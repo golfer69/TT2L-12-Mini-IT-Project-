@@ -1,20 +1,19 @@
 # import sqlite3
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-
-
+from datetime import datetime
 
 # create web
-web= Flask(__name__)
+web = Flask(__name__)
 # create database
-web.config['sqlalchemy_database_uri']= 'sqlite:///users.db'
+web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 # Initialise database
-db= SQLAlchemy(web)
+db = SQLAlchemy(web)
 
-class users(db.model):
-    id= db.column(db.integer, primary_key=True, nullable=False)
-    name= db.column(db.string(150), nullable=False)
-    email= db.column(db.string(100), nullable=False, unique=True)
-    date_posted= db.column(db.datetime, nullable=False)
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(100), nullable=False, unique=True)
+    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
 db.create_all()
