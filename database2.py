@@ -1,16 +1,17 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from app import app
 
 # create web
-def create_web():
-    web = Flask(__name__)
-    web.config['SECRET_KEY'] = 'chickenstuffe'
-    return web
+# def create_web():
+#     web = Flask(__name__)
+#     web.config['SECRET_KEY'] = 'chickenstuffe'
+#     return web
 
-web = create_web()
-web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' # create database
-db = SQLAlchemy(web) # Initialise database
+# web = create_web()
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' # create database
+db = SQLAlchemy(app) # Initialise database
 
 class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -32,4 +33,4 @@ if __name__ == "__main__":
     # Call the function to create tables
     create_tables()
     # Run the Flask app
-    web.run(debug=True)
+    app.run(debug=True)

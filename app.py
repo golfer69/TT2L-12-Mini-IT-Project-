@@ -2,8 +2,12 @@ from flask import Flask, render_template, request, redirect, send_from_directory
 from werkzeug.utils import secure_filename
 import os 
 
-app = Flask(__name__)
-app.config['UPLOAD_DIRECTORY'] = 'uploads/'
+
+def create_app():
+    app = Flask(__name__)
+    app.config['UPLOAD_DIRECTORY'] = 'uploads/'
+
+app=create_app()
 
 @app.route('/')
 def index():
@@ -28,6 +32,7 @@ def serve_files(filename):
 
 if  __name__ == '__main__':
     app.run(debug=True)
+    
 
 
 
