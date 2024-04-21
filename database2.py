@@ -1,4 +1,4 @@
-# import sqlite3
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
@@ -16,4 +16,12 @@ class User(db.Model):
     email = db.Column(db.String(100), nullable=False, unique=True)
     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.now)
 
-db.create_all()
+# Define a function to create tables
+def create_tables():
+    db.create_all()
+
+if __name__ == "__main__":
+    # Call the function to create tables
+    create_tables()
+    # Run the Flask app
+    web.run(debug=True)
