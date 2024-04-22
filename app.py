@@ -6,6 +6,9 @@ import os
 def create_app():
     app = Flask(__name__)
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    return app
 
 app=create_app()
 
