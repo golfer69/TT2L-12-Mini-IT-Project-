@@ -1,15 +1,18 @@
-from flask import Flask
+from flask import Flask, render_template, request, redirect, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+# from app import app
+# import app
+from werkzeug.utils import secure_filename
+import os 
 
-# create web
 def create_web():
     web = Flask(__name__)
     web.config['SECRET_KEY'] = 'chickenstuffe'
+    web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
     return web
 
-web = create_web()
-web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' # create database
+web=create_web()
 db = SQLAlchemy(web) # Initialise database
 
 class User(db.Model):
@@ -24,12 +27,25 @@ class Posts(db.Model):
     title=db.Column(db.String(20000), nullable=False)
     text=db.Column(db.String(20000), nullable=False)
 
-# Define a function to create tables
-def create_tables():
-    db.create_all()
+# # Creating a new user
+# new_user = User(name='John Doe', email='john@example.com')
+# # Adding the new user to the session
+# db.session.add(new_user)
+
+# # Creating a new post
+# new_post = Posts(title='Hello World', content='This is my first post.', date_posted=datetime.now())
+# # Adding the new post to the session
+# db.session.add(new_post)
+
+# # Committing the session to persist the changes to the database
+# db.session.commit()
+# db.session.close()
+@web.route('/')
+def index():
+    # Fetch users and posts from the database
+    users = User.query.all()
+    posts = Posts.query.all()
+    return render_template('index.html', users=users, posts=posts)
 
 if __name__ == "__main__":
-    # Call the function to create tables
-    create_tables()
-    # Run the Flask app
     web.run(debug=True)
