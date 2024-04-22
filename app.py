@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, send_from_directory
 from werkzeug.utils import secure_filename
 import os 
-
+from database2 import db
 
 def create_app():
     app = Flask(__name__)
@@ -11,6 +11,14 @@ def create_app():
     return app
 
 app=create_app()
+
+def create_tables():
+    with app.app_context().push():
+        db.create_all()
+
+app.app_context().push()
+
+
 
 @app.route('/')
 def index():
