@@ -9,10 +9,11 @@ import os
 def create_web():
     web = Flask(__name__)
     web.config['SECRET_KEY'] = 'chickenstuffe'
-    web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
     return web
 
 web=create_web()
+web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.test'
+web.config['SQLALCHEMY_TRACK_MODIFICATIONS']= False
 db = SQLAlchemy(web) # Initialise database
 
 class User(db.Model):
@@ -42,10 +43,11 @@ class Posts(db.Model):
 # db.session.close()
 @web.route('/')
 def index():
+    with web.app_context():
     # Fetch users and posts from the database
-    users = User.query.all()
-    posts = Posts.query.all()
-    return render_template('index.html', users=users, posts=posts)
+        users = User.query.all()
+        posts = Posts.query.all()
+    # return render_template('index.html', users=users, posts=posts)
 
 if __name__ == "__main__":
     web.run(debug=True)
