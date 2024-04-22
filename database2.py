@@ -1,15 +1,15 @@
-from flask import Flask
+from flask import Flask, render_template, request, redirect, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 
+# create web
 def create_web():
     web = Flask(__name__)
     web.config['SECRET_KEY'] = 'chickenstuffe'
     return web
 
-web=create_web()
-web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.test'
-web.config['SQLALCHEMY_TRACK_MODIFICATIONS']= False
+web = create_web()
+web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db' # create database
 db = SQLAlchemy(web) # Initialise database
 
 class User(db.Model):
@@ -24,14 +24,12 @@ class Posts(db.Model):
     posts_title=db.Column(db.String(20000), nullable=False)
     text=db.Column(db.String(20000), nullable=False)
 
-# Creating a new user
-new_user = User(user_id= 122, name='John Doe', email='john@example.com', date_posted=datetime.now)
-db.session.add(new_user)
+# Define a function to create tables
+def create_tables():
+    db.create_all()
 
-# Creating a new post
-new_post = Posts(post_id= 990, image='chicken.jpg', posts_title='This is my first post', text='Hello world')
-db.session.add(new_post)
-
-# Committing the session to persist the changes to the database
-db.session.commit()
-db.session.close()
+if __name__ == "__main__":
+    # Call the function to create tables
+    create_tables()
+    # Run the Flask app
+    web.run(debug=True)
