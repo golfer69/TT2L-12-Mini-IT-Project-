@@ -7,14 +7,6 @@ cur=conn.cursor()
 cur.execute("""CREATE TABLE IF NOT EXISTS user_data(Name, ID PRIMARY KEY, Email UNIQUE, DATE_POSTED)
                    """)
 
-# User_Details:
-name=input('Enter your name: ')
-user_id=int(input('Enter id: ' ))
-email=input('Enter email: ')
-date_posted=datetime.now()
-
-
-
 def insert_data(name, user_id, email, date_posted):
     cur.execute("""INSERT INTO user_data(Name, ID, Email, Date_Posted) VALUES(?, ?, ?, ?)""",  (name, user_id, email, date_posted ))
     conn.commit()
@@ -22,7 +14,27 @@ def insert_data(name, user_id, email, date_posted):
 
 def pull_data():
     cur.execute('''SELECT * FROM user_data''')
-    return cur.fetchall()   
+    return cur.fetchall()
+
+def validate_input_length(input_str, max_length):
+    return input_str[:max_length]
+
+# User details
+while True:
+    name = input('Enter your name: ')
+    if len(name) > 100:
+        print("Name must be 100 characters or fewer. Please try again.")
+    else:
+        break
+user_id=int(input('Enter id: ' ))
+while True:
+    email = input('Enter your name: ')
+    if len(email) > 150:
+        print("Name must be 150 characters or fewer. Please try again.")
+    else:
+        break  
+date_posted=datetime.now()
+
 
 insert_data(name, user_id, email, date_posted)
 data=pull_data()
