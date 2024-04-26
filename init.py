@@ -1,8 +1,5 @@
 from flask import Flask
 import sqlite3
-<<<<<<< Updated upstream
-
-=======
 from datetime import datetime
 
 conn=sqlite3.Connection('User.db')
@@ -33,4 +30,3 @@ data=pull_data()
 print("Name\tID\tEMAIL\tDATE_POSTED")
 for row in data:
     print("{}\t{}\t{}\t{}".format(row[0], row[1], row[2], row[3]))
->>>>>>> Stashed changes
