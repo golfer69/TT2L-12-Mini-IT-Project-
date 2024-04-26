@@ -10,7 +10,7 @@ from datetime import datetime
 
 web = Flask(__name__)
 web.config['SECRET_KEY'] = 'chickenstuffe'
-web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chicken.db' # create database
+web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.chicken' # create database
 web.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(web) # Initialise database
 
@@ -26,20 +26,20 @@ class Posts(db.Model):
     posts_title=db.Column(db.String(20000), nullable=False)
     text=db.Column(db.String(20000), nullable=False)
 
-    def __repr__(self):
-        return f'<User: {self.email}>'
+#     def __repr__(self):
+#         return f'<User: {self.email}>'
         
 
-# Define a function to create tables
-def create_tables():
-    with web.app_context():
-        db.create_all()
+# # Define a function to create tables
+# def create_tables():
+#     with web.app_context():
+#         db.create_all()
 
-if __name__ == "__main__":
-    # Call the function to create tables
-    create_tables()
-    # Run the Flask app
-    web.run(debug=True)
+# if __name__ == "__main__":
+#     # Call the function to create tables
+#     create_tables()
+#     # Run the Flask app
+#     web.run(debug=True)
 
 
 # new_user = User(user_id=122, name='John Doe', email='john@example.com', date_posted=datetime.now)
