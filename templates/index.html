@@ -9,8 +9,20 @@
 </head>
 <body>
   <div class="app">
-
+    
     <div class="form-section">
+      
+      <h1>Text Saver</h1>
+      <form action="{{ url_for('index') }}" method="POST">
+          <textarea name="content" rows="4" cols="50"></textarea><br>
+          <input type="submit" value="Save">
+      </form>
+      <h2>Saved Texts</h2>
+      <ul>
+          {% for text in texts %}
+              <li>{{ text.content }}</li>
+          {% endfor %}
+      </ul>
 
       <form action="/upload" method="post" enctype="multipart/form-data">
         <input type="file" name="file">
