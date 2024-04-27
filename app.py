@@ -1,9 +1,9 @@
 from flask import Flask, render_template, request, redirect, send_from_directory
 from werkzeug.utils import secure_filename
 import os 
-from wtforms import SubmitField, StringField, PasswordField
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from wtforms import SubmitField, StringField, PasswordField
 
 def create_app():
     app = Flask(__name__)
