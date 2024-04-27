@@ -1,7 +1,9 @@
 from flask import Flask, render_template, request, redirect, send_from_directory
 from werkzeug.utils import secure_filename
 import os 
-from database2 import db
+from wtforms import SubmitField, StringField, PasswordField
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 def create_app():
     app = Flask(__name__)
@@ -11,6 +13,19 @@ def create_app():
     return app
 
 app=create_app()
+db = SQLAlchemy(app) # Initialise database
+
+class User(db.Model):
+    user_id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(100), nullable=False, unique=True)
+    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.now)
+
+class Posts(db.Model):
+    posts_id=db.Column(db.Integer, primary_key=True)
+    image=db.Column(db.String(2000))
+    posts_title=db.Column(db.String(20000), nullable=False)
+    text=db.Column(db.String(20000), nullable=False)
 
 def create_tables():
     with app.app_context().push():
@@ -18,16 +33,19 @@ def create_tables():
 
 app.app_context().push()
 
-
-
 @app.route('/')
 def index():
     files = os.listdir(app.config['UPLOAD_DIRECTORY'])
     return render_template('index.html', files=files)
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form= LoginForm()
+    return render_template('register.html', form=form)
+
 @app.route('/upload', methods=['POST'])
 def upload():
-    file = request.files['file']
+    file = request.files['file'] 
     
     if file:
         file.save(os.path.join(

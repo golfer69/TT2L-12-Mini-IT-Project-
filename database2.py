@@ -10,7 +10,7 @@ from datetime import datetime
 
 web = Flask(__name__)
 web.config['SECRET_KEY'] = 'chickenstuffe'
-web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.chicken' # create database
+web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chicken.db' # create database
 web.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(web) # Initialise database
 
