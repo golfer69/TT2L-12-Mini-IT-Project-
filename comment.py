@@ -5,7 +5,7 @@ def __init__(self,text,author):
     self.reply = []
 
 def add_reply(self,reply):
-    """Add a reply to this comment.""" 
+    """Reply """ 
     self.reply.append(reply)
 
 def display(self,indent=0):
@@ -24,12 +24,11 @@ top_comment.add.reply(reply1)
 top_comment.add_reply(reply2)
 reply1.add_reply(reply3)
 
-print("Comments:")
+print("Post_Comment:")
 top_comment.display()
 
 
 # Create vote
-# Create reply 
 # Create share
 # Add timestamps
 # Add user authentication 
