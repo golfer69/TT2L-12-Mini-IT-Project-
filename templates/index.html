@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Uploads</title>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
+</head>
+<body>
+  <div class="app">
+    
+    <div class="form-section">
+      
+      <h1>Text Saver</h1>
+      <form action="{{ url_for('index') }}" method="POST">
+          <textarea name="content" rows="4" cols="50"></textarea><br>
+          <input type="submit" value="Save">
+      </form>
+      <h2>Saved Texts</h2>
+      <ul>
+          {% for text in texts %}
+              <li>{{ text.content }}</li>
+          {% endfor %}
+      </ul>
+
+      <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <input type="submit" value="Upload">
+      </form>
+
+    </div>
+
+    <div class="images-section">
+
+      {% for file in files: %}
+        <a href="{{ url_for('serve_files', filename=file) }}" target="_blank">
+          <img src="{{ url_for('serve_files', filename=file) }}">
+        </a>
+      {% endfor %}
+    </div>
+    
+  </div>
+</body>
+</html>
