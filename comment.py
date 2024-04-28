@@ -1,3 +1,6 @@
+from flask import Flask, render_template, request, redirect, send_from_directory
+
+
 # Create comment
 class Post:
     def __init__(self,content,author):
