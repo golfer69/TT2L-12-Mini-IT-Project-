@@ -1,7 +1,5 @@
 from flask import Flask, render_template, request, redirect, send_from_directory, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
 from werkzeug.utils import secure_filename
-from datetime import datetime
 import os 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, current_user, login_required
@@ -14,7 +12,7 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'chickenstuffe'
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     return app
 
@@ -56,26 +54,10 @@ class LoginForm(FlaskForm):
     submit= SubmitField('Login')
 
 
-db = SQLAlchemy(app)
-
-class Text(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    content = db.Column(db.String(255))
-    date_added = db.Column(db.DateTime, default=datetime.now)
-
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')
 def index():
     files = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    if request.method == 'POST':
-        content = request.form['content']
-        text = Text(content=content)
-        db.session.add(text)
-        db.session.commit()
-        return redirect(url_for('index'))
-    else:
-        texts = Text.query.all()
-        return render_template('index.html', texts=texts, files=files)
+    return render_template('index.html', files=files)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -138,3 +120,10 @@ def serve_files(filename):
 
 if  __name__ == '__main__':
     app.run(debug=True)
+
+    
+
+
+
+
+
