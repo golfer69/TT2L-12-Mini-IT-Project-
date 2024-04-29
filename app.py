@@ -73,7 +73,6 @@ def register():
     return render_template('register.html', form=form)
 
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -94,8 +93,6 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
-
 
 
 @app.route('/dashboard', methods=['GET', 'POST'])
@@ -120,8 +117,6 @@ def upload():
 @app.route('/serve-files/<filename>', methods=['GET'])
 def serve_files(filename):
     return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
-
-
 
 
 if  __name__ == '__main__':
