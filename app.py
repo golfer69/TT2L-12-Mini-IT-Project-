@@ -2,8 +2,7 @@ from flask import Flask, render_template, request, redirect, send_from_directory
 from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
-# from datetime import datetime
-from flask_login import UserMixin,  LoginManager, login_user, logout_user, current_user, login_required
+from flask_login import UserMixin, LoginManager, login_user, logout_user, current_user, login_required
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField
 from wtforms.validators import InputRequired, Length, ValidationError
@@ -30,7 +29,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 class User(db.Model, UserMixin):
-    user_id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
     # email = db.Column(db.String(100), nullable=False, unique=True)
@@ -41,17 +40,17 @@ with app.app_context():
 
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
-    password= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
+    password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Register')
 
-def validate_username(self, username):
-    existing_username=User.query.filter_by(username=username.data).first()
-    if existing_username:
-        raise ValidationError('That username already exists. Please choose another one')
+    def validate_username(self, username):
+        existing_username=User.query.filter_by(username=username.data).first()
+        if existing_username:
+            raise ValidationError('That username already exists. Please choose another one')
 
 class LoginForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
-    password= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
+    password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
 
 
