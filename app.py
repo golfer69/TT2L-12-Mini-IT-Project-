@@ -13,8 +13,8 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'chickenstuffe'
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///data.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
+    app.config['SQLALCHEMY_BINDS'] = {'text': 'sqlite:///text.db'}
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     return app
 
@@ -34,10 +34,10 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
-    # email = db.Column(db.String(100), nullable=False, unique=True)
 
 
 class Text(db.Model):
+    __bind_key__ = 'text'  # Specify the database bind
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
@@ -45,6 +45,7 @@ class Text(db.Model):
 
 with app.app_context():
     db.create_all()
+    
 
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
@@ -99,8 +100,8 @@ def index():
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
-        hashded_password= bcrypt.generate_password_hash(form.password.data)
-        new_user= User(username=form.username.data, password=hashded_password)
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
+        new_user= User(username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
@@ -138,9 +139,5 @@ def dashboard():
 
 if  __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
 
 
