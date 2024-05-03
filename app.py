@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, send_from_directory
 from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, LoginManager, login_user, logout_user, current_user, login_required
+from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField
@@ -19,7 +19,7 @@ def create_app():
     return app
 
 app=create_app()
-db = SQLAlchemy(app) # Initialise database
+db = SQLAlchemy(app) 
 bcrypt=Bcrypt(app)
 
 login_manager=LoginManager()
@@ -37,7 +37,7 @@ class User(db.Model, UserMixin):
 
 
 class Text(db.Model):
-    __bind_key__ = 'text'  # Specify the database bind
+    __bind_key__ = 'text'  
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
