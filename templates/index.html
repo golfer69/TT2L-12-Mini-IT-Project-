@@ -8,8 +8,17 @@
   <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
 </head>
 <body>
-  <a href="{{url_for('register')}}">Don't have an account? Sign up here</a> <br>
-  <a href="{{url_for('login')}}">Log in here</a>
+
+  {%if current_user.is_authenticated%}
+  {%if current_user.id==5%}
+    <a href="{{url_for('admin')}}">Admin Page</a><br>
+  {%endif%}
+  <a href="{{url_for('logout')}}">Log Out</a>
+  {%else%}
+    <a href="{{url_for('register')}}">Sign up</a> <br>
+    <a href="{{url_for('login')}}">Log In</a><br>
+  {%endif%}
+  
 
   <div class="app">
     

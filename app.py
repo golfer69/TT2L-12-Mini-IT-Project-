@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, send_from_directory
 from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required
+from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField
@@ -21,7 +21,6 @@ def create_app():
 app=create_app()
 db = SQLAlchemy(app) 
 bcrypt=Bcrypt(app)
-
 login_manager=LoginManager()
 login_manager.init_app(app)
 login_manager.login_view='login'
@@ -97,6 +96,8 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
@@ -109,6 +110,8 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -123,7 +126,7 @@ def login():
     return render_template('login.html', form=form)
 
 
-@app.route('/logout', methods=['GET', 'POST'])
+@app.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('login'))
@@ -133,6 +136,18 @@ def logout():
 @login_required
 def dashboard():
     return render_template('dashboard.html')
+
+
+@app.route('/admin')
+@login_required
+def admin():
+    id= current_user.id
+    if id==5:
+        return render_template('admin.html')
+    else:
+        flash("Only admins can access this page")
+        return redirect(url_for('index'))
+
 
 
 if  __name__ == '__main__':

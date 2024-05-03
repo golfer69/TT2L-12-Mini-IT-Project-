@@ -23,7 +23,7 @@
     {{ form.submit }}
     {% with messages = get_flashed_messages() %}
     {% if messages %}
-        <ul class="error"> <!-- Apply the 'error' class to the list of flashed messages -->
+        <ul class="error"> 
         {% for message in messages %}
             <li>{{ message }}</li>
         {% endfor %}
