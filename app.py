@@ -57,6 +57,16 @@ def upload():
 def serve_files(filename):
     return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
 
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
+def delete_post(post_id):
+  post = Text.query.get(post_id)
+  if post:
+    # Delete the post object from the database
+    db.session.delete(post)
+    db.session.commit()
+  return redirect('/')
+
+
 if  __name__ == '__main__':
     with app.app_context():
         db.create_all()
