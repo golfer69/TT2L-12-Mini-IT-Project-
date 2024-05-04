@@ -20,31 +20,37 @@ class Text(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
+    image_filename = db.Column(db.String(255))
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def index():
-    files = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    if request.method == 'POST':
-        content = request.form['content']
-        text = Text(content=content)
-        db.session.add(text)
-        db.session.commit()
-        return redirect(url_for('index'))
-    else:
-        texts = Text.query.all()
-        return render_template('index.html', texts=texts, files=files)
+    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
+    texts = Text.query.all()
+    return render_template('index.html', texts=texts, pics=pics)
 
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['file']
+    if request.method == 'POST':
+        content = request.form['content'] # get text from html form
+        file = request.files['file']  # Access the uploaded file
+        text = Text(content=content)
+        db.session.add(text)
+        db.session.commit()
     
-    if file:
-        file.save(os.path.join(
-            app.config['UPLOAD_DIRECTORY'],
-            secure_filename(file.filename)
-        ))
-    
+        if file:
+
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(
+                app.config['UPLOAD_DIRECTORY'],
+                secure_filename(file.filename)
+            ))
+
+            text.image_filename = filename
+            db.session.add(text)
+            db.session.commit()
+        
     return redirect('/')
 
 @app.route('/serve-files/<filename>', methods=['GET'])
