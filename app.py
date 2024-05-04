@@ -64,6 +64,17 @@ def delete_post(post_id):
     # Delete the post object from the database
     db.session.delete(post)
     db.session.commit()
+    
+    # Delete the image file if it exists
+    image_filename = post.image_filename
+    if image_filename:
+      image_path = os.path.join(app.config['UPLOAD_DIRECTORY'], image_filename)
+      if os.path.exists(image_path):
+        try:
+          os.remove(image_path)
+        except OSError as e:
+          print(f"Error deleting image file: {e}")
+          
   return redirect('/')
 
 
