@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for 
+from flask import Flask, render_template, request, redirect,  url_for 
 import sqlite3
 from datetime import datetime
 
@@ -27,5 +27,20 @@ def create_comment_table():
         connection.close()
 
 # Route for HTML file
-@app.route("/comment", methods={"GET", "POST"})
-def 
+@app.route("/comment", methods=["GET", "POST"])
+def user_comment():
+    if request.method == "GO":
+        username = request.form["username"]
+        message_content = request.form["message_content"]
+        time = request.form["time"]
+
+        # Add comment to database
+        add_comment(username, message_content, time)
+
+        #render comment.html
+        return render_template("comment.html")
+    
+
+if __name__ == "__main__":
+    create_comment_table()
+    app.run(debug=True)
