@@ -77,6 +77,13 @@ def delete_post(post_id):
           
   return redirect('/')
 
+@app.route('/post/<int:post_id>', methods=['GET'])
+def show_post(post_id):
+    post = Text.query.get(post_id)
+    if not post:
+        return redirect('/')  # Handle non-existent post
+    
+    return render_template('post.html',post=post)  # Render a separate template for single post
 
 if  __name__ == '__main__':
     with app.app_context():
