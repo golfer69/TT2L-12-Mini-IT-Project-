@@ -9,20 +9,20 @@ def create_comment_table():
     connection = sqlite3.connect("comment.db")
     cursor = connection.cursor()
     cursor.execute('''CREATE TABLE IF NOT EXISTS comment
-                   ( id INTEGRATE PRIMARY KEY,
+                   ( id INTEGER NOT NULL PRIMARY KEY,
                    username TEXT NOT NULL,
-                   message_content TEXT NOT NULL,
-                   time TEXT )
+                   message_content VARCHAR(255),
+                   date_added DATETIME )
                    ''')
     connection.commit()
     connection.close()
 
 # Add comment to database
-    def add_comment(username, message_content, time):
+    def add_comment(username, message_content, date_added):
         connection = sqlite3.connect("comment.db")
         cursor = connection.cursor()
-        cursor.execute('''INSERT INTO comment (username, message_content, time)
-                       VALUES (?,?,?)''', (username, message_content, time))
+        cursor.execute('''INSERT INTO comment section (username, message_content, date_added)
+                       VALUES (?,?,?)''', (username, message_content, date_added))
         connection.commit()
         connection.close()
 
@@ -32,12 +32,12 @@ def user_comment():
     if request.method == "GO":
         username = request.form["username"]
         message_content = request.form["message_content"]
-        time = request.form["time"]
+        date_added = request.form["date_added"]
 
         # Add comment to database
-        add_comment(username, message_content, time)
+        add_comment(username, message_content, date_added)
 
-        #render comment.html
+        # Render comment.html
         return render_template("comment.html")
     
 
