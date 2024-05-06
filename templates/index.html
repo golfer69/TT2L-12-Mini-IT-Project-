@@ -10,6 +10,24 @@
 </head>
 <body>
 
+
+  <!-- <nav class="navbar">
+    <div class="navbar-container">
+      <div class="navbar-section section1">
+        <a href="#">Home</a>
+      </div>
+      <div class="navbar-section section2">
+        <a href="#">About</a>
+      </div>
+      <div class="navbar-section section3">
+        <a href="#">Services</a>
+      </div>
+      <div class="navbar-section section4">
+        <a href="#">Contact</a>
+      </div>
+    </div>
+  </nav> -->
+
   {% if current_user.is_authenticated %}
     {% if current_user.id == 5 or current_user.id == 6 %}
       <a href="{{url_for('admin')}}">Admin Page</a><br>
