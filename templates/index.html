@@ -23,11 +23,21 @@
     </div>
 
     <div class="posts-section">
+
       {% for text in texts %}
+      <a href="{{ url_for('show_post', post_id=text.id) }}">  <li>
+          {{ text.content }}
+          {% if text.image_filename %}
+            <div style="display: flex; flex-direction: column;">
+              <img src="{{ url_for('serve_files', filename=text.image_filename) }}">
+            </div>
+          {% endif %}
+        </li>
+      </a>
+      {% endfor %}
+
+      <!-- {% for text in texts %}
       <li>
-        <form action="{{ url_for('delete_post', post_id=text.id) }}" method="POST">
-          <button type="submit">Delete</button>
-        </form>
         {{ text.content }}
         {% if text.image_filename %}
           <div style="display: flex; flex-direction: column;">
@@ -37,8 +47,9 @@
           </div>
         {% endif %}
       </li>
-      {% endfor %}
-    </div>
+      {% endfor %} -->
+
+      </div>
   </div>
 </body>
 </html>
