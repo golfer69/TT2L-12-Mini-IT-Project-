@@ -1,3 +1,4 @@
+
 from flask import Flask, render_template, request, redirect, send_from_directory, url_for, flash
 from werkzeug.utils import secure_filename
 import os 
@@ -34,23 +35,21 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
 
-
 class Text(db.Model):
     __bind_key__ = 'text'  
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
 
-
 with app.app_context():
     db.create_all()
-    
 
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Register')
-def validate_username(self, username):
+
+    def validate_username(self, username):
         existing_username=User.query.filter_by(username=username.data).first()
         if existing_username:
             raise ValidationError('That username already exists. Please choose another one')
@@ -59,25 +58,6 @@ class LoginForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
-
-
-
-
-@app.route('/upload', methods=['POST'])
-def upload():
-    file = request.files['file'] 
-    if file:
-        file.save(os.path.join(
-            app.config['UPLOAD_DIRECTORY'],
-            secure_filename(file.filename)
-        ))
-    return redirect('/')
-
-
-@app.route('/serve-files/<filename>', methods=['GET'])
-def serve_files(filename):
-    return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
-
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -92,6 +72,11 @@ def index():
     else:
         texts = Text.query.all()
         return render_template('index.html', texts=texts, files=files)
+    
+
+@app.route('/uploads/<path:filename>')
+def serve_files(filename):
+    return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -106,7 +91,6 @@ def register():
         db.session.commit()
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -125,18 +109,15 @@ def login():
             flash('Invalid username or password.', 'error')
     return render_template('login.html', form=form)
 
-
 @app.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('login'))
 
-
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
     return render_template('dashboard.html')
-
 
 @app.route('/admin')
 @login_required
@@ -148,7 +129,6 @@ def admin():
         flash("Only admins can access this page")
         return redirect(url_for('index'))
 
-
-
 if  __name__ == '__main__':
     app.run(debug=True)
+

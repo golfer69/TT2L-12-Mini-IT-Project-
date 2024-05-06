@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,16 +10,16 @@
 </head>
 <body>
 
-  {%if current_user.is_authenticated%}
-  {%if current_user.id==5 or current_user.id==6%}
-    <a href="{{url_for('admin')}}">Admin Page</a><br>
-  {%endif%}
-  <a href="{{url_for('dashboard')}}">Dashboard</a><br>
-  <a href="{{url_for('logout')}}">Log Out</a>
-  {%else%}
+  {% if current_user.is_authenticated %}
+    {% if current_user.id == 5 or current_user.id == 6 %}
+      <a href="{{url_for('admin')}}">Admin Page</a><br>
+    {% endif %}
+    <a href="{{url_for('dashboard')}}">Dashboard</a><br>
+    <a href="{{url_for('logout')}}">Log Out</a>
+  {% else %}
     <a href="{{url_for('register')}}">Sign up</a> <br>
     <a href="{{url_for('login')}}">Log In</a><br>
-  {%endif%}
+  {% endif %}
   
 
   <div class="app">
@@ -37,7 +38,7 @@
           {% endfor %}
       </ul>
 
-      <form action="/upload" method="post" enctype="multipart/form-data">
+      <form action="{{ url_for('index') }}" method="post" enctype="multipart/form-data">
         <input type="file" name="file">
         <input type="submit" value="Upload">
       </form>
@@ -46,7 +47,7 @@
 
     <div class="images-section">
 
-      {% for file in files: %}
+      {% for file in files %}
         <a href="{{ url_for('serve_files', filename=file) }}" target="_blank">
           <img src="{{ url_for('serve_files', filename=file) }}">
         </a>
