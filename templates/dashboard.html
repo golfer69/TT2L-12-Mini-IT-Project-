@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login Page</title>
+</head>
+<body>
+    <h1>Dasboard Page</h1><br>
+    <h1>Hello, {{current_user.username}} you are logged in</h1>
+    {%if current_user.is_authenticated%}
+    {%if current_user.id==5 or current_user.id==6%}
+      <a href="{{url_for('admin')}}">Admin Page</a><br>
+    {%endif%}
+    <a href="{{url_for('index')}}">Home Page</a><br>
+    <a href="{{url_for('logout')}}">Log Out</a>
+    {%endif%}
+</html>

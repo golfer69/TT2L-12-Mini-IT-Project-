@@ -1,20 +1,18 @@
-from flask import Flask, render_template, request, redirect, send_from_directory
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-# from app import app
-import app
-from werkzeug.utils import secure_filename
-import os 
 
+# create web
 # def create_web():
 #     web = Flask(__name__)
 #     web.config['SECRET_KEY'] = 'chickenstuffe'
-#     web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 #     return web
 
-db = SQLAlchemy(app) # Initialise database
-if __name__ == "__main__":
-    app.run(debug=True)
+web = Flask(__name__)
+web.config['SECRET_KEY'] = 'chickenstuffe'
+web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///chicken.db' # create database
+web.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(web) # Initialise database
 
 class User(db.Model):
     user_id = db.Column(db.Integer, primary_key=True, nullable=False)
@@ -25,22 +23,26 @@ class User(db.Model):
 class Posts(db.Model):
     posts_id=db.Column(db.Integer, primary_key=True)
     image=db.Column(db.String(2000))
-    title=db.Column(db.String(20000), nullable=False)
+    posts_title=db.Column(db.String(20000), nullable=False)
     text=db.Column(db.String(20000), nullable=False)
 
-# Creating a new user
-new_user = User(name='John Doe', email='john@example.com')
-# Adding the new user to the session
-db.session.add(new_user)
+#     def __repr__(self):
+#         return f'<User: {self.email}>'
+        
 
-# Creating a new post
-new_post = Posts(title='Hello World', content='This is my first post.', date_posted=datetime.now())
-# Adding the new post to the session
-db.session.add(new_post)
+# # Define a function to create tables
+# def create_tables():
+#     with web.app_context():
+#         db.create_all()
 
-# Committing the session to persist the changes to the database
-db.session.commit()
-db.session.close()
+# if __name__ == "__main__":
+#     # Call the function to create tables
+#     create_tables()
+#     # Run the Flask app
+#     web.run(debug=True)
 
 
-
+# new_user = User(user_id=122, name='John Doe', email='john@example.com', date_posted=datetime.now)
+# db.session.add(new_user)
+# db.session.commit()
+# db.session.close()

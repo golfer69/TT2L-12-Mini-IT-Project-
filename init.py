@@ -1,46 +1,44 @@
-from flask import Flask, render_template, request, redirect, send_from_directory
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask
+import sqlite3
 from datetime import datetime
-# from app import app
-import app
-from werkzeug.utils import secure_filename
-import os 
 
-def create_web():
-    web = Flask(__name__)
-    web.config['SECRET_KEY'] = 'chickenstuffe'
-    web.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-    return web
+conn=sqlite3.Connection('User.db')
+cur=conn.cursor()
+cur.execute("""CREATE TABLE IF NOT EXISTS user_data(Name, ID PRIMARY KEY, Email UNIQUE, DATE_POSTED)
+                   """)
 
-web=create_web()
-db = SQLAlchemy(web) # Initialise database
-if __name__ == "__main__":
-    web.run(debug=True)
-
-class User(db.Model):
-    user_id = db.Column(db.Integer, primary_key=True, nullable=False)
-    name = db.Column(db.String(150), nullable=False)
-    email = db.Column(db.String(100), nullable=False, unique=True)
-    date_posted = db.Column(db.DateTime, nullable=False, default=datetime.now)
-
-class Posts(db.Model):
-    posts_id=db.Column(db.Integer, primary_key=True)
-    image=db.Column(db.String(2000))
-    title=db.Column(db.String(20000), nullable=False)
-    text=db.Column(db.String(20000), nullable=False)
-
-# Creating a new user
-new_user = User(name='John Doe', email='john@example.com')
-# Adding the new user to the session
-db.session.add(new_user)
-
-# Creating a new post
-new_post = Posts(title='Hello World', content='This is my first post.', date_posted=datetime.now())
-# Adding the new post to the session
-db.session.add(new_post)
-
-# Committing the session to persist the changes to the database
-db.session.commit()
-db.session.close()
+def insert_data(name, user_id, email, date_posted):
+    cur.execute("""INSERT INTO user_data(Name, ID, Email, Date_Posted) VALUES(?, ?, ?, ?)""",  (name, user_id, email, date_posted ))
+    conn.commit()
 
 
+def pull_data():
+    cur.execute('''SELECT * FROM user_data''')
+    return cur.fetchall()
+
+def validate_input_length(input_str, max_length):
+    return input_str[:max_length]
+
+# User details
+while True:
+    name = input('Enter your name: ')
+    if len(name) > 100:
+        print("Name must be 100 characters or fewer. Please try again.")
+    else:
+        break
+user_id=int(input('Enter id: ' ))
+while True:
+    email = input('Enter your name: ')
+    if len(email) > 150:
+        print("Name must be 150 characters or fewer. Please try again.")
+    else:
+        break  
+date_posted=datetime.now()
+
+
+insert_data(name, user_id, email, date_posted)
+data=pull_data()
+
+print("Name\tID\tEMAIL\tDATE_POSTED")
+for row in data:
+    print("{}\t{}\t{}\t{}".format(row[0], row[1], row[2], row[3]))

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login Page</title>
+    <style>
+        .error {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login Page</h1><br>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <div>
+        {{ form.username.label }}
+        {{ form.username }}
+    <br>
+        {{ form.password.label }}
+        {{ form.password }}
+    </form>
+    <br>
+    {{ form.submit }}
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <ul class="error"> 
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
+    <br>
+    <a href="{{ url_for('register') }}">Don't have an account? Sign up here</a>
+</body>
+</html>
