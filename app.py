@@ -14,6 +14,7 @@ from flask_bcrypt import Bcrypt
 
 def create_app():
     app = Flask(__name__)
+    app.config['SECRET_KEY']='chickenstuffe'
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
     app.config['SQLALCHEMY_BINDS'] = {'data': 'sqlite:///data.db'}
@@ -32,6 +33,11 @@ login_manager.login_view='login'
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)  
+    username = db.Column(db.String(150), nullable=False, unique=True)
+    password= db.Column(db.String(40), nullable=False)
 
 class Text(db.Model):
     __bind_key__ = 'data'  
