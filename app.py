@@ -40,6 +40,7 @@ class Text(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
+    image_filename = db.Column(db.String(255))
 
 with app.app_context():
     db.create_all()
@@ -59,20 +60,35 @@ class LoginForm(FlaskForm):
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def index():
-    files = os.listdir(app.config['UPLOAD_DIRECTORY'])
+    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
+    texts = Text.query.all()
+    return render_template('index.html', texts=texts, pics=pics)
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    file = request.files['file']
     if request.method == 'POST':
-        content = request.form['content']
+        content = request.form['content'] # get text from html form
+        file = request.files['file']  # Access the uploaded file
         text = Text(content=content)
         db.session.add(text)
         db.session.commit()
-        db.session.close()
-        return redirect(url_for('index'))
-    else:
-        texts = Text.query.all()
-        return render_template('index.html', texts=texts, files=files)
     
+        if file:
+
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(
+                app.config['UPLOAD_DIRECTORY'],
+                secure_filename(file.filename)
+            ))
+
+            text.image_filename = filename
+            db.session.add(text)
+            db.session.commit()
+        
+    return redirect('/')
 
 @app.route('/uploads/<path:filename>')
 def serve_files(filename):
@@ -128,6 +144,33 @@ def admin():
     else:
         flash("Only admins can access this page")
         return redirect(url_for('index'))
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
+def delete_post(post_id):
+  post = Text.query.get(post_id)
+  if post:
+    # Delete the post object from the database
+    db.session.delete(post)
+    db.session.commit()
+    
+    # Delete the image file if it exists
+    image_filename = post.image_filename
+    if image_filename:
+      image_path = os.path.join(app.config['UPLOAD_DIRECTORY'], image_filename)
+      if os.path.exists(image_path):
+        try:
+          os.remove(image_path)
+        except OSError as e:
+          print(f"Error deleting image file: {e}")
+          
+  return redirect('/')
+
+@app.route('/post/<int:post_id>', methods=['GET'])
+def show_post(post_id):
+    post = Text.query.get(post_id)
+    if not post:
+        return redirect('/')  # Handle non-existent post
+    
+    return render_template('post.html',post=post)  # Render a separate template for single post
 
 if  __name__ == '__main__':
     app.run(debug=True)
