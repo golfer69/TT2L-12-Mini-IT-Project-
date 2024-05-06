@@ -1,14 +1,14 @@
-
 from flask import Flask, render_template, request, redirect, send_from_directory, url_for, flash
 from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.utils import secure_filename
+from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
-import os 
-from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
-from 
+from wtforms import SubmitField, StringField, PasswordField
+from wtforms.validators import InputRequired, Length, ValidationError
+from flask_bcrypt import Bcrypt
+
 
 
 
