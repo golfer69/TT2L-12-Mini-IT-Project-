@@ -5,7 +5,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device_width, initial_scale=1.0">
         <title>MMU Reddit</title>
-        <style>
+        <!-- <style>
             *{
                 padding: 0;
                 margin: 0;
@@ -152,19 +152,30 @@
                 width: 85%;
             }
 
-        </style>
+        </style> -->
     </head>
 
     <body>
+        <!-- form -->
+        <h1>Comment</h1>
+        <form action="{{ url_for('user_comment') }}" method="POST">
+            <textarea name="username" rows="4" cols="50" placeholder="Enter username..."></textarea><br>
+            <textarea name="message_content" rows="4" cols="50" placeholder="Enter comment..."></textarea><br>
+            <input type="submit" value="Save">
+        </form>
 
-        <div class="messages">
-            <h1>Message Board</h1>
-            <div class="form">
-                <input type="text" id="username" placeholder="Username">
-                <textarea id="message" placeholder="Message Content"></textarea>
-                <button id="submitbutton">Go</button>
-            </div>
-            <div id="messageboard">
+        <div class="message">
+                {% for text in texts %}
+                <div class="message-info">
+                    <div class="info">
+                        <div class="username">{{text.username}}</div>
+                        <div>{{text.date_added}}</div>
+                        <div class="content">{{text.message_content}}</div><br>
+                    </div>
+                </div>
+                {% endfor %}
+
+            <!-- <div id="messageboard">
                 <div class="message">
                     <div class="message-info">
                         <div class="info">
@@ -175,11 +186,11 @@
                     </div>
                     <div class="content">Hello World</div>
                 </div>
-            </div>
+            </div> -->
         </div>
 
     </body>
-    <script>
+    <!-- <script>
         //For "GO" button
         document.getElementById('submitbutton').addEventListener('click',function () {
         
@@ -224,5 +235,5 @@
             var minute = ('0' +now.getMinutes()).slice(-2);
             return date + '/' + month + '/' + year + ' ' + hour + ':' + minute;
         }
-    </script>
+    </script> -->
 </html>

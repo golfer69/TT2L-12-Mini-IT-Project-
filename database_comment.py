@@ -1,46 +1,41 @@
-from flask import Flask, render_template, request, redirect,  url_for 
-import sqlite3
+from flask import Flask, render_template, request, redirect, url_for 
+# import sqlite3
 from datetime import datetime
+from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///comment.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    return app
 
-# Create comment table
-def create_comment_table():
-    connection = sqlite3.connect("comment.db")
-    cursor = connection.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS comment
-                   ( id INTEGER NOT NULL PRIMARY KEY,
-                   username TEXT NOT NULL,
-                   message_content VARCHAR(255),
-                   date_added DATETIME )
-                   ''')
-    connection.commit()
-    connection.close()
+app=create_app()
 
-# Add comment to database
-    def add_comment(username, message_content, date_added):
-        connection = sqlite3.connect("comment.db")
-        cursor = connection.cursor()
-        cursor.execute('''INSERT INTO comment section (username, message_content, date_added)
-                       VALUES (?,?,?)''', (username, message_content, date_added))
-        connection.commit()
-        connection.close()
+db = SQLAlchemy(app)
+
+class Text(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255))
+    message_content = db.Column(db.String(255))
+    date_added = db.Column(db.DateTime, default=datetime.now)
 
 # Route for HTML file
-@app.route("/comment", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def user_comment():
-    if request.method == "GO":
+    if request.method == 'POST':
         username = request.form["username"]
         message_content = request.form["message_content"]
-        date_added = request.form["date_added"]
+        text = Text(username=username, message_content=message_content)
+        
+        db.session.add(text)
+        db.session.commit()
+        return redirect(url_for('user_comment'))
+    else:
+        texts = Text.query.all()
+        return render_template('comment.html', texts=texts)
 
-        # Add comment to database
-        add_comment(username, message_content, date_added)
-
-        # Render comment.html
-        return render_template("comment.html")
-    
 
 if __name__ == "__main__":
-    create_comment_table()
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
