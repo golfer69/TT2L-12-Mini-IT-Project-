@@ -1,8 +1,10 @@
+
 from flask import Flask, render_template, request, redirect, send_from_directory, url_for, flash
 from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, LoginManager, login_user, logout_user, current_user, login_required
+from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
+from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField
 from wtforms.validators import InputRequired, Length, ValidationError
@@ -12,14 +14,14 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY'] = 'chickenstuffe'
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
+    app.config['SQLALCHEMY_BINDS'] = {'text': 'sqlite:///text.db'}
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     return app
 
 app=create_app()
-db = SQLAlchemy(app) # Initialise database
+db = SQLAlchemy(app) 
 bcrypt=Bcrypt(app)
-
 login_manager=LoginManager()
 login_manager.init_app(app)
 login_manager.login_view='login'
@@ -32,8 +34,12 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
-    # email = db.Column(db.String(100), nullable=False, unique=True)
 
+class Text(db.Model):
+    __bind_key__ = 'text'  
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.String(255))
+    date_added = db.Column(db.DateTime, default=datetime.now)
 
 with app.app_context():
     db.create_all()
@@ -53,27 +59,43 @@ class LoginForm(FlaskForm):
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
 
-
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
     files = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    return render_template('index.html', files=files)
+    if request.method == 'POST':
+        content = request.form['content']
+        text = Text(content=content)
+        db.session.add(text)
+        db.session.commit()
+        db.session.close()
+        return redirect(url_for('index'))
+    else:
+        texts = Text.query.all()
+        return render_template('index.html', texts=texts, files=files)
+    
+
+@app.route('/uploads/<path:filename>')
+def serve_files(filename):
+    return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = RegisterForm()
     if form.validate_on_submit():
-        hashded_password= bcrypt.generate_password_hash(form.password.data)
-        new_user= User(username=form.username.data, password=hashded_password)
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
+        new_user= User(username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -87,36 +109,26 @@ def login():
             flash('Invalid username or password.', 'error')
     return render_template('login.html', form=form)
 
-
-@app.route('/logout', methods=['GET', 'POST'])
+@app.route('/logout')
 def logout():
     logout_user()
     return redirect(url_for('login'))
-
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
     return render_template('dashboard.html')
 
-
-
-@app.route('/upload', methods=['POST'])
-def upload():
-    file = request.files['file'] 
-    if file:
-        file.save(os.path.join(
-            app.config['UPLOAD_DIRECTORY'],
-            secure_filename(file.filename)
-        ))
-    return redirect('/')
-
-
-
-@app.route('/serve-files/<filename>', methods=['GET'])
-def serve_files(filename):
-    return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
-
+@app.route('/admin')
+@login_required
+def admin():
+    id= current_user.id
+    if id==5 or id==6:
+        return render_template('admin.html')
+    else:
+        flash("Only admins can access this page")
+        return redirect(url_for('index'))
 
 if  __name__ == '__main__':
     app.run(debug=True)
+
