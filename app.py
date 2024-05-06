@@ -15,7 +15,7 @@ def create_app():
     app.config['SECRET_KEY'] = 'chickenstuffe'
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
-    app.config['SQLALCHEMY_BINDS'] = {'text': 'sqlite:///text.db'}
+    app.config['SQLALCHEMY_BINDS'] = {'data': 'sqlite:///data.db'}
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     return app
 
@@ -36,7 +36,7 @@ class User(db.Model, UserMixin):
     password= db.Column(db.String(40), nullable=False)
 
 class Text(db.Model):
-    __bind_key__ = 'text'  
+    __bind_key__ = 'data'  
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
