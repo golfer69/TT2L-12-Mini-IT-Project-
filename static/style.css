@@ -24,9 +24,10 @@
 
 /* Center the entire app container */
 .app {
-  text-align: center;
+  text-align: left;
   margin: 0 auto;  /* Add margin for better centering */
-  top: 70px
+  top: 70px;
+  max-width:70%;
 }
 /* Remove list dots and add some padding to list items */
 .app li {

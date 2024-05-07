@@ -42,6 +42,7 @@ class User(db.Model, UserMixin):
 class Text(db.Model):
     __bind_key__ = 'data'  
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
@@ -74,9 +75,10 @@ def index():
 def upload():
     file = request.files['file']
     if request.method == 'POST':
+        title = request.form['title']
         content = request.form['content'] # get text from html form
         file = request.files['file']  # Access the uploaded file
-        text = Text(content=content)
+        text = Text(title=title, content=content)
         db.session.add(text)
         db.session.commit()
     

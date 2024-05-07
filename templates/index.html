@@ -14,7 +14,7 @@
     <a href="/">Home</a>
     {% if current_user.is_authenticated %}
       {% if current_user.id == 5 or current_user.id == 6 %}
-        <a href="{{url_for('admin')}}">Admin Page</a><br>
+        <a href="{{url_for('admin')}}">Admin Page</a>
       {% endif %}
     <a href="{{url_for('dashboard')}}">Dashboard</a>
     <a href="{{url_for('logout')}}">Log Out</a>
@@ -31,6 +31,7 @@
 
       {% for text in texts %}
       <a class="posts" href="{{ url_for('show_post', post_id=text.id) }}">  <li>
+          <h3>{{text.title}}</h3> <br>
           {{ text.content }}
           {% if text.image_filename %}
             <div style="display: flex; flex-direction: column;">
