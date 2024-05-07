@@ -10,8 +10,6 @@ from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
 
 
-
-
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY']='chickenstuffe'
@@ -34,11 +32,12 @@ login_manager.login_view='login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
-    posts= db.relationship('Post', backreg='posts')
+    posts= db.relationship('Post', backref='poster')
 
 class Post(db.Model):
     __bind_key__ = '_post_'
@@ -47,8 +46,7 @@ class Post(db.Model):
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
-    post_id=db.Column(db.Integer, db.ForeignKey('user_id'))
-
+    post_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
 with app.app_context():
     db.create_all()
@@ -81,8 +79,8 @@ def upload():
         title = request.form['title']
         content = request.form['content'] # get text from html form
         file = request.files['file']  # Access the uploaded file
-        the_poster=current_user.id
-        text = Post(content=content, post_id=the_poster, title=title)
+        the_poster= current_user.id
+        text = Post(title=title, content=content, post_id=the_poster)
         db.session.add(text)
         db.session.commit()
     
@@ -103,7 +101,7 @@ def upload():
 @app.route('/create', methods=['GET'])
 def create():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    texts = Text.query.all()
+    texts = Post.query.all()
     return render_template('create.html', texts=texts, pics=pics)
 
 
