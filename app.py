@@ -43,6 +43,7 @@ class User(db.Model, UserMixin):
 class Post(db.Model):
     __bind_key__ = '_post_'
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
@@ -77,10 +78,11 @@ def index():
 def upload():
     file = request.files['file']
     if request.method == 'POST':
+        title = request.form['title']
         content = request.form['content'] # get text from html form
         file = request.files['file']  # Access the uploaded file
         the_poster=current_user.id
-        text = Post(content=content, post_id=the_poster)
+        text = Post(content=content, post_id=the_poster, title=title)
         db.session.add(text)
         db.session.commit()
     
@@ -97,6 +99,13 @@ def upload():
             db.session.commit()
         
     return redirect('/')
+
+@app.route('/create', methods=['GET'])
+def create():
+    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
+    texts = Text.query.all()
+    return render_template('create.html', texts=texts, pics=pics)
+
 
 @app.route('/uploads/<path:filename>')
 def serve_files(filename):

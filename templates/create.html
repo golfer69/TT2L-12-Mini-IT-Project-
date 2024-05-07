@@ -1,0 +1,58 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Uploads</title>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
+  
+  <script>
+    function validateForm() {
+      var x = document.forms["post-form"]["title"].value;
+      if (x == "" || x == null) {
+        alert("Title must be filled out");
+        return false;
+      }
+    }
+    </script>
+
+</head>
+<body>
+
+<div class="navigation">
+    <a href="/">Home</a>
+    {% if current_user.is_authenticated %}
+      {% if current_user.id == 5 or current_user.id == 6 %}
+        <a href="{{url_for('admin')}}">Admin Page</a><br>
+      {% endif %}
+    <a href="{{url_for('dashboard')}}">Dashboard</a>
+    <a href="{{url_for('logout')}}">Log Out</a>
+    {% else %}
+    <a href="{{url_for('register')}}">Sign up</a>
+    <a href="{{url_for('login')}}">Log In</a>
+    {% endif %}
+</div>
+
+  <div class="app">
+    <div class="form-section">
+
+      {% if current_user.id == 5 or current_user.id == 6 %}
+        <h2>Administrator</h2>
+      {% endif %}
+
+      <h2>{{current_user.username}}</h2>
+    
+      <h2>Create a post</h2>
+
+      <form action="/upload" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+        <textarea name="title" rows="4" cols="50" placeholder="Title"></textarea><br>
+        <textarea name="content" rows="4" cols="50" placeholder="Your content"></textarea><br>
+        <input type="file" name="file">
+        <input type="submit" value="Upload">
+      </form>
+
+  </div>
+</body>
+</html>
