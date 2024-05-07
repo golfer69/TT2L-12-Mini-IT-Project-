@@ -17,7 +17,7 @@ def create_app():
     app.config['SECRET_KEY']='chickenstuffe'
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
-    app.config['SQLALCHEMY_BINDS'] = {'data': 'sqlite:///data.db'}
+    app.config['SQLALCHEMY_BINDS'] = {'_post_': 'sqlite:///post.db'}
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     return app
 
@@ -38,13 +38,16 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
+    posts= db.relationship('Post', backreg='posts')
 
-class Text(db.Model):
-    __bind_key__ = 'data'  
+class Post(db.Model):
+    __bind_key__ = '_post_'
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
+    post_id=db.Column(db.Integer, db.ForeignKey('user_id'))
+
 
 with app.app_context():
     db.create_all()
@@ -67,7 +70,7 @@ class LoginForm(FlaskForm):
 @app.route('/', methods=['GET'])
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    texts = Text.query.all()
+    texts = Post.query.all()
     return render_template('index.html', texts=texts, pics=pics)
 
 @app.route('/upload', methods=['POST'])
@@ -76,7 +79,8 @@ def upload():
     if request.method == 'POST':
         content = request.form['content'] # get text from html form
         file = request.files['file']  # Access the uploaded file
-        text = Text(content=content)
+        the_poster=current_user.id
+        text = Post(content=content, post_id=the_poster)
         db.session.add(text)
         db.session.commit()
     
@@ -150,7 +154,7 @@ def admin():
         return redirect(url_for('index'))
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
-  post = Text.query.get(post_id)
+  post = Post.query.get(post_id)
   if post:
     # Delete the post object from the database
     db.session.delete(post)
@@ -170,7 +174,7 @@ def delete_post(post_id):
 
 @app.route('/post/<int:post_id>', methods=['GET'])
 def show_post(post_id):
-    post = Text.query.get(post_id)
+    post = Post.query.get(post_id)
     if not post:
         return redirect('/')  # Handle non-existent post
     
