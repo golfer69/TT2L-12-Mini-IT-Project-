@@ -94,6 +94,13 @@ def upload():
         
     return redirect('/')
 
+@app.route('/create', methods=['GET'])
+def create():
+    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
+    texts = Text.query.all()
+    return render_template('create.html', texts=texts, pics=pics)
+
+
 @app.route('/uploads/<path:filename>')
 def serve_files(filename):
     return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
