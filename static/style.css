@@ -1,14 +1,10 @@
 :root {
-  --black: #000000;
   --almost-black: #080708;
   --blue: #3772FF;
   --blue-light: #1cb2f5;
-  --red: #DF2935;
-  --yellow: #FDCA40;
-  --light: #E6E8E6;
-  --white: #fff;
   --almost-blue: #212131;
   --almost-white:#e3e8ed;
+  --almost-grey:#bcbfc3;
 }
 
 * {
@@ -27,24 +23,8 @@
   text-align: center;
   margin: 0 auto;  /* Add margin for better centering */
   top: 70px;
-  max-width:70%;
-}
-/* Remove list dots and add some padding to list items */
-.app li {
-  margin: auto;
-  width: 60%;
-  padding: 10px;
-  list-style-type: none;
-  max-width: fit-content;
-  color: var(--almost-black);
 }
 
-/* Style the image */
-.app img {
-  max-width: 300px;  /* Set a maximum width for images */
-  max-height: 300px; /* Set a maximum height for images */
-  object-fit: cover;  /* Maintain aspect ratio and resize to fit within max dimensions */
-}
 input[type='file'] {
   margin: 0 0 12px;
   padding: 10px 10px;
@@ -75,24 +55,7 @@ button[type='button']:hover {
   box-shadow: inset 0 -25px 25px var(--blue-light);
 }
 
-.posts-section li {
-    border:1px solid black;
-    margin: 10px 0 0;
-    text-align: left;
-  }
-
-.posts-section a{
-  text-align: left;
-}
-
-.posts-section {
-  text-align: left;
-}
-
-.posts {
-  margin: 3px 0px;
-  text-align: left;
-}
+/* nav bar css */
 .navigation {
   overflow: hidden;
   position: fixed; 
@@ -121,13 +84,18 @@ button[type='button']:hover {
   color: var(--almost-black);
 }
 
-.btn {
-  background-color: #04AA6D !important;
-  border-radius: 5px;
+.navigation .btn {
+  background-color: white;
+  border-radius: 30px;
   font-size: 17px;
   font-family: 'Source Sans Pro', sans-serif;
-  padding: 6px 18px;
-  margin: 30px auto;
+  padding: 8px 16px;
+  margin: 7px 10px; 
+  float: right;
+}
+
+.navigation .btn:hover {
+  background-color: rgb(194, 194, 194); 
 }
 
 .previous-btn {
@@ -144,4 +112,50 @@ button[type='button']:hover {
   background-color: #000000;
   color: var(--almost-white);
   
+}
+
+/* posts section */
+.posts-section {
+ text-align: center;
+ width: 60vw;
+ margin: auto;
+}
+
+
+
+.posts-section li:hover {
+  background-color: var(--almost-grey);
+} 
+
+/* individual post on the main page */
+.posts {
+  padding: 15px 0px;
+  margin: 10px 0 10px 50px;
+  border-radius: 20px;
+  border-bottom: 1px solid var(--almost-grey);
+  text-align: left;
+}
+
+.posts:hover{
+  background-color: var(--almost-grey) !important;
+}
+.posts:hover h3,
+.posts:hover img,
+.posts:hover a{
+  background-color: var(--almost-grey) !important;
+}
+.posts h3 {
+  padding: 0 10px;
+}
+.posts img {
+  width: 50vw;  /* Set a maximum width for images */
+  height: 60vh; /* Set a maximum height for images */
+  object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
+}
+
+/* individual post page */
+.post img {
+  width: 50vw;  /* Set a maximum width for images */
+  height: 60vh; /* Set a maximum height for images */
+  object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }

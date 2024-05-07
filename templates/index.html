@@ -22,25 +22,24 @@
     <a href="{{url_for('register')}}">Sign up</a>
     <a href="{{url_for('login')}}">Log In</a>
     {% endif %}
+    <a class="btn" href="/create"> + Create</a>
 </div>
 
   <div class="app">
     <div class="posts-section">
-
-      <a class="btn" href="/create"> + Create</a>
-
       {% for text in texts %}
-      <a class="posts" href="{{ url_for('show_post', post_id=text.id) }}">  <li>
-          <h3>{{text.title}}</h3> <br>
-          {% if text.image_filename %}
-            <div style="display: flex; flex-direction: column;">
-              <img src="{{ url_for('serve_files', filename=text.image_filename) }}">
-            </div>
-            {% else %}
-              {{ text.content }}
-          {% endif %}
-        </li>
-      </a>
+      <div class="posts">      
+        <a href="{{ url_for('show_post', post_id=text.id) }}">  
+            <h3>{{text.title}}</h3> <br>
+            {% if text.image_filename %}
+              <!-- <div style="display: flex; flex-direction: column;"> -->
+                <img src="{{ url_for('serve_files', filename=text.image_filename) }}">
+              <!-- </div> -->
+              {% else %}
+                {{ text.content }}
+            {% endif %}
+        </a>
+      </div>
       {% endfor %}
 
       <!-- {% for text in texts %}
