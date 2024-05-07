@@ -24,7 +24,7 @@
 
 /* Center the entire app container */
 .app {
-  text-align: left;
+  text-align: center;
   margin: 0 auto;  /* Add margin for better centering */
   top: 70px;
   max-width:70%;
@@ -77,11 +77,21 @@ button[type='button']:hover {
 
 .posts-section li {
     border:1px solid black;
-    margin: 10px auto;
+    margin: 10px 0 0;
+    text-align: left;
   }
 
+.posts-section a{
+  text-align: left;
+}
+
+.posts-section {
+  text-align: left;
+}
+
 .posts {
-  margin: 3px auto;
+  margin: 3px 0px;
+  text-align: left;
 }
 .navigation {
   overflow: hidden;
@@ -118,4 +128,20 @@ button[type='button']:hover {
   font-family: 'Source Sans Pro', sans-serif;
   padding: 6px 18px;
   margin: 30px auto;
+}
+
+.previous-btn {
+  background-color: #04AA6D;
+  color: black;
+  text-decoration: none;
+  display: inline-block;
+  padding: 8px 16px;
+  right: 500px;
+  bottom: 0px;
+  border-radius: 12px;
+}
+.previous-btn:hover {
+  background-color: #000000;
+  color: var(--almost-white);
+  
 }

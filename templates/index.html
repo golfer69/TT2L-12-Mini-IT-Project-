@@ -32,11 +32,12 @@
       {% for text in texts %}
       <a class="posts" href="{{ url_for('show_post', post_id=text.id) }}">  <li>
           <h3>{{text.title}}</h3> <br>
-          {{ text.content }}
           {% if text.image_filename %}
             <div style="display: flex; flex-direction: column;">
               <img src="{{ url_for('serve_files', filename=text.image_filename) }}">
             </div>
+            {% else %}
+              {{ text.content }}
           {% endif %}
         </li>
       </a>
