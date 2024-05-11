@@ -46,6 +46,101 @@ class Text(db.Model):
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
 
+
+#user profile customization
+#sqlalchemy
+
+app.config['SQLALCHEMY_DATABASE_URI']='sqlite;/// profiles.db'
+
+#secret key 
+app.config['SECRET_KEY']='secret user profile'
+#initialize  the database
+
+db=SQLAlchemy
+#Upload picture feature
+
+class Users(db.Model):
+    id= db.Column(db.Integer,primary_key=True)
+    username= db.Column(db.String(10),nullable=False)
+    location=db.Column(db.String(20),nullable=False)
+    date_added= db.Column(db.DateTime,default=datetime.now)
+
+    #Create a string
+
+    def __repr__(self):
+        return '<Username%>' % self.name
+    
+
+    class Userform(FlaskForm):
+        username=StringField()
+
+UPLOAD_FOLDER='profile_uploads'
+allowed_extensions={'png','jpg','jpeg','gif'}
+
+app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
+
+def allowed_file(filename):
+    return filename.lower().endswith(('.png','.jpg','.jpeg','.gif'))
+
+@app.route('/')
+def index():
+    return render_template('profile.html')
+
+@app.route('/upload_profile',methods=['GET','POST'])
+def profile():
+    if request.method=='POST':
+        if 'file' not in request.files:
+            return redirect(request.url)
+        
+        file=request.files['file']
+
+        if file.filename == '':
+            return redirect(request.url)
+        
+        if file and allowed_file(file.filename):
+            filename=secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
+          
+
+        else:
+            return redirect(request.url)
+
+
+
+# Create user table 
+def create_user_table():
+
+    class Text(db.Model):
+     __bind_key__ = 'data'  
+id = db.Column(db.Integer, primary_key=True)
+username = db.Column(db.String(255))
+bio = db.Column(db.String(50))
+image_filename = db.Column(db.String(255))
+
+# Add user to database 
+
+
+# Route for HTML file 
+@app.route("/", methods=["GET", "POST"])
+def user_profile():
+    if request.method == "POST":
+     username = request.form["username"]
+     bio = request.form["bio"]
+       
+        # Redirect to user profile page
+    return redirect(url_for("thank_you"))
+
+    # render profile.html
+    return render_template("profile.html")
+
+
+@app.route("/thank-you")
+def thank_you():
+    return "Your profile is successfully saved !"
+
+
+
+
 with app.app_context():
     db.create_all()
 
