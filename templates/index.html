@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,9 +9,46 @@
   <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
 </head>
 <body>
+
+
+  <!-- <nav class="navbar">
+    <div class="navbar-container">
+      <div class="navbar-section section1">
+        <a href="#">Home</a>
+      </div>
+      <div class="navbar-section section2">
+        <a href="#">About</a>
+      </div>
+      <div class="navbar-section section3">
+        <a href="#">Services</a>
+      </div>
+      <div class="navbar-section section4">
+        <a href="#">Contact</a>
+      </div>
+    </div>
+  </nav> -->
+
+  {% if current_user.is_authenticated %}
+    {% if current_user.id == 5 or current_user.id == 6 %}
+      <a href="{{url_for('admin')}}">Admin Page</a><br>
+    {% endif %}
+    <a href="{{url_for('dashboard')}}">Dashboard</a><br>
+    <a href="{{url_for('logout')}}">Log Out</a>
+  {% else %}
+    <a href="{{url_for('register')}}">Sign up</a> <br>
+    <a href="{{url_for('login')}}">Log In</a><br>
+  {% endif %}
+  
+
   <div class="app">
     
     <div class="form-section">
+
+      {% if current_user.id == 5 or current_user.id == 6 %}
+        <h2>Administrator</h2>
+      {% endif %}
+
+      <h2>{{current_user.username}}</h2>
       
       <h1>Text Saver</h1>
       <form action="{{ url_for('index') }}" method="POST">
