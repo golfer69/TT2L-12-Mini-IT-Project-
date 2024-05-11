@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='loginreg.css')}}">
     <title>Register Page</title>
 </head>
 <body>
-    <h1>Register Page</h1><br>
-    <form method="POST" action="">
+    <div class="app">
+        <a href="{{ url_for('index') }}" class="previous-btn round"> &laquo; Previous </a>
+
+        <h1>Register Page</h1><br>
+        <form method="POST" action="">
         {{ form.hidden_tag() }}
         <div>
             {{ form.username.label }}
@@ -21,6 +25,8 @@
         <div>
             {{ form.submit }}
         </div>
-    </form>
+        </form>
+    </div>
+    
 </body>
 </html>
