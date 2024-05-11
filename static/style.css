@@ -159,3 +159,23 @@ button[type='button']:hover {
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }
+
+input[type=text] {
+  width: 40vw;
+  padding: 12px 20px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: 1px solid black;
+  border-radius: 10px;
+}
+
+.form-content {
+  max-width: 40vw;
+  width: 40vw;
+  height:auto;
+  padding: 12px 20px;
+  margin: 8px 0;
+  box-sizing: border-box;
+  border: 1px solid black;
+  border-radius: 10px;
+}
