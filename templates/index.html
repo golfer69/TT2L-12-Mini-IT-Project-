@@ -1,45 +1,61 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Uploads</title>
+  <title>MMU Reddit</title>
   <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
 </head>
 <body>
+
+<div class="navigation">
+    <a href="/">Home</a>
+    {% if current_user.is_authenticated %}
+      {% if current_user.id == 5 or current_user.id == 6 %}
+        <a href="{{url_for('admin')}}">Admin Page</a>
+      {% endif %}
+    <a href="{{url_for('dashboard')}}">Dashboard</a>
+    <a href="{{url_for('logout')}}">Log Out</a>
+    {% else %}
+    <a href="{{url_for('register')}}">Sign up</a>
+    <a href="{{url_for('login')}}">Log In</a>
+    {% endif %}
+    <a class="btn" href="/create"> + Create</a>
+</div>
+
   <div class="app">
-    
-    <div class="form-section">
-      
-      <h1>Text Saver</h1>
-      <form action="{{ url_for('index') }}" method="POST">
-          <textarea name="content" rows="4" cols="50"></textarea><br>
-          <input type="submit" value="Save">
-      </form>
-      <h2>Saved Texts</h2>
-      <ul>
-          {% for text in texts %}
-              <li>{{ text.content }}</li>
-          {% endfor %}
-      </ul>
-
-      <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Upload">
-      </form>
-
-    </div>
-
-    <div class="images-section">
-
-      {% for file in files: %}
-        <a href="{{ url_for('serve_files', filename=file) }}" target="_blank">
-          <img src="{{ url_for('serve_files', filename=file) }}">
+    <div class="posts-section">
+      {% for text in texts %}
+      <div class="posts">      
+        <a href="{{ url_for('show_post', post_id=text.id) }}">  
+            <h3>{{text.title}}</h3> <br>
+            {% if text.image_filename %}
+              <!-- <div style="display: flex; flex-direction: column;"> -->
+                <img src="{{ url_for('serve_files', filename=text.image_filename) }}">
+              <!-- </div> -->
+              {% else %}
+                {{ text.content }}
+            {% endif %}
         </a>
+      </div>
       {% endfor %}
-    </div>
-    
+
+      <!-- {% for text in texts %}
+      <li>
+        {{ text.content }}
+        {% if text.image_filename %}
+          <div style="display: flex; flex-direction: column;">
+            <a href="{{ url_for('serve_files', filename=text.image_filename) }}" target="_blank">
+              <img src="{{ url_for('serve_files', filename=text.image_filename) }}">
+            </a>
+          </div>
+        {% endif %}
+      </li>
+      {% endfor %} -->
+
+      </div>
   </div>
 </body>
 </html>
