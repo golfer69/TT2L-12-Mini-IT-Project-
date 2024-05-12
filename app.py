@@ -5,10 +5,10 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, StringField, PasswordField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms import SubmitField, StringField, PasswordField, EmailField
+from wtforms.validators import InputRequired, Length, ValidationError, DataRequired
 from flask_bcrypt import Bcrypt
-
+from itsdangerous import TimedSerializer
 
 def create_app():
     app = Flask(__name__)
@@ -37,6 +37,21 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
+    email= db.Column(db.String(200), nullable=False, unique=True)
+
+    def get_reset_token(self, expire_sec=1800):
+        seconds = TimedSerializer(app.config['SECRET_KEY'], expire_sec)
+        return seconds.dumps({'user_id': self.id}).decode('utf-8')
+
+    @staticmethod
+    def verify_reset_token(token):
+        seconds = TimedSerializer(app.config['SECRET_KEY'])
+        try:
+            user_id=seconds.loads(token)['user_id']
+        except:
+            return None
+        return User.query.get(user_id)
+
 
 
 class Post(db.Model):
@@ -53,6 +68,7 @@ class Post(db.Model):
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
+    password= EmailField(validators=[InputRequired(), Length(min=40, max=100)], render_kw={'placeholder':'Email'})
     submit= SubmitField('Register')
 
     def validate_username(self, username):
@@ -60,10 +76,31 @@ class RegisterForm(FlaskForm):
         if existing_username:
             raise ValidationError('That username already exists. Please choose another one')
 
+    def validate_username(self, email):
+        existing_email=User.query.filter_by(email=email.data).first()
+        if existing_email:
+            raise ValidationError('That email already exists. Please choose another one')
+
+
 class LoginForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
+
+class RequestResetForm(FlaskForm):
+    password= PasswordField(validators=[DataRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
+    submit= SubmitField('Request Password Reset')
+    def validate_username(self, username):
+        existing_username=User.query.filter_by(username=username.data).first()
+        if existing_username is None:
+            raise ValidationError('There is no account with that username. You must register first.')
+
+
+class ResetPasswordForm(FlaskForm):
+    password=PasswordField('Password', validators=[DataRequired()])
+    confirm_password=PasswordField('Confirm Password', validators=[DataRequired()])
+    submit= SubmitField('Reset Password')
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -186,6 +223,25 @@ def show_post(post_id):
         return redirect('/')  # Handle non-existent post
     
     return render_template('post.html',post=post)  # Render a separate template for single post
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form=RequestResetForm()
+    return render_template('reset_request.html', title='Reset Password', form=form)
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    user=user.verify_reset_token(token)
+    if user is None:
+        flash("that is an invalid or expired token", 'warning')
+        return redirect(url_for('reset_request'))
+    form= ResetPasswordForm()
+    return render_template('reset_token.html', title='Reset Password', form=form)
+
 
 if  __name__ == '__main__':
     with app.app_context():

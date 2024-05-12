@@ -12,6 +12,10 @@
         <form method="POST" action="">
         {{ form.hidden_tag() }}
         <div>
+            {{ form.email.label }}
+            {{ form.email }}
+        </div>
+        <div>
             {{ form.username.label }}
             {{ form.username }}
             {% for error in form.username.errors %}
