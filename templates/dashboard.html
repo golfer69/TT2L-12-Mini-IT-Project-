@@ -14,11 +14,4 @@
     <a href="{{url_for('logout')}}">Log Out</a>
     <p>{{current_user.username}}</p>
     {%endif%}
-
-    <h2>Change Username</h2>
-    <form action="/dashboard"{{user.id}} METHOD="POST">
-      <input type="text" placeholder="Username" name="username" value="{{user_to_update.username}}">
-      <input type="submit" value="Change Username" class="btn btn-secondary">
-    </form>
-    <h2>Change Password</h2>
 </html>

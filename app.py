@@ -38,7 +38,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
-    posts= db.relationship('Post', back_populates='poster')
+    posts= db.relationship('Post', backref='poster', lazy=True)
 
 class Post(db.Model):
     __bind_key__ = '_post_'
@@ -47,7 +47,7 @@ class Post(db.Model):
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
-    post_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable= False)
 
 with app.app_context():
     db.create_all()
@@ -146,18 +146,10 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/dashboard/<int:id>', methods=['GET', 'POST'])
+@app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    user_to_update=User.query.get_or_404(id)
-    if request.method=='POST':
-        user_to_update.username= request.form[username]
-        try:
-            db.session.commit()
-        except:
-            print('There was an error changing your username')
-    else:
-        return render_template('dashboard.html', user_to_update=user_to_update)
+    return render_template('dashboard.html', user=current_user)
     
 
 @app.route('/admin')
