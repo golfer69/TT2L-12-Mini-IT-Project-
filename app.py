@@ -33,12 +33,12 @@ login_manager.login_view='login'
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-
 class User(db.Model, UserMixin):
+    _tablename_='user'
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
-    posts= db.relationship('Post', backref='poster', lazy=True)
+
 
 class Post(db.Model):
     __bind_key__ = '_post_'
@@ -47,10 +47,9 @@ class Post(db.Model):
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
-    post_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable= False)
 
-with app.app_context():
-    db.create_all()
+
+
 
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
@@ -149,7 +148,7 @@ def logout():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    return render_template('dashboard.html', user=current_user)
+    return render_template('dashboard.html')
     
 
 @app.route('/admin')
@@ -190,5 +189,7 @@ def show_post(post_id):
     return render_template('post.html',post=post)  # Render a separate template for single post
 
 if  __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
 
