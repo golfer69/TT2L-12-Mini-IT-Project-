@@ -12,7 +12,7 @@
         <a href="/">Home</a>
         {% if current_user.is_authenticated %}
           {% if current_user.id == 5 or current_user.id == 6 %}
-            <a href="{{url_for('admin')}}">Admin Page</a><br>
+            <a href="{{url_for('admin')}}">Admin Page</a>
           {% endif %}
         <a href="{{url_for('dashboard')}}">Dashboard</a>
         <a href="{{url_for('logout')}}">Log Out</a>
@@ -24,19 +24,25 @@
     
 
     <div class="app">
+
+        <!-- button to go back -->
+        <a href="{{ url_for('index') }}" class="previous-btn round"> &laquo; Previous </a>
+ 
+        <!-- display content -->
+        <h2>{{post.title}}</h2> <br>
+        <p>{{ post.content }}</p>
+
         <!-- check if theres img -->
         {% if post.image_filename %} 
-        <div>
+        <div class="post">
             <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
         </div>
         {% endif %}
-        <!-- display content -->
-        <p>{{ post.content }}</p>
-        <!-- button to go back -->
-        <a href="{{ url_for('index') }}">Back to Posts</a>
+
+        <!-- delete button -->
         {% if current_user.is_authenticated %}
             {% if current_user.id == 5 or current_user.id == 6 %}
-        <!-- delete button -->
+        
             <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST">
                 <button type="submit">Delete</button>
                 {% endif %}
