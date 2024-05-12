@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, send_from_directory
 from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import relationship
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from flask_wtf import FlaskForm
@@ -37,7 +38,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
-    posts= db.relationship('Post', backref='poster')
+    posts= db.relationship('Post', back_populates='poster')
 
 class Post(db.Model):
     __bind_key__ = '_post_'
@@ -145,10 +146,19 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/dashboard/<int:id>', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    user_to_update=User.query.get_or_404(id)
+    if request.method=='POST':
+        user_to_update.username= request.form[username]
+        try:
+            db.session.commit()
+        except:
+            print('There was an error changing your username')
+    else:
+        return render_template('dashboard.html', user_to_update=user_to_update)
+    
 
 @app.route('/admin')
 @login_required
