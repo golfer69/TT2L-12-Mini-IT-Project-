@@ -8,7 +8,8 @@ from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
-
+from sqlalchemy.orm import relationship 
+from sqlalchemy import ForeignKey
 
 
 
@@ -17,7 +18,10 @@ def create_app():
     app.config['SECRET_KEY']='chickenstuffe'
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
-    app.config['SQLALCHEMY_BINDS'] = {'data': 'sqlite:///data.db'}
+    app.config['SQLALCHEMY_BINDS'] = {
+        'data': 'sqlite:///data.db',
+        'comment': 'sqlite:///comment.db'
+        }
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     return app
 
@@ -41,14 +45,25 @@ class User(db.Model, UserMixin):
 
 class Text(db.Model):
     __bind_key__ = 'data'  
+    __tablename__ = 'text'
+
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
+    id_for_comments = db.relationship('Comment', backref='text', lazy=True)
+    
 
+class Comment(db.Model):
+    _bind_key__ = 'comment'
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey('text.id'))  # Foreign key referencing Text.id
+    comment_content = db.Column(db.Text)
+# create database
 with app.app_context():
-    db.create_all()
+    # Create Text table first
+    db.create_all([Text, Comment])
 
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
@@ -157,6 +172,7 @@ def admin():
     else:
         flash("Only admins can access this page")
         return redirect(url_for('index'))
+    
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
   post = Text.query.get(post_id)
@@ -180,10 +196,23 @@ def delete_post(post_id):
 @app.route('/post/<int:post_id>', methods=['GET'])
 def show_post(post_id):
     post = Text.query.get(post_id)
+    comments = Comment.query.all()
+    
+
+    if request.method == 'POST':
+        username = request.form["username"] # account will handle this part
+        comment_content = request.form["comment_content"]
+
+        comment = Comment(username=username, comment_content=comment_content)
+        
+        db.session.add(comment)
+        db.session.commit()
+        return redirect(url_for('show_post'), comments=comments)
+
     if not post:
         return redirect('/')  # Handle non-existent post
-    
-    return render_template('post.html',post=post)  # Render a separate template for single post
+        
+    return render_template('post.html',post=post, comments=comments)
 
 if  __name__ == '__main__':
     app.run(debug=True)

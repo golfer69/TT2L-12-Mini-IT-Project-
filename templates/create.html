@@ -10,7 +10,7 @@
   
   <script>
     function validateForm() {
-      var x = document.forms["post-form"]["title"].value;
+      var x = document.forms["post-form"]["form-title"].value;
       if (x == "" || x == null) {
         alert("Title must be filled out");
         return false;
@@ -48,8 +48,8 @@
       <h2>Create a post</h2>
 
       <form action="/upload" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
-        <input type="text" name="form-title" placeholder="Title"><br>
-        <textarea type="text" name="form-content"  class="form-content" placeholder="Content"></textarea><br>
+        <input type="text" name="title" placeholder="Title"><br>
+        <textarea type="text" name="content"  class="form-content" placeholder="Content"></textarea><br>
         <input type="file" name="file">
         <input type="submit" value="Upload">
       </form>
