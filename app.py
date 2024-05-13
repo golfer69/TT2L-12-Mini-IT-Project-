@@ -42,10 +42,12 @@ class User(db.Model, UserMixin):
 class Text(db.Model):
     __bind_key__ = 'data'  
     id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
 
+<<<<<<< HEAD
 #user profile customization
 #sqlalchemy
 
@@ -164,6 +166,8 @@ def thank_you():
 
 
 
+=======
+>>>>>>> main
 with app.app_context():
     db.create_all()
 
@@ -276,6 +280,16 @@ def index():
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['file']
+<<<<<<< HEAD
+=======
+    if request.method == 'POST':
+        title = request.form['title']
+        content = request.form['content'] # get text from html form
+        file = request.files['file']  # Access the uploaded file
+        text = Text(title=title, content=content)
+        db.session.add(text)
+        db.session.commit()
+>>>>>>> main
     
     if file:
         file.save(os.path.join(
@@ -284,6 +298,13 @@ def upload():
         ))
     
     return redirect('/')
+
+@app.route('/create', methods=['GET'])
+def create():
+    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
+    texts = Text.query.all()
+    return render_template('create.html', texts=texts, pics=pics)
+
 
 @app.route('/uploads/<path:filename>')
 def serve_files(filename):
@@ -368,8 +389,12 @@ def show_post(post_id):
     
     return render_template('post.html',post=post)  # Render a separate template for single post
 
+<<<<<<< HEAD
 
 if  __name__ == '__main__':
      with app.app_context():
         db.create_all()
+=======
+if  __name__ == '__main__':
+>>>>>>> main
     app.run(debug=True)

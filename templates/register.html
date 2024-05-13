@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='loginreg.css')}}">
+    <title>Register Page</title>
+</head>
+<body>
+    <div class="app">
+        <a href="{{ url_for('index') }}" class="previous-btn round"> &laquo; Previous </a>
+
+        <h1>Register Page</h1><br>
+        <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.username.label }}
+            {{ form.username }}
+            {% for error in form.username.errors %}
+                <span style="color: red;">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            {{ form.password.label }}
+            {{ form.password }}
+        </div>
+        <div>
+            {{ form.submit }}
+        </div>
+        </form>
+    </div>
+    
+</body>
+</html>
