@@ -63,7 +63,7 @@ class Comment(db.Model):
 # create database
 with app.app_context():
     # Create Text table first
-    db.create_all([Text, Comment])
+    db.create_all()
 
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
