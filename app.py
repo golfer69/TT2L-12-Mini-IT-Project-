@@ -47,205 +47,6 @@ class Text(db.Model):
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
 
-<<<<<<< HEAD
-#user profile customization
-#sqlalchemy
-
-app.config['SQLALCHEMY_DATABASE_URI']='sqlite;/// profiles.db'
-
-#secret key 
-app.config['SECRET_KEY']='secret user profile'
-#initialize  the database
-
-db=SQLAlchemy
-#Upload picture feature
-
-class Users(db.Model):
-    id= db.Column(db.Integer,primary_key=True)
-    username= db.Column(db.String(10),nullable=False)
-    location=db.Column(db.String(20),nullable=False)
-    date_added= db.Column(db.DateTime,default=datetime.now)
-
-    #Create a string
-
-    def __repr__(self):
-        return '<Username%>' % self.name
-    
-
-    class Userform(FlaskForm):
-        username=StringField()
-
-UPLOAD_FOLDER='profile_uploads'
-allowed_extensions={'png','jpg','jpeg','gif'}
-
-app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
-
-def allowed_file(filename):
-    return filename.lower().endswith(('.png','.jpg','.jpeg','.gif'))
-
-@app.route('/')
-def index():
-    return render_template('profile.html')
-
-@app.route('/upload_profile',methods=['GET','POST'])
-def profile():
-    if request.method=='POST':
-        if 'file' not in request.files:
-            return redirect(request.url)
-        
-        file=request.files['file']
-
-        if file.filename == '':
-            return redirect(request.url)
-        
-        if file and allowed_file(file.filename):
-            filename=secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-          
-
-        else:
-            return redirect(request.url)
-
-# Create comment database
-# sqlalchemy 
-app.config['SQLALCHEMY_DATABASE_URI']='sqlite;/// comment.db'
-
-db= SQLAlchemy(app)
-
-class Text(db.Model):
-     id = db.Column(db.Integer, primary_key=True)
-     username = db.Column(db.String(255))
-     message_content = db.Column(db.String(255))
-     date_added = db.Column(db.DateTime, default=datetime.now)
-
-@app.route('/comment', methods=['GET', 'POST'])
-def user_comment():
-    if request.method == 'POST':
-        username = request.form["username"]
-        message_content = request.form["message_content"]
-        text = Text(username=username, message_content=message_content)
-        
-        db.session.add(text)
-        db.session.commit()
-        return redirect(url_for('user_comment'))
-    else:
-        texts = Text.query.all()
-        return render_template('comment.html', texts=texts)
-
-# Create user table 
-def create_user_table():
-
-    class Text(db.Model):
-     __bind_key__ = 'data'  
-id = db.Column(db.Integer, primary_key=True)
-username = db.Column(db.String(255))
-bio = db.Column(db.String(50))
-image_filename = db.Column(db.String(255))
-
-# Add user to database 
-
-
-# Route for HTML file 
-@app.route("/", methods=["GET", "POST"])
-def user_profile():
-    if request.method == "POST":
-     username = request.form["username"]
-     bio = request.form["bio"]
-       
-        # Redirect to user profile page
-    return redirect(url_for("thank_you"))
-
-    # render profile.html
-    return render_template("profile.html")
-
-
-@app.route("/thank-you")
-def thank_you():
-    return "Your profile is successfully saved !"
-
-
-
-
-=======
->>>>>>> main
-with app.app_context():
-    db.create_all()
-
-class RegisterForm(FlaskForm):
-    username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
-    password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
-    submit= SubmitField('Register')
-
-    def validate_username(self, username):
-        existing_username=User.query.filter_by(username=username.data).first()
-        if existing_username:
-            raise ValidationError('That username already exists. Please choose another one')
-
-class LoginForm(FlaskForm):
-    username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
-    password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
-    submit= SubmitField('Login')
-
-@app.route('/', methods=['GET', 'POST'])
-#user profile customization
-#sqlalchemy
-
-app.config['SQLALCHEMY_DATABASE_URI']='sqlite;/// profiles.db'
-
-#secret key 
-app.config['SECRET_KEY']='secret user profile'
-#initialize  the database
-
-db=SQLAlchemy
-#Upload picture feature
-
-class Users(db.Model):
-    id= db.Column(db.Integer,primary_key=True)
-    username= db.Column(db.String(10),nullable=False)
-    location=db.Column(db.String(20),nullable=False)
-    date_added= db.Column(db.DateTime,default=datetime.now)
-
-    #Create a string
-
-    def __repr__(self):
-        return '<Username%>' % self.name
-    
-
-    class Userform(FlaskForm):
-        username=StringField()
-
-UPLOAD_FOLDER='profile_uploads'
-allowed_extensions={'png','jpg','jpeg','gif'}
-
-app.config['UPLOAD_FOLDER']=UPLOAD_FOLDER
-
-def allowed_file(filename):
-    return filename.lower().endswith(('.png','.jpg','.jpeg','.gif'))
-
-@app.route('/')
-def index():
-    return render_template('profile.html')
-
-@app.route('/upload_profile',methods=['GET','POST'])
-def profile():
-    if request.method=='POST':
-        if 'file' not in request.files:
-            return redirect(request.url)
-        
-        file=request.files['file']
-
-        if file.filename == '':
-            return redirect(request.url)
-        
-        if file and allowed_file(file.filename):
-            filename=secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'],filename))
-          
-
-        else:
-            return redirect(request.url)
-
-
 with app.app_context():
     db.create_all()
 
@@ -266,22 +67,13 @@ class LoginForm(FlaskForm):
 
 @app.route('/', methods=['GET'])
 def index():
-    files = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    if request.method == 'POST':
-        content = request.form['content']
-        text = Text(content=content)
-        db.session.add(text)
-        db.session.commit()
-        return redirect(url_for('index'))
-    else:
-        texts = Text.query.all()
-        return render_template('index.html', texts=texts, files=files)
+    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
+    texts = Text.query.all()
+    return render_template('index.html', texts=texts, pics=pics)
 
 @app.route('/upload', methods=['POST'])
 def upload():
     file = request.files['file']
-<<<<<<< HEAD
-=======
     if request.method == 'POST':
         title = request.form['title']
         content = request.form['content'] # get text from html form
@@ -289,14 +81,19 @@ def upload():
         text = Text(title=title, content=content)
         db.session.add(text)
         db.session.commit()
->>>>>>> main
     
-    if file:
-        file.save(os.path.join(
-            app.config['UPLOAD_DIRECTORY'],
-            secure_filename(file.filename)
-        ))
-    
+        if file:
+
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(
+                app.config['UPLOAD_DIRECTORY'],
+                secure_filename(file.filename)
+            ))
+
+            text.image_filename = filename
+            db.session.add(text)
+            db.session.commit()
+        
     return redirect('/')
 
 @app.route('/create', methods=['GET'])
@@ -360,7 +157,6 @@ def admin():
     else:
         flash("Only admins can access this page")
         return redirect(url_for('index'))
-
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
   post = Text.query.get(post_id)
@@ -389,12 +185,5 @@ def show_post(post_id):
     
     return render_template('post.html',post=post)  # Render a separate template for single post
 
-<<<<<<< HEAD
-
 if  __name__ == '__main__':
-     with app.app_context():
-        db.create_all()
-=======
-if  __name__ == '__main__':
->>>>>>> main
     app.run(debug=True)
