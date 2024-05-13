@@ -47,9 +47,6 @@ class Text(db.Model):
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
 
-with app.app_context():
-    db.create_all()
-
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
@@ -186,5 +183,7 @@ def show_post(post_id):
     return render_template('post.html',post=post)  # Render a separate template for single post
 
 if  __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
 
