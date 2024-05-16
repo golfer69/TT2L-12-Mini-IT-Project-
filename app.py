@@ -17,11 +17,7 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY']='chickenstuffe'
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
-    app.config['SQLALCHEMY_BINDS'] = {
-        'data': 'sqlite:///data.db',
-        'comment': 'sqlite:///comment.db'
-        }
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     return app
 
@@ -39,14 +35,13 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 class User(db.Model, UserMixin):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
 
-class Text(db.Model):
-    __bind_key__ = 'data'  
-    __tablename__ = 'text'
-
+class Post(db.Model):  
+    __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
     content = db.Column(db.String(255))
@@ -56,10 +51,13 @@ class Text(db.Model):
     
 
 class Comment(db.Model):
-    _bind_key__ = 'comment'
+    __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
-    post_id = db.Column(db.Integer, db.ForeignKey('text.id'))  # Foreign key referencing Text.id
+    username = db.Column(db.String(255))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
     comment_content = db.Column(db.Text)
+
+
 # create database
 with app.app_context():
     # Create Text table first
@@ -83,7 +81,7 @@ class LoginForm(FlaskForm):
 @app.route('/', methods=['GET'])
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    texts = Text.query.all()
+    texts = Post.query.all()
     return render_template('index.html', texts=texts, pics=pics)
 
 @app.route('/upload', methods=['POST'])
@@ -93,7 +91,7 @@ def upload():
         title = request.form['title']
         content = request.form['content'] # get text from html form
         file = request.files['file']  # Access the uploaded file
-        text = Text(title=title, content=content)
+        text = Post(title=title, content=content)
         db.session.add(text)
         db.session.commit()
     
@@ -114,7 +112,7 @@ def upload():
 @app.route('/create', methods=['GET'])
 def create():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    texts = Text.query.all()
+    texts = Post.query.all()
     return render_template('create.html', texts=texts, pics=pics)
 
 
@@ -175,7 +173,7 @@ def admin():
     
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
-  post = Text.query.get(post_id)
+  post = Post.query.get(post_id)
   if post:
     # Delete the post object from the database
     db.session.delete(post)
@@ -193,26 +191,53 @@ def delete_post(post_id):
           
   return redirect('/')
 
-@app.route('/post/<int:post_id>', methods=['GET'])
-def show_post(post_id):
-    post = Text.query.get(post_id)
-    comments = Comment.query.all()
+# @app.route('/post/<int:post_id>', methods=['GET','POST'])
+# def show_post(post_id):
+#     post = Post.query.get(post_id)
+#     comments = Comment.query.all()
     
 
-    if request.method == 'POST':
-        username = request.form["username"] # account will handle this part
-        comment_content = request.form["comment_content"]
+#     if request.method == 'POST':
+#         username = request.form["username"] # account will handle this part
+#         comment_content = request.form["comment_content"]
 
-        comment = Comment(username=username, comment_content=comment_content)
+#         comment = Comment(username=username, comment_content=comment_content)
         
+#         db.session.add(comment)
+#         db.session.commit()
+#         return redirect(url_for('show_post'), comments=comments)
+
+#     if not post:
+#         return redirect('/')  # Handle non-existent post
+        
+#     return render_template('post.html',post=post, comments=comments)
+
+@app.route('/post/<int:post_id>', methods=['GET', 'POST'])
+def show_post(post_id):
+    post = Post.query.get(post_id)
+    comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
+
+    if request.method == 'POST':
+        username = request.form["username"]
+        comment_content = request.form["comment-content"]
+        post_id = request.form["post_id"]  # Access post ID from the hidden field
+
+        # Validate user input (optional)
+        # if not username or not comment_content:
+        #     # Handle invalid input (e.g., display error message)
+        #     pass
+
+        comment = Comment(username=username, comment_content=comment_content, post_id=post_id)
         db.session.add(comment)
         db.session.commit()
-        return redirect(url_for('show_post'), comments=comments)
+
+        # Redirect back to the updated post page using the correct post ID
+        return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
 
     if not post:
         return redirect('/')  # Handle non-existent post
-        
-    return render_template('post.html',post=post, comments=comments)
+
+    return render_template('post.html', post=post, comments=comments)
 
 if  __name__ == '__main__':
     app.run(debug=True)

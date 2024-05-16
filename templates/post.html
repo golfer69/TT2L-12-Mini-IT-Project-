@@ -41,18 +41,27 @@
         
         <div class="comment-section">
             <h1>Comment section</h1>
-            <form action="{{ url_for('user_comment') }}" method="POST">
+            <!-- <form action="{{ '/post/<int:post_id>' }}" method="POST">
+                <input type="hidden" name="post_id" value="{{ post_id }}">
+                <textarea name="username" rows="4" cols="50" placeholder="Enter username..."></textarea><br>
+                <textarea name="comment-content" rows="4" cols="50" placeholder="Enter comment..."></textarea><br>
+                <input type="submit" value="Save">
+                
+            </form> -->
+            <form action="{{ url_for('show_post', post_id=post.id) }}" method="POST">
+                <input type="hidden" name="post_id" value="{{ post.id }}">  
                 <textarea name="username" rows="4" cols="50" placeholder="Enter username..."></textarea><br>
                 <textarea name="comment-content" rows="4" cols="50" placeholder="Enter comment..."></textarea><br>
                 <input type="submit" value="Save">
             </form>
+            
 
             <div class="comments">
                     {% for comment in comments %}
                     <div>
                         <div class="info">
                             <div class="username">{{comment.username}}</div>
-                            <div>{{text.date_added}}</div>
+                            <div>{{comment.date_added}}</div>
                             <div class="comment-content">{{comment.comment_content}}</div><br>
                         </div>
                     </div>

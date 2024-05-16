@@ -123,9 +123,9 @@ button[type='button']:hover {
 
 
 
-.posts-section li:hover {
+/* .posts-section li:hover {
   background-color: var(--almost-grey);
-} 
+}  */
 
 /* individual post on the main page */
 .posts {
@@ -143,6 +143,7 @@ button[type='button']:hover {
 .posts:hover img,
 .posts:hover a{
   background-color: var(--almost-grey) !important;
+  display: block;
 }
 .posts h3 {
   padding: 0 10px;
@@ -159,6 +160,8 @@ button[type='button']:hover {
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }
+
+
 
 input[type=text] {
   width: 40vw;
