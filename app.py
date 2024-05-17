@@ -6,12 +6,11 @@ from flask_login import UserMixin, LoginManager, login_user, logout_user, login_
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField
-from wtforms.validators import InputRequired, Length, ValidationError
+from wtforms.validators import InputRequired, Length, ValidationError, DataRequired
 from flask_bcrypt import Bcrypt
-# from itsdangerous import TimedSerializer
-# from flask_mail import Mail, Message
-# from sqlalchemy.orm import relationship 
-# from sqlalchemy import ForeignKey
+from itsdangerous import URLSafeTimedSerializer as Serializer
+from flask_mail import Mail, Message
+
 
 
 
@@ -23,11 +22,17 @@ def create_app():
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['MAIL_SERVER']='smtp.gmail.com'
+    app.config['MAIL_PORT']=587
+    app.config['MAIL_USE_TLS']=True
+    app.config['MAIL_USERNAME'] = 'halimalif13@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'alifakmalbinabdulhalim'
     return app
 
 app=create_app()
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
+mail=Mail(app)
 
 
 
@@ -47,7 +52,19 @@ class User(db.Model, UserMixin):
     email= db.Column(db.String(80), nullable=False, unique=True)
     posts= db.relationship('Post', backref='poster', lazy=True)
 
-
+    def get_token(self, expires_sec=300):
+        serializer=Serializer(app.config['SECRET_KEY'], expires_in=expires_sec)
+        return serializer.dumps({'user_id':self.id}).decode('utf-8')
+    
+    @staticmethod
+    def verify_token(token):
+        serializer=Serializer(app.config['SECRET_KEY'])
+        try:
+            user_id=serializer.loads(token)['user_id']
+        except:
+            return None
+        return User.query.get(user_id)
+    
 
 class Post(db.Model):
     __tablename__ = 'post'
@@ -73,6 +90,7 @@ with app.app_context():
     # Create Text table first
     db.create_all()
 
+
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
@@ -94,6 +112,17 @@ class LoginForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
+
+
+class ResetRequestForm(FlaskForm):
+    email= StringField(label='Email', validators=[InputRequired()])
+    submit= SubmitField(label='Reset Password', validators=[InputRequired()])
+
+
+class ResetPasswordForm(FlaskForm):
+    password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
+    confirm_password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Confirm Password'})
+    submit= SubmitField('Change Password')
 
 
 @app.route('/', methods=['GET'])
@@ -141,6 +170,8 @@ def serve_files(filename):
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
@@ -154,6 +185,8 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -167,9 +200,47 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-# @app.route('/reset_password')
-# def reset_request():
-#     return render_template('reset_request.html', title='Reset Request')
+def send_mail(user):
+    token=user.get_token()
+    message=Message('Password Reset Request', recipients=[user.email], sender='noreply@mmureddit.com')
+    message.body=f''' To reset your password, please follow the link:
+
+{url_for(reset_token, token=token, _external=True)}
+    
+If you didn't send a password request, please ignore this email
+
+'''
+    
+    mail.send(message)
+
+
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_request():
+    form=ResetRequestForm()
+    if form.validate_on_submit:
+        user=User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_mail(user)
+            flash("Reset request sent! Check your mail.","success")
+            return redirect(url_for('login'))
+    return render_template('reset_request.html', title='Reset Request', form=form)
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    user=User.verify_token(token)
+    if user is None:
+        flash('That is an invalid or expired token, please try again', 'warning')
+        return redirect(url_for('reset_request'))
+    
+    form=ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
+        db.session.add(hashed_password)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('change_password.html', title="Change Password", form=form)
+
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
