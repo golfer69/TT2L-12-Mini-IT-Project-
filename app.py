@@ -30,7 +30,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY']='chickenstuffe'
 app.config['UPLOAD_DIRECTORY'] = 'uploads/'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
-app.config['SQLALCHEMY_BINDS'] = {'_post_': 'sqlite:///post.db'}
+# app.config['SQLALCHEMY_BINDS'] = {'_post_': 'sqlite:///post.db'}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 # app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
 # app.config['MAIL_PORT'] = 587
@@ -42,7 +42,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
-mail=Mail(app)
+# mail=Mail(app)
 
 
 login_manager=LoginManager()
@@ -59,7 +59,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
     email= db.Column(db.String(200), nullable=False, unique=True)
-    posts= db.Relationship('Post', backref=db.backref('poster', lazy=True))
+    posts= db.Relationship('Post', backref=db.backref('poster'))
 
     def get_reset_token(self, expire_sec=1800):
         seconds = TimedSerializer(app.config['SECRET_KEY'], expire_sec)
@@ -248,15 +248,15 @@ def show_post(post_id):
     return render_template('post.html',post=post)  # Render a separate template for single post
 
 
-def send_reset_email(user):
-    token= user.get_reset_token()
-    msg=Message('Password Reset Request', sender='noreply@demo.com', recipients=[user.email])
-    msg.body=f'''To reset your password, visit the following link:
-{url_for('reset_token', token=token, _external=True)} 
+# def send_reset_email(user):
+#     token= user.get_reset_token()
+#     msg=Message('Password Reset Request', sender='noreply@demo.com', recipients=[user.email])
+#     msg.body=f'''To reset your password, visit the following link:
+# {url_for('reset_token', token=token, _external=True)} 
 
-If you did not make this request, then ignore this email   
-'''
-    mail.send(msg)
+# If you did not make this request, then ignore this email   
+# '''
+#     mail.send(msg)
 
 
 # @app.route('/reset_password', methods=['GET', 'POST'])
