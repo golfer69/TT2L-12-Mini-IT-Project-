@@ -76,7 +76,7 @@ with app.app_context():
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
-    email= EmailField(validators=[InputRequired(), Length(min=40, max=100)], render_kw={'placeholder':'Email'})
+    email= EmailField(validators=[InputRequired(), Length(min=10, max=100)], render_kw={'placeholder':'Email'})
     submit= SubmitField('Register')
 
     def validate_username(self, username):
@@ -141,8 +141,6 @@ def serve_files(filename):
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
@@ -267,7 +265,5 @@ def show_post(post_id):
 
 
 if  __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
     app.run(debug=True)
 
