@@ -22,6 +22,9 @@
         <br>
             {{ form.password.label }}
             {{ form.password }}
+
+        <br>
+        <a href="{{url_for('reset_request')}}">'Forgot Password?</a>
         </form>
         <br>
         {{ form.submit }}

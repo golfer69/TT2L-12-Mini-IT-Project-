@@ -9,20 +9,41 @@ from wtforms import SubmitField, StringField, PasswordField, EmailField
 from wtforms.validators import InputRequired, Length, ValidationError, DataRequired
 from flask_bcrypt import Bcrypt
 from itsdangerous import TimedSerializer
+from flask_mail import Mail, Message
 
-def create_app():
-    app = Flask(__name__)
-    app.config['SECRET_KEY']='chickenstuffe'
-    app.config['UPLOAD_DIRECTORY'] = 'uploads/'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
-    app.config['SQLALCHEMY_BINDS'] = {'_post_': 'sqlite:///post.db'}
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    return app
 
-app=create_app()
+# def create_app():
+#     app = Flask(__name__)
+#     app.config['SECRET_KEY']='chickenstuffe'
+#     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
+#     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
+#     app.config['SQLALCHEMY_BINDS'] = {'_post_': 'sqlite:///post.db'}
+#     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+#     app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+#     app.config['MAIL_PORT'] = 587
+#     app.config['MAIL_USE_TLS']=True
+#     app.config['MAIL_USERNAME'] = os.environment.get('EMAIL_USER')
+#     app.config['MAIL_PASSWORD'] = os.environment.get('EMAIL_PASS')
+
+
+app = Flask(__name__)
+app.config['SECRET_KEY']='chickenstuffe'
+app.config['UPLOAD_DIRECTORY'] = 'uploads/'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
+app.config['SQLALCHEMY_BINDS'] = {'_post_': 'sqlite:///post.db'}
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+# app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+# app.config['MAIL_PORT'] = 587
+# app.config['MAIL_USE_TLS']=True
+# app.config['MAIL_USERNAME'] = os.environment.get('EMAIL_USER')
+# app.config['MAIL_PASSWORD'] = os.environment.get('EMAIL_PASS')
+
+
 
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
+mail=Mail(app)
+
 
 login_manager=LoginManager()
 login_manager.init_app(app)
@@ -38,6 +59,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
     email= db.Column(db.String(200), nullable=False, unique=True)
+    posts= db.Relationship('Post', backref=db.backref('poster', lazy=True))
 
     def get_reset_token(self, expire_sec=1800):
         seconds = TimedSerializer(app.config['SECRET_KEY'], expire_sec)
@@ -61,6 +83,7 @@ class Post(db.Model):
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
+    post_id=db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
 
@@ -87,19 +110,19 @@ class LoginForm(FlaskForm):
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
 
-class RequestResetForm(FlaskForm):
-    password= PasswordField(validators=[DataRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
-    submit= SubmitField('Request Password Reset')
-    def validate_username(self, username):
-        existing_username=User.query.filter_by(username=username.data).first()
-        if existing_username is None:
-            raise ValidationError('There is no account with that username. You must register first.')
+# class RequestResetForm(FlaskForm):
+#     password= PasswordField(validators=[DataRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
+#     submit= SubmitField('Request Password Reset')
+#     def validate_username(self, username):
+#         existing_username=User.query.filter_by(username=username.data).first()
+#         if existing_username is None:
+#             raise ValidationError('There is no account with that username. You must register first.')
 
 
-class ResetPasswordForm(FlaskForm):
-    password=PasswordField('Password', validators=[DataRequired()])
-    confirm_password=PasswordField('Confirm Password', validators=[DataRequired()])
-    submit= SubmitField('Reset Password')
+# class ResetPasswordForm(FlaskForm):
+#     password=PasswordField('Password', validators=[DataRequired()])
+#     confirm_password=PasswordField('Confirm Password', validators=[DataRequired()])
+#     submit= SubmitField('Reset Password')
 
 
 @app.route('/', methods=['GET'])
@@ -224,23 +247,48 @@ def show_post(post_id):
     
     return render_template('post.html',post=post)  # Render a separate template for single post
 
-@app.route('/reset_password', methods=['GET', 'POST'])
-def reset_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    form=RequestResetForm()
-    return render_template('reset_request.html', title='Reset Password', form=form)
 
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
-def reset_token(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    user=user.verify_reset_token(token)
-    if user is None:
-        flash("that is an invalid or expired token", 'warning')
-        return redirect(url_for('reset_request'))
-    form= ResetPasswordForm()
-    return render_template('reset_token.html', title='Reset Password', form=form)
+def send_reset_email(user):
+    token= user.get_reset_token()
+    msg=Message('Password Reset Request', sender='noreply@demo.com', recipients=[user.email])
+    msg.body=f'''To reset your password, visit the following link:
+{url_for('reset_token', token=token, _external=True)} 
+
+If you did not make this request, then ignore this email   
+'''
+    mail.send(msg)
+
+
+# @app.route('/reset_password', methods=['GET', 'POST'])
+# def reset_request():
+#     if current_user.is_authenticated:
+#         return redirect(url_for('index'))
+#     form=RequestResetForm()
+#     if form.validate_on_submit():
+#         user=user.query.filter_by(email=form.email.data).first()
+#         send_reset_email(user)
+#         flash('An email has been sent to reset your password')
+#         return redirect(url_for('login'))
+#     return render_template('reset_request.html', title='Reset Password', form=form)
+
+
+
+# @app.route('/reset_password/<token>', methods=['GET', 'POST'])
+# def reset_token(token):
+#     if current_user.is_authenticated:
+#         return redirect(url_for('index'))
+#     new_user=new_user.verify_reset_token(token)
+#     if new_user is None:
+#         flash("that is an invalid or expired token", 'warning')
+#         return redirect(url_for('reset_request'))
+#     form= ResetPasswordForm()
+#     if form.validate_on_submit():
+#         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
+#         new_user.password= hashed_password
+#         db.session.commit()
+#         flash('Your password has been updated!')
+#         return redirect(url_for('login'))
+#     return render_template('reset_token.html', title='Reset Password', form=form)
 
 
 if  __name__ == '__main__':
