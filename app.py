@@ -50,7 +50,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
     email= db.Column(db.String(200), nullable=False, unique=True)
-    posts= db.Relationship('Post', backref=db.backref('poster'))
+    posts= db.Relationship('Post', backref=db.backref('poster'), lazy=True)
 
     def get_reset_token(self, expire_sec=1800):
         seconds = TimedSerializer(app.config['SECRET_KEY'], expire_sec)
@@ -68,12 +68,13 @@ class User(db.Model, UserMixin):
 
 
 class Post(db.Model):
-    __tablename__ = '_post_'
+    __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
+    post_id2 = db.Column(db.Integer, db.ForeignKey('user.id')) 
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 
