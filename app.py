@@ -96,9 +96,6 @@ class LoginForm(FlaskForm):
     submit= SubmitField('Login')
 
 
-
-
-
 @app.route('/', methods=['GET'])
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
@@ -179,9 +176,9 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-@app.route('/reset_password')
-def reset_request():
-    return render_template('reset_request.html', title='Reset Request')
+# @app.route('/reset_password')
+# def reset_request():
+#     return render_template('reset_request.html', title='Reset Request')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
