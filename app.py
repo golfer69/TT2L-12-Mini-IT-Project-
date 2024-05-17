@@ -6,9 +6,9 @@ from flask_login import UserMixin, LoginManager, login_user, logout_user, login_
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField
-from wtforms.validators import InputRequired, Length, ValidationError, DataRequired
+from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
-from itsdangerous import URLSafeTimedSerializer as Serializer
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from flask_mail import Mail, Message
 
 
@@ -23,8 +23,9 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['MAIL_SERVER']='smtp.gmail.com'
-    app.config['MAIL_PORT']=587
-    app.config['MAIL_USE_TLS']=True
+    app.config['MAIL_PORT']=465
+    app.config['MAIL_USE_TLS']=False
+    app.config['MAIL_USE_SSL']=True
     app.config['MAIL_USERNAME'] = 'halimalif13@gmail.com'
     app.config['MAIL_PASSWORD'] = 'alifakmalbinabdulhalim'
     return app
@@ -33,8 +34,7 @@ app=create_app()
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
 mail=Mail(app)
-
-
+serializer=URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 login_manager=LoginManager()
 login_manager.init_app(app)
@@ -52,17 +52,15 @@ class User(db.Model, UserMixin):
     email= db.Column(db.String(80), nullable=False, unique=True)
     posts= db.relationship('Post', backref='poster', lazy=True)
 
-    def get_token(self, expires_sec=300):
-        serializer=Serializer(app.config['SECRET_KEY'], expires_in=expires_sec)
-        return serializer.dumps({'user_id':self.id}).decode('utf-8')
-    
+    def get_token(self):
+        return serializer.dumps({'user_id':self.id}, salt='password-reset-salt')
+                                
     @staticmethod
     def verify_token(token):
-        serializer=Serializer(app.config['SECRET_KEY'])
         try:
-            user_id=serializer.loads(token)['user_id']
+            user_id = serializer.loads(token, salt='password-reset-salt', max_age=300)['user_id']
         except:
-            return None
+            SignatureExpired()
         return User.query.get(user_id)
     
 
@@ -124,6 +122,9 @@ class ResetPasswordForm(FlaskForm):
     confirm_password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Confirm Password'})
     submit= SubmitField('Change Password')
 
+    def validate_confirm_password(self, confirm_password):
+        if self.password.data != confirm_password.data:
+            raise ValidationError('Passwords do not match!')
 
 @app.route('/', methods=['GET'])
 def index():
@@ -200,31 +201,27 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+
 def send_mail(user):
     token=user.get_token()
-    message=Message('Password Reset Request', recipients=[user.email], sender='noreply@mmureddit.com')
-    message.body=f''' To reset your password, please follow the link:
+    msg=Message('Password Reset Request', recipients=[user.email], sender='noreply@demo.com')
+    msg.body=f''' To reset your password, please follow the link: {url_for(reset_token, token=token, _external=True)} If you didn't send a password request, please ignore this email'''
+    Mail.send(msg)
 
-{url_for(reset_token, token=token, _external=True)}
-    
-If you didn't send a password request, please ignore this email
-
-'''
-    
-    mail.send(message)
 
 
 
 @app.route('/reset_password', methods=['GET', 'POST'])
 def reset_request():
     form=ResetRequestForm()
-    if form.validate_on_submit:
+    if form.validate_on_submit():
         user=User.query.filter_by(email=form.email.data).first()
         if user:
             send_mail(user)
-            flash("Reset request sent! Check your mail.","success")
             return redirect(url_for('login'))
-    return render_template('reset_request.html', title='Reset Request', form=form)
+    return render_template('reset_request.html', form=form)
+
+
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_token(token):
