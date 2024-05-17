@@ -44,7 +44,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
-    password= db.Column(db.String(80), nullable=False, unique=True)
+    email= db.Column(db.String(80), nullable=False, unique=True)
     posts= db.relationship('Post', backref='poster', lazy=True)
 
 
@@ -76,7 +76,7 @@ with app.app_context():
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
-    password= EmailField(validators=[InputRequired(), Length(min=40, max=100)], render_kw={'placeholder':'Email'})
+    email= EmailField(validators=[InputRequired(), Length(min=40, max=100)], render_kw={'placeholder':'Email'})
     submit= SubmitField('Register')
 
     def validate_username(self, username):
@@ -84,7 +84,7 @@ class RegisterForm(FlaskForm):
         if existing_username:
             raise ValidationError('That username already exists. Please choose another one')
 
-    def validate_username(self, email):
+    def validate_email(self, email):
         existing_email=User.query.filter_by(email=email.data).first()
         if existing_email:
             raise ValidationError('That email already exists. Please choose another one')
@@ -94,14 +94,6 @@ class LoginForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
-
-class RequestResetForm(FlaskForm):
-    password= PasswordField(validators=[DataRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
-    submit= SubmitField('Request Password Reset')
-    def validate_username(self, username):
-        existing_username=User.query.filter_by(username=username.data).first()
-        if existing_username is None:
-            raise ValidationError('There is no account with that username. You must register first.')
 
 
 
@@ -157,11 +149,13 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
-        new_user= User(username=form.username.data, password=hashed_password)
+        new_user= User(email=form.email.data, username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
+
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -184,6 +178,10 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('login'))
+
+@app.route('/reset_password')
+def reset_request():
+    return render_template('reset_request.html', title='Reset Request')
 
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
@@ -221,26 +219,26 @@ def delete_post(post_id):
           
   return redirect('/')
 
-@app.route('/post/<int:post_id>', methods=['GET','POST'])
-def show_post(post_id):
-    post = Post.query.get(post_id)
-    comments = Comment.query.all()
+# @app.route('/post/<int:post_id>', methods=['GET','POST'])
+# def show_post(post_id):
+#     post = Post.query.get(post_id)
+#     comments = Comment.query.all()
     
 
-    if request.method == 'POST':
-        username = request.form["username"] # account will handle this part
-        comment_content = request.form["comment_content"]
+#     if request.method == 'POST':
+#         username = request.form["username"] # account will handle this part
+#         comment_content = request.form["comment_content"]
 
-        comment = Comment(username=username, comment_content=comment_content)
+#         comment = Comment(username=username, comment_content=comment_content)
         
-        db.session.add(comment)
-        db.session.commit()
-        return redirect(url_for('show_post'), comments=comments)
+#         db.session.add(comment)
+#         db.session.commit()
+#         return redirect(url_for('show_post'), comments=comments)
 
-    if not post:
-        return redirect('/')  # Handle non-existent post
+#     if not post:
+#         return redirect('/')  # Handle non-existent post
         
-    return render_template('post.html',post=post, comments=comments)
+#     return render_template('post.html',post=post, comments=comments)
 
 @app.route('/post/<int:post_id>', methods=['GET', 'POST'])
 def show_post(post_id):
