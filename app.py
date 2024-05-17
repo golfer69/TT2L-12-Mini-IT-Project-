@@ -6,12 +6,12 @@ from flask_login import UserMixin, LoginManager, login_user, logout_user, login_
 from datetime import datetime
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField
-from wtforms.validators import InputRequired, Length, ValidationError, DataRequired
+from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
-from itsdangerous import TimedSerializer
-from flask_mail import Mail, Message
-from sqlalchemy.orm import relationship 
-from sqlalchemy import ForeignKey
+# from itsdangerous import TimedSerializer
+# from flask_mail import Mail, Message
+# from sqlalchemy.orm import relationship 
+# from sqlalchemy import ForeignKey
 
 
 
@@ -154,19 +154,12 @@ def register():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        if user:
-            if bcrypt.check_password_hash(user.password, form.password.data):
-                login_user(user)
-                return redirect(url_for('dashboard'))
-            else:
-                flash('Invalid username or password.', 'error')
-        else:
-            flash('Invalid username or password.', 'error')
+        bcrypt.check_password_hash(user.password, form.password.data)
+        login_user(user)
+        return redirect(url_for('dashboard'))
     return render_template('login.html', form=form)
 
 @app.route('/logout')
