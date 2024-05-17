@@ -10,36 +10,27 @@ from wtforms.validators import InputRequired, Length, ValidationError, DataRequi
 from flask_bcrypt import Bcrypt
 from itsdangerous import TimedSerializer
 from flask_mail import Mail, Message
-
-
-# def create_app():
-#     app = Flask(__name__)
-#     app.config['SECRET_KEY']='chickenstuffe'
-#     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
-#     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
-#     app.config['SQLALCHEMY_BINDS'] = {'_post_': 'sqlite:///post.db'}
-#     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-#     app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
-#     app.config['MAIL_PORT'] = 587
-#     app.config['MAIL_USE_TLS']=True
-#     app.config['MAIL_USERNAME'] = os.environment.get('EMAIL_USER')
-#     app.config['MAIL_PASSWORD'] = os.environment.get('EMAIL_PASS')
-
-
-app = Flask(__name__)
-app.config['SECRET_KEY']='chickenstuffe'
-app.config['UPLOAD_DIRECTORY'] = 'uploads/'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
-# app.config['SQLALCHEMY_BINDS'] = {'_post_': 'sqlite:///post.db'}
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
-# app.config['MAIL_PORT'] = 587
-# app.config['MAIL_USE_TLS']=True
-# app.config['MAIL_USERNAME'] = os.environment.get('EMAIL_USER')
-# app.config['MAIL_PASSWORD'] = os.environment.get('EMAIL_PASS')
+from sqlalchemy.orm import relationship 
+from sqlalchemy import ForeignKey
 
 
 
+
+
+def create_app():
+    app = Flask(__name__)
+    app.config['SECRET_KEY']='chickenstuffe'
+    app.config['UPLOAD_DIRECTORY'] = 'uploads/'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    # app.config['MAIL_SERVER'] = 'smtp.googlemail.com'
+    # app.config['MAIL_PORT'] = 587
+    # app.config['MAIL_USE_TLS']=True
+    # app.config['MAIL_USERNAME'] = os.environment.get('EMAIL_USER')
+    # app.config['MAIL_PASSWORD'] = os.environment.get('EMAIL_PASS')
+    return app
+
+app=create_app()
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
 # mail=Mail(app)
@@ -54,7 +45,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 class User(db.Model, UserMixin):
-    _tablename_='user'
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
@@ -77,16 +68,27 @@ class User(db.Model, UserMixin):
 
 
 class Post(db.Model):
-    __bind_key__ = '_post_'
+    __tablename__ = '_post_'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
-    post_id=db.Column(db.Integer, db.ForeignKey('user.id'))
+    id_for_comments = db.relationship('Comment', backref='text', lazy=True)
+    
+
+class Comment(db.Model):
+    __tablename__ = 'comment'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
+    comment_content = db.Column(db.Text)
 
 
-
+# create database
+with app.app_context():
+    # Create Text table first
+    db.create_all()
 
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
@@ -138,8 +140,7 @@ def upload():
         title = request.form['title']
         content = request.form['content'] # get text from html form
         file = request.files['file']  # Access the uploaded file
-        the_poster= current_user.id
-        text = Post(title=title, content=content, post_id=the_poster)
+        text = Post(title=title, content=content)
         db.session.add(text)
         db.session.commit()
     
@@ -219,6 +220,7 @@ def admin():
     else:
         flash("Only admins can access this page")
         return redirect(url_for('index'))
+    
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
   post = Post.query.get(post_id)
@@ -239,13 +241,53 @@ def delete_post(post_id):
           
   return redirect('/')
 
-@app.route('/post/<int:post_id>', methods=['GET'])
+# @app.route('/post/<int:post_id>', methods=['GET','POST'])
+# def show_post(post_id):
+#     post = Post.query.get(post_id)
+#     comments = Comment.query.all()
+    
+
+#     if request.method == 'POST':
+#         username = request.form["username"] # account will handle this part
+#         comment_content = request.form["comment_content"]
+
+#         comment = Comment(username=username, comment_content=comment_content)
+        
+#         db.session.add(comment)
+#         db.session.commit()
+#         return redirect(url_for('show_post'), comments=comments)
+
+#     if not post:
+#         return redirect('/')  # Handle non-existent post
+        
+#     return render_template('post.html',post=post, comments=comments)
+
+@app.route('/post/<int:post_id>', methods=['GET', 'POST'])
 def show_post(post_id):
     post = Post.query.get(post_id)
+    comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
+
+    if request.method == 'POST':
+        username = request.form["username"]
+        comment_content = request.form["comment-content"]
+        post_id = request.form["post_id"]  # Access post ID from the hidden field
+
+        # Validate user input (optional)
+        # if not username or not comment_content:
+        #     # Handle invalid input (e.g., display error message)
+        #     pass
+
+        comment = Comment(username=username, comment_content=comment_content, post_id=post_id)
+        db.session.add(comment)
+        db.session.commit()
+
+        # Redirect back to the updated post page using the correct post ID
+        return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
+
     if not post:
         return redirect('/')  # Handle non-existent post
-    
-    return render_template('post.html',post=post)  # Render a separate template for single post
+
+    return render_template('post.html', post=post, comments=comments)
 
 
 # def send_reset_email(user):
