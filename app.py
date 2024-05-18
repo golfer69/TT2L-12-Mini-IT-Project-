@@ -47,6 +47,8 @@ class Text(db.Model):
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
 
+    
+
 with app.app_context():
     db.create_all()
 
@@ -184,6 +186,59 @@ def show_post(post_id):
         return redirect('/')  # Handle non-existent post
     
     return render_template('post.html',post=post)  # Render a separate template for single post
+
+
+def calculate_time_difference(posted_time):
+    # Your time difference calculation function here
+
+ @app.route('/post')
+ def post():
+    posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
+    time_since_posted = calculate_time_difference(posted_time)
+    return render_template('post.html', time_since_posted=time_since_posted)
+
+
+
+#how far back was a post posted
+
+def calculate_time_difference(posted_time):
+    current_time = datetime.now()
+    time_difference = current_time - posted_time
+
+    seconds = time_difference.total_seconds()
+    minutes = seconds / 60
+    hours = minutes / 60
+    days = hours / 24
+    weeks = days / 7
+    months = days / 30
+    years = days / 365
+
+    if seconds < 60:
+        return f"{int(seconds)} seconds ago"
+    elif minutes < 60:
+        return f"{int(minutes)} minutes ago"
+    elif hours < 24:
+        return f"{int(hours)} hours ago"
+    elif days < 7:
+        return f"{int(days)} days ago"
+    elif weeks < 4:
+        return f"{int(weeks)} weeks ago"
+    elif months < 12:
+        return f"{int(months)} months ago"
+    else:
+        return f"{int(years)} years ago"
+
+# Example usage
+posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
+time_since_posted = calculate_time_difference(posted_time)
+print(time_since_posted)
+
+
+
+
+
+
+
 
 if  __name__ == '__main__':
     app.run(debug=True)
