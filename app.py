@@ -71,7 +71,7 @@ class Post(db.Model):
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id')) 
+    poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 
@@ -133,31 +133,35 @@ def index():
     return render_template('index.html', texts=texts, pics=pics)
 
 @app.route('/upload', methods=['POST'])
+@login_required
 def upload():
-    file = request.files['file']
-    if request.method == 'POST':
-        title = request.form['title']
-        content = request.form['content'] # get text from html form
-        file = request.files['file']  # Access the uploaded file
-        text = Post(title=title, content=content)
-        db.session.add(text)
-        db.session.commit()
-    
-        if file:
-
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(
-                app.config['UPLOAD_DIRECTORY'],
-                secure_filename(file.filename)
-            ))
-
-            text.image_filename = filename
+    if current_user.is_authenticated:
+        file = request.files['file']
+        if request.method == 'POST':
+            title = request.form['title']
+            content = request.form['content'] # get text from html form
+            file = request.files['file']  # Access the uploaded file
+            poster= current_user.id
+            text = Post(title=title, content=content, poster_id=poster)
             db.session.add(text)
             db.session.commit()
+        
+            if file:
+
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(
+                    app.config['UPLOAD_DIRECTORY'],
+                    secure_filename(file.filename)
+                ))
+
+                text.image_filename = filename
+                db.session.add(text)
+                db.session.commit()
         
     return redirect('/')
 
 @app.route('/create', methods=['GET'])
+@login_required
 def create():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     texts = Post.query.all()
@@ -191,9 +195,14 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        bcrypt.check_password_hash(user.password, form.password.data)
-        login_user(user)
-        return redirect(url_for('dashboard'))
+        if user is None:
+            flash("Invalid usename or password. Please try again")
+            return render_template('login.html', form=form)
+        if bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user)
+            return redirect(url_for('dashboard'))
+        else:
+            flash("Invalid username or password. Please try again")
     return render_template('login.html', form=form)
 
 @app.route('/logout')
@@ -256,6 +265,7 @@ def admin():
         return redirect(url_for('index'))
     
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
+@login_required
 def delete_post(post_id):
   post = Post.query.get(post_id)
   if post:
