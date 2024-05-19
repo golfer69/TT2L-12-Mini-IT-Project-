@@ -268,7 +268,8 @@ def admin():
 @login_required
 def delete_post(post_id):
   post = Post.query.get(post_id)
-  if post:
+  poster=current_user.id
+  if post.poster_id==poster:
     # Delete the post object from the database
     db.session.delete(post)
     db.session.commit()
