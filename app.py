@@ -12,10 +12,6 @@ from itsdangerous import URLSafeTimedSerializer, SignatureExpired
 from flask_mail import Mail, Message
 
 
-
-
-
-
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY']='chickenstuffe'
@@ -63,7 +59,6 @@ class User(db.Model, UserMixin):
             SignatureExpired()
         return User.query.get(user_id)
     
-
 class Post(db.Model):
     __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key=True)
@@ -74,7 +69,6 @@ class Post(db.Model):
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
-
 class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
@@ -82,12 +76,10 @@ class Comment(db.Model):
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
     comment_content = db.Column(db.Text)
 
-
 # create database
 with app.app_context():
     # Create Text table first
     db.create_all()
-
 
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
@@ -129,8 +121,15 @@ class ResetPasswordForm(FlaskForm):
 @app.route('/', methods=['GET'])
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
+    posts = Post.query.all()
+    return render_template('index.html', posts=posts, pics=pics)
+
+@app.route('/create', methods=['GET'])
+@login_required
+def create():
+    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     texts = Post.query.all()
-    return render_template('index.html', texts=texts, pics=pics)
+    return render_template('create.html', texts=texts, pics=pics)
 
 @app.route('/upload', methods=['POST'])
 @login_required
@@ -160,18 +159,24 @@ def upload():
         
     return redirect('/')
 
-@app.route('/create', methods=['GET'])
-@login_required
-def create():
-    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    texts = Post.query.all()
-    return render_template('create.html', texts=texts, pics=pics)
+@app.route('/update', methods=['GET','POST'])
+def update():
+    post_id = request.form['post_id'] 
+    post = Post.query.get(post_id)
+    if request.method == 'POST' and post.poster_id == current_user.id:
+        
+        new_title = request.form['title']
+        new_content = request.form['content']
 
+        post.title = new_title
+        post.content = new_content
+        
+        db.session.commit()
+    return redirect(url_for('show_post', post_id=post_id))
 
 @app.route('/uploads/<path:filename>')
 def serve_files(filename):
     return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
-
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -185,8 +190,6 @@ def register():
         db.session.commit()
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
-
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -210,15 +213,11 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-
 def send_mail(user):
     token=user.get_token()
     msg=Message('Password Reset Request', recipients=[user.email], sender='noreply@demo.com')
     msg.body=f''' To reset your password, please follow the link: {url_for(reset_token, token=token, _external=True)} If you didn't send a password request, please ignore this email'''
     Mail.send(msg)
-
-
-
 
 @app.route('/reset_password', methods=['GET', 'POST'])
 def reset_request():
@@ -229,8 +228,6 @@ def reset_request():
             send_mail(user)
             return redirect(url_for('login'))
     return render_template('reset_request.html', form=form)
-
-
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_token(token):
@@ -286,26 +283,11 @@ def delete_post(post_id):
           
   return redirect('/')
 
-# @app.route('/post/<int:post_id>', methods=['GET','POST'])
-# def show_post(post_id):
-#     post = Post.query.get(post_id)
-#     comments = Comment.query.all()
-    
+@app.route('/edit/<int:post_id>', methods=['GET','POST'])
+def edit_post(post_id):
+    post = Post.query.get(post_id)
+    return render_template('edit.html',post=post)
 
-#     if request.method == 'POST':
-#         username = request.form["username"] # account will handle this part
-#         comment_content = request.form["comment_content"]
-
-#         comment = Comment(username=username, comment_content=comment_content)
-        
-#         db.session.add(comment)
-#         db.session.commit()
-#         return redirect(url_for('show_post'), comments=comments)
-
-#     if not post:
-#         return redirect('/')  # Handle non-existent post
-        
-#     return render_template('post.html',post=post, comments=comments)
 
 @app.route('/post/<int:post_id>', methods=['GET', 'POST'])
 def show_post(post_id):
@@ -317,11 +299,6 @@ def show_post(post_id):
         comment_content = request.form["comment-content"]
         post_id = request.form["post_id"]  # Access post ID from the hidden field
 
-        # Validate user input (optional)
-        # if not username or not comment_content:
-        #     # Handle invalid input (e.g., display error message)
-        #     pass
-
         comment = Comment(username=username, comment_content=comment_content, post_id=post_id)
         db.session.add(comment)
         db.session.commit()
@@ -331,9 +308,7 @@ def show_post(post_id):
 
     if not post:
         return redirect('/')  # Handle non-existent post
-
     return render_template('post.html', post=post, comments=comments)
-
 
 
 if  __name__ == '__main__':
