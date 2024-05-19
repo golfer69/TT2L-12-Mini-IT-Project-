@@ -157,6 +157,7 @@ def admin():
     else:
         flash("Only admins can access this page")
         return redirect(url_for('index'))
+    
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
   post = Text.query.get(post_id)

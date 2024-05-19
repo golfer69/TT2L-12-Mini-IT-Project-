@@ -12,32 +12,100 @@ app=create_app()
 
 db = SQLAlchemy(app)
 
-class Comment_Like(db.Model):
+from app import db
+from datetime import datetime
+
+class User(db.Model):
+    __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(255))
-    message_content = db.Column(db.String(255))
-    vote = db.Column(db.Integer, primary_key=True)
-    date_added = db.Column(db.DateTime, default= datetime.now)
+    username = db.Column(db.String(50), nullable=False, unique=True)
+    email = db.Column(db.String(100), nullable=False, unique=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+    date_added = db.Column(db.DateTime, default=datetime.now)
 
-# Route
-@app.route("/vote", methods=["GET","POST"])
-def vote_action():
-    if request.method == 'POST':
-        username = request.form["username"]
-        message_content = request.form["message_content"]
-        vote = request.form["vote"]
-        date_added = request.form["message_content"]
-        cl = Comment_Like(username=username, message_content=message_content, vote=vote, date_added=date_added)
-        
-        db.session.add(cl)
-        db.session.commit()
-        return redirect(url_for('user_vote'))
-    else:
-        cl = Comment_Like.query.filter_by(id=1).first()
-        cl.vote.count()
-        return render_template('vote.html', cl=cl)
+class Post(db.Model):
+    __tablename__ = 'posts'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(300), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    date_added = db.Column(db.DateTime, default=datetime.now)
 
-if  __name__ == '__main__':
+    user = db.relationship('User', backref=db.backref('posts', lazy=True))
+
+class Vote(db.Model):
+    __tablename__ = 'votes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False)
+    vote_type = db.Column(db.Boolean, nullable=False)  # True for upvote, False for downvote
+    date_added = db.Column(db.DateTime, default=datetime.now)
+
+    user = db.relationship('User', backref=db.backref('votes', lazy=True))
+    post = db.relationship('Post', backref=db.backref('votes', lazy=True))
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'post_id', name='unique_user_post_vote'),)
+
+# Create users
+user1 = User(username='user1', email='user1@example.com', password_hash='hashed_password_1')
+user2 = User(username='user2', email='user2@example.com', password_hash='hashed_password_2')
+
+db.session.add(user1)
+db.session.add(user2)
+db.session.commit()
+
+# Create posts
+post1 = Post(title='First Post', content='This is the content of the first post', user_id=user1.id)
+post2 = Post(title='Second Post', content='This is the content of the second post', user_id=user2.id)
+
+db.session.add(post1)
+db.session.add(post2)
+db.session.commit()
+
+# Create votes
+vote1 = Vote(user_id=user1.id, post_id=post1.id, vote_type=True)  # user1 upvotes First Post
+vote2 = Vote(user_id=user2.id, post_id=post1.id, vote_type=False) # user2 downvotes First Post
+vote3 = Vote(user_id=user1.id, post_id=post2.id, vote_type=True)  # user1 upvotes Second Post
+
+db.session.add(vote1)
+db.session.add(vote2)
+db.session.add(vote3)
+db.session.commit()
+
+@app.route('/posts', methods=['GET'])
+def get_posts():
+    posts = Post.query.all()
+    return render_template([post.title for post in posts])
+
+@app.route('/posts/<int:post_id>/upvote', methods=['POST'])
+def upvote_post(post_id):
+    user_id = request.method.get('user_id')
+    post = Post.query.get_or_404(post_id)
+    vote = Vote.query.filter_by(user_id=user_id, post_id=post_id).first()
+    
+    if vote:
+        return render_template({'message': 'User has already voted on this post'}), 400
+
+    new_vote = Vote(user_id=user_id, post_id=post_id, vote_type=True)
+    db.session.add(new_vote)
+    db.session.commit()
+    return redirect(url_for('upvote_post(post_id)'))
+
+@app.route('/posts/<int:post_id>/downvote', methods=['POST'])
+def downvote_post(post_id):
+    user_id = request.method.get('user_id')
+    post = Post.query.get_or_404(post_id)
+    vote = Vote.query.filter_by(user_id=user_id, post_id=post_id).first()
+    
+    if vote:
+        return render_template({'message': 'User has already voted on this post'}), 400
+
+    new_vote = Vote(user_id=user_id, post_id=post_id, vote_type=False)
+    db.session.add(new_vote)
+    db.session.commit()
+    return redirect(url_for('downvote_post(post_id)'))
+
+if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     app.run(debug=True)
