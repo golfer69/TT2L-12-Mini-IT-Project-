@@ -29,25 +29,65 @@
         <a href="{{ url_for('index') }}" class="previous-btn round"> &laquo; Previous </a>
  
         <!-- display content -->
-        <h2>{{post.title}}</h2> <br>
-        <p>{{ post.content }}</p>
+        <div class="post">
+            <h2>{{post.title}}</h2> <br>
+            <p>{{ post.content }}</p> <br>
+            <p>by: {{post.poster.username}}</p>
+
 
         <!-- check if theres img -->
         {% if post.image_filename %} 
-        <div class="post">
             <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
         </div>
         {% endif %}
+        
+        <div class="comment-section">
+            <h1>Comment section</h1>
+
+            <form action="{{ url_for('show_post', post_id=post.id) }}" method="POST">
+                <input type="hidden" name="post_id" value="{{ post.id }}">  
+                <textarea name="username" rows="4" cols="50" placeholder="Enter username..."></textarea><br>
+                <textarea name="comment-content" rows="4" cols="50" placeholder="Enter comment..."></textarea><br>
+                <input type="submit" value="Save">
+            </form>
+            
+
+            <div class="comments">
+                    {% for comment in comments %}
+                    <div>
+                        <div class="info">
+                            <div class="username">{{comment.username}}</div>
+                            <div>{{comment.date_added}}</div>
+                            <div class="comment-content">{{comment.comment_content}}</div><br>
+                        </div>
+                    </div>
+                    {% endfor %}
+        </div>
 
         <!-- delete button -->
         {% if current_user.is_authenticated %}
             {% if current_user.id == 5 or current_user.id == 6 %}
-        
             <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST">
                 <button type="submit">Delete</button>
                 {% endif %}
+            </form>
         {% endif %}
-        </form>
+
+        {% if current_user.is_authenticated and current_user.id==post.poster_id %}
+            <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST">
+            <button type="submit">Delete</button>
+            </form>
+        {% endif %}
+        
+
+        <!-- edit button -->
+        {% if current_user.is_authenticated and current_user.id==post.poster_id %}
+            <input type="hidden" name="post_id" value="{{ post.id }}">  
+            <form action="{{ url_for('edit_post', post_id=post.id) }}" method="POST">
+            <button type="submit">Edit</button>
+            </form>
+        {% endif %}
+
     </div>
 </body>
 </html>

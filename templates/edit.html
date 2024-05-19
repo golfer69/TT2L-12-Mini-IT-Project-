@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create post</title>
+  <title>Edit post</title>
   <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
   
   <script>
@@ -39,19 +39,15 @@
     <!--  create form  -->
     <div class="form-section">
 
-      {% if current_user.id == 5 or current_user.id == 6 %}
-        <h2>Administrator</h2>
-      {% endif %}
-
       <h2>{{current_user.username}}</h2>
     
-      <h2>Create a post</h2>
+      <h2>Edit post</h2>
 
-      <form action="/upload" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
-        <input type="text" name="title" placeholder="Title"><br>
-        <textarea type="text" name="content"  class="form-content" placeholder="Content"></textarea><br>
-        <input type="file" name="file">
-        <input type="submit" value="Upload">
+      <form action="{{ url_for('update')}}" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+        <input type="hidden" name="post_id" value="{{ post.id }}">  
+        <input type="text" name="title" placeholder="Title" value="{{post.title}}"><br>
+        <textarea type="text" name="content"  class="form-content" placeholder="Content" value="{{post.content}}"></textarea><br>
+        <input type="submit" value="Finish">
       </form>
 
   </div>
