@@ -5,11 +5,14 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, StringField, PasswordField
+from wtforms import SubmitField, StringField, PasswordField, EmailField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
-from sqlalchemy.orm import relationship 
-from sqlalchemy import ForeignKey
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired
+from flask_mail import Mail, Message
+
+
+
 
 
 
@@ -19,12 +22,19 @@ def create_app():
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['MAIL_SERVER']='smtp.gmail.com'
+    app.config['MAIL_PORT']=465
+    app.config['MAIL_USE_TLS']=False
+    app.config['MAIL_USE_SSL']=True
+    app.config['MAIL_USERNAME'] = 'halimalif13@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'alifakmalbinabdulhalim'
     return app
 
 app=create_app()
-
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
+mail=Mail(app)
+serializer=URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 login_manager=LoginManager()
 login_manager.init_app(app)
@@ -39,14 +49,29 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
+    email= db.Column(db.String(80), nullable=False, unique=True)
+    posts= db.relationship('Post', backref='poster', lazy=True)
 
-class Post(db.Model):  
+    def get_token(self):
+        return serializer.dumps({'user_id':self.id}, salt='password-reset-salt')
+                                
+    @staticmethod
+    def verify_token(token):
+        try:
+            user_id = serializer.loads(token, salt='password-reset-salt', max_age=300)['user_id']
+        except:
+            SignatureExpired()
+        return User.query.get(user_id)
+    
+
+class Post(db.Model):
     __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
+    poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 
@@ -63,9 +88,11 @@ with app.app_context():
     # Create Text table first
     db.create_all()
 
+
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
+    email= EmailField(validators=[InputRequired(), Length(min=10, max=100)], render_kw={'placeholder':'Email'})
     submit= SubmitField('Register')
 
     def validate_username(self, username):
@@ -73,10 +100,31 @@ class RegisterForm(FlaskForm):
         if existing_username:
             raise ValidationError('That username already exists. Please choose another one')
 
+    def validate_email(self, email):
+        existing_email=User.query.filter_by(email=email.data).first()
+        if existing_email:
+            raise ValidationError('That email already exists. Please choose another one')
+
+
 class LoginForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
+
+
+class ResetRequestForm(FlaskForm):
+    email= StringField(label='Email', validators=[InputRequired()])
+    submit= SubmitField(label='Reset Password', validators=[InputRequired()])
+
+
+class ResetPasswordForm(FlaskForm):
+    password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
+    confirm_password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Confirm Password'})
+    submit= SubmitField('Change Password')
+
+    def validate_confirm_password(self, confirm_password):
+        if self.password.data != confirm_password.data:
+            raise ValidationError('Passwords do not match!')
 
 @app.route('/', methods=['GET'])
 def index():
@@ -85,31 +133,35 @@ def index():
     return render_template('index.html', texts=texts, pics=pics)
 
 @app.route('/upload', methods=['POST'])
+@login_required
 def upload():
-    file = request.files['file']
-    if request.method == 'POST':
-        title = request.form['title']
-        content = request.form['content'] # get text from html form
-        file = request.files['file']  # Access the uploaded file
-        text = Post(title=title, content=content)
-        db.session.add(text)
-        db.session.commit()
-    
-        if file:
-
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(
-                app.config['UPLOAD_DIRECTORY'],
-                secure_filename(file.filename)
-            ))
-
-            text.image_filename = filename
+    if current_user.is_authenticated:
+        file = request.files['file']
+        if request.method == 'POST':
+            title = request.form['title']
+            content = request.form['content'] # get text from html form
+            file = request.files['file']  # Access the uploaded file
+            poster= current_user.id
+            text = Post(title=title, content=content, poster_id=poster)
             db.session.add(text)
             db.session.commit()
+        
+            if file:
+
+                filename = secure_filename(file.filename)
+                file.save(os.path.join(
+                    app.config['UPLOAD_DIRECTORY'],
+                    secure_filename(file.filename)
+                ))
+
+                text.image_filename = filename
+                db.session.add(text)
+                db.session.commit()
         
     return redirect('/')
 
 @app.route('/create', methods=['GET'])
+@login_required
 def create():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     texts = Post.query.all()
@@ -124,31 +176,33 @@ def serve_files(filename):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('dashboard'))
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
-        new_user= User(username=form.username.data, password=hashed_password)
+        new_user= User(email=form.email.data, username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
+
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('index'))
+        return redirect(url_for('dashboard'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        if user:
-            if bcrypt.check_password_hash(user.password, form.password.data):
-                login_user(user)
-                return redirect(url_for('dashboard'))
-            else:
-                flash('Invalid username or password.', 'error')
+        if user is None:
+            flash("Invalid usename or password. Please try again")
+            return render_template('login.html', form=form)
+        if bcrypt.check_password_hash(user.password, form.password.data):
+            login_user(user)
+            return redirect(url_for('dashboard'))
         else:
-            flash('Invalid username or password.', 'error')
+            flash("Invalid username or password. Please try again")
     return render_template('login.html', form=form)
 
 @app.route('/logout')
@@ -156,10 +210,49 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+
+def send_mail(user):
+    token=user.get_token()
+    msg=Message('Password Reset Request', recipients=[user.email], sender='noreply@demo.com')
+    msg.body=f''' To reset your password, please follow the link: {url_for(reset_token, token=token, _external=True)} If you didn't send a password request, please ignore this email'''
+    Mail.send(msg)
+
+
+
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_request():
+    form=ResetRequestForm()
+    if form.validate_on_submit():
+        user=User.query.filter_by(email=form.email.data).first()
+        if user:
+            send_mail(user)
+            return redirect(url_for('login'))
+    return render_template('reset_request.html', form=form)
+
+
+
+@app.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_token(token):
+    user=User.verify_token(token)
+    if user is None:
+        flash('That is an invalid or expired token, please try again', 'warning')
+        return redirect(url_for('reset_request'))
+    
+    form=ResetPasswordForm()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
+        db.session.add(hashed_password)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template('change_password.html', title="Change Password", form=form)
+
+
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
     return render_template('dashboard.html')
+    
 
 @app.route('/admin')
 @login_required
@@ -172,9 +265,11 @@ def admin():
         return redirect(url_for('index'))
     
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
+@login_required
 def delete_post(post_id):
-  post = Post.Session.get(post_id)
-  if post:
+  post = Post.query.get(post_id)
+  poster=current_user.id
+  if post.poster_id==poster:
     # Delete the post object from the database
     db.session.delete(post)
     db.session.commit()
@@ -238,6 +333,8 @@ def show_post(post_id):
         return redirect('/')  # Handle non-existent post
 
     return render_template('post.html', post=post, comments=comments)
+
+
 
 if  __name__ == '__main__':
     app.run(debug=True)
