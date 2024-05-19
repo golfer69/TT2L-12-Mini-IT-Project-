@@ -173,7 +173,7 @@ def admin():
     
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 def delete_post(post_id):
-  post = Post.query.get(post_id)
+  post = Post.Session.get(post_id)
   if post:
     # Delete the post object from the database
     db.session.delete(post)

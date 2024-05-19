@@ -29,7 +29,7 @@
         <a href="{{ url_for('index') }}" class="previous-btn round"> &laquo; Previous </a>
  
         <!-- display content -->
-        <div class="post"></div>
+        <div class="post">
             <h2>{{post.title}}</h2> <br>
             <p>{{ post.content }}</p>
 
@@ -41,13 +41,7 @@
         
         <div class="comment-section">
             <h1>Comment section</h1>
-            <!-- <form action="{{ '/post/<int:post_id>' }}" method="POST">
-                <input type="hidden" name="post_id" value="{{ post_id }}">
-                <textarea name="username" rows="4" cols="50" placeholder="Enter username..."></textarea><br>
-                <textarea name="comment-content" rows="4" cols="50" placeholder="Enter comment..."></textarea><br>
-                <input type="submit" value="Save">
-                
-            </form> -->
+
             <form action="{{ url_for('show_post', post_id=post.id) }}" method="POST">
                 <input type="hidden" name="post_id" value="{{ post.id }}">  
                 <textarea name="username" rows="4" cols="50" placeholder="Enter username..."></textarea><br>
