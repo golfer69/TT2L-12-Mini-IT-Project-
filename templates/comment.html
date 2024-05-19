@@ -163,14 +163,15 @@
             <textarea name="message_content" rows="4" cols="50" placeholder="Enter comment..."></textarea><br>
             <input type="submit" value="Save">
         </form>
-
+        <br>
         <div class="message">
                 {% for text in texts %}
                 <div class="message-info">
                     <div class="info">
                         <div class="username">{{text.username}}</div>
                         <div>{{text.date_added}}</div>
-                        <div class="content">{{text.message_content}}</div><br>
+                        <div class="content">{{text.message_content}}</div>
+                        <div><input type="submit" value="▲">Vote<input type="submit" value="▼"></div>
                     </div>
                 </div>
                 {% endfor %}
