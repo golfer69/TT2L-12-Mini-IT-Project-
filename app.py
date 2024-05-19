@@ -67,6 +67,8 @@ class Post(db.Model):
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
+    community = db.relationship('Community', backref='posts', lazy=True)
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 class Comment(db.Model):
@@ -75,6 +77,12 @@ class Comment(db.Model):
     username = db.Column(db.String(255))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
     comment_content = db.Column(db.Text)
+
+class Community(db.Model):
+    __tablename__ = 'community'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    about = db.Column(db.String(255))
 
 # create database
 with app.app_context():
@@ -129,34 +137,49 @@ def index():
 def create():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     texts = Post.query.all()
-    return render_template('create.html', texts=texts, pics=pics)
+    communities = Community.query.all()
+    return render_template('create.html', texts=texts, pics=pics,communities=communities)
+
+@app.route('/createcommunity', methods=['GET'])
+@login_required
+def createcomm():
+    return render_template('createcomm.html')
 
 @app.route('/upload', methods=['POST'])
 @login_required
 def upload():
+    item = request.form.get('item')
     if current_user.is_authenticated:
-        file = request.files['file']
         if request.method == 'POST':
-            title = request.form['title']
-            content = request.form['content'] # get text from html form
-            file = request.files['file']  # Access the uploaded file
-            poster= current_user.id
-            text = Post(title=title, content=content, poster_id=poster)
-            db.session.add(text)
-            db.session.commit()
-        
-            if file:
-
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(
-                    app.config['UPLOAD_DIRECTORY'],
-                    secure_filename(file.filename)
-                ))
-
-                text.image_filename = filename
-                db.session.add(text)
+            if item == "post":
+                title = request.form['title']
+                content = request.form['content'] # get text from html form
+                file = request.files['file']  # Access the uploaded file
+                poster= current_user.id
+                community_id = request.form['community_id']
+                post = Post(title=title, content=content, poster_id=poster, community_id=community_id)
+                db.session.add(post)
                 db.session.commit()
-        
+            
+                if file:
+
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(
+                        app.config['UPLOAD_DIRECTORY'],
+                        secure_filename(file.filename)
+                    ))
+
+                    post.image_filename = filename
+                    db.session.add(post)
+                    db.session.commit()
+
+            if item == "community":
+                name = request.form.get('name')
+                about = request.form.get('about')
+                community = Community(name=name, about=about)
+                db.session.add(community)
+                db.session.commit()
+            
     return redirect('/')
 
 @app.route('/update', methods=['GET','POST'])
