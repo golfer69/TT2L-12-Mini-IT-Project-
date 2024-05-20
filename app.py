@@ -255,7 +255,7 @@ def dashboard():
 @login_required
 def admin():
     id= current_user.id
-    if id==5 or id==6:
+    if id==2:
         return render_template('admin.html')
     else:
         flash("Only admins can access this page")
