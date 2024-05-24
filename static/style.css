@@ -99,7 +99,7 @@ button[type='button']:hover {
 }
 
 .previous-btn {
-  background-color: #04AA6D;
+  background-color: red;
   color: black;
   text-decoration: none;
   display: inline-block;
@@ -122,11 +122,6 @@ button[type='button']:hover {
 }
 
 
-
-.posts-section li:hover {
-  background-color: var(--almost-grey);
-} 
-
 /* individual post on the main page */
 .posts {
   padding: 15px 0px;
@@ -141,11 +136,13 @@ button[type='button']:hover {
 }
 .posts:hover h3,
 .posts:hover img,
-.posts:hover a{
+.posts:hover a,
+.posts:hover p{
   background-color: var(--almost-grey) !important;
+  display: block;
 }
-.posts h3 {
-  padding: 0 10px;
+.posts h3, p {
+  padding: 0 20px;
 }
 .posts img {
   width: 50vw;  /* Set a maximum width for images */
@@ -159,6 +156,8 @@ button[type='button']:hover {
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }
+
+
 
 input[type=text] {
   width: 40vw;
@@ -178,4 +177,59 @@ input[type=text] {
   box-sizing: border-box;
   border: 1px solid black;
   border-radius: 10px;
+}
+
+.card-header{
+  text-align: center;
+}
+
+
+.card-title{
+  text-align: center;
+}
+
+
+.card-text {
+  padding-top: 10px;
+  height: auto;
+  text-align: justify;
+  padding-left: 45%;
+}
+
+.app-user {
+  padding-bottom: 100px;
+  text-align: center;
+}
+
+.posts {
+  padding: 15px 0px;
+  margin: 10px 0 10px 50px;
+  border-radius: 20px;
+  border-bottom: 1px solid var(--almost-grey);
+  text-align: left;
+}
+
+.posts:hover{
+  background-color: var(--almost-grey) !important;
+}
+.posts:hover h3,
+.posts:hover img,
+.posts:hover a{
+  background-color: var(--almost-grey) !important;
+  display: block;
+}
+.posts h3 {
+  padding: 0 20px;
+}
+.posts img {
+  width: 50vw;  /* Set a maximum width for images */
+  height: 60vh; /* Set a maximum height for images */
+  object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
+}
+
+/* individual post page */
+.post img {
+  width: 50vw;  /* Set a maximum width for images */
+  height: 60vh; /* Set a maximum height for images */
+  object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }

@@ -10,7 +10,7 @@
   
   <script>
     function validateForm() {
-      var x = document.forms["post-form"]["title"].value;
+      var x = document.forms["post-form"]["form-title"].value;
       if (x == "" || x == null) {
         alert("Title must be filled out");
         return false;
@@ -22,17 +22,19 @@
 <body>
 <!-- nav bar -->
 <div class="navigation">
-    <a href="/">Home</a>
-    {% if current_user.is_authenticated %}
-        {% if current_user.id == 5 or current_user.id == 6 %}
-        <a href="{{url_for('admin')}}">Admin Page</a>
-        {% endif %}
-    <a href="{{url_for('dashboard')}}">Dashboard</a>
-    <a href="{{url_for('logout')}}">Log Out</a>
-    {% else %}
-    <a href="{{url_for('register')}}">Sign up</a>
-    <a href="{{url_for('login')}}">Log In</a>
-    {% endif %}
+  <a href="/">Home</a>
+  {% if current_user.is_authenticated %}
+  {% if current_user.id == 1 or current_user.id == 6 %}
+      <a href="{{url_for('admin')}}">Admin Page</a>
+  {% endif %}
+  <a href="{{url_for('dashboard')}}">Dashboard</a>
+  <a href="{{url_for('user_details')}}">User</a>
+  <a href="{{url_for('logout')}}">Log Out</a>
+  {% else %}
+  <a href="{{url_for('register')}}">Sign up</a>
+  <a href="{{url_for('login')}}">Log In</a>
+  {% endif %}
+  <a class="btn" href="/create"> + Create</a>
 </div>
 
   <div class="app">
@@ -48,9 +50,16 @@
       <h2>Create a post</h2>
 
       <form action="/upload" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
-        <input type="text" name="form-title" placeholder="Title"><br>
-        <textarea type="text" name="form-content"  class="form-content" placeholder="Content"></textarea><br>
+        <input type="hidden" name="item" value="post">
+        <input type="text" name="title" placeholder="Title"><br>
+        <textarea type="text" name="content"  class="form-content" placeholder="Content"></textarea><br>
+        <select name="community_id">
+          {% for community in communities %}
+            <option value="{{community.id}}">{{community.name}}</option>
+          {% endfor %}
+        </select>
         <input type="file" name="file">
+
         <input type="submit" value="Upload">
       </form>
 
