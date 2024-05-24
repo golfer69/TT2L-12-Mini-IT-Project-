@@ -340,11 +340,6 @@ def show_post(post_id):
     return render_template('post.html', post=post, comments=comments)
 
 
-if  __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
-
 def calculate_time_difference(posted_time):
     # Your time difference calculation function here
 
