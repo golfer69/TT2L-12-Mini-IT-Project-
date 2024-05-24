@@ -276,12 +276,17 @@ def dashboard():
     user_posts= Post.query.filter_by(poster_id=current_user.id).all()
     return render_template('dashboard.html', posts=user_posts)
     
+@app.route('/user_details', methods=['GET', 'POST'])
+@login_required
+def user_details():
+    return render_template('user_details.html')
+
 
 @app.route('/admin')
 @login_required
 def admin():
     id= current_user.id
-    if id==2 or id==6:
+    if id==1 or id==6:
         return render_template('admin.html')
     
 @app.route('/delete_post/<int:post_id>', methods=['POST'])

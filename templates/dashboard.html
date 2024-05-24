@@ -9,10 +9,11 @@
   <div class="navigation">
     <a href="/">Home</a>
     {% if current_user.is_authenticated %}
-    {% if current_user.id == 2 or current_user.id == 6 %}
+    {% if current_user.id == 1 or current_user.id == 6 %}
         <a href="{{url_for('admin')}}">Admin Page</a>
     {% endif %}
     <a href="{{url_for('dashboard')}}">Dashboard</a>
+    <a href="{{url_for('user_details')}}">User</a>
     <a href="{{url_for('logout')}}">Log Out</a>
     {% else %}
     <a href="{{url_for('register')}}">Sign up</a>
@@ -27,22 +28,6 @@
     </div>
   </div>
 
-  <div class="bio">
-    <div class="card">
-      <h3 class="card-header">{{current_user.username}}</h5>
-    </div>
-    <div class="card-body">
-      <h4 class="card-title">Bio</h4><br>
-      <div class="card-text">
-      <p>
-      <strong>Name: </strong> {{current_user.username}}<br>
-      <strong>Age: </strong> {{current_user.id}}<br>
-      <strong>Location: </strong> {{current_user.email}}<br>
-      <strong>Bio: </strong> {{current_user.username}}<br>
-      </p>
-      </div>
-    </div>
-  </div>
   <div class="user-posts">
     <div class="app">
       <div class="posts-section">
