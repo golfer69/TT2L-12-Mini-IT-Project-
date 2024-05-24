@@ -248,7 +248,8 @@ def reset_token(token):
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    user_posts= Post.query.filter_by(poster_id=current_user.id).all()
+    return render_template('dashboard.html', posts=user_posts)
     
 
 @app.route('/admin')

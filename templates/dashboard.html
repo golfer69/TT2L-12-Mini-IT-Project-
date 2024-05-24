@@ -22,6 +22,48 @@
   </div>
   <div class="app">
     <h1>Dashboard Page</h1><br>
+    <div class="app-user">
     <h1>Hello, {{current_user.username}} you are logged in</h1>
+    </div>
   </div>
+
+  <div class="bio">
+    <div class="card">
+      <h3 class="card-header">{{current_user.username}}</h5>
+    </div>
+    <div class="card-body">
+      <h4 class="card-title">Bio</h4><br>
+      <div class="card-text">
+      <p>
+      <strong>Name: </strong> {{current_user.username}}<br>
+      <strong>Age: </strong> {{current_user.id}}<br>
+      <strong>Location: </strong> {{current_user.email}}<br>
+      <strong>Bio: </strong> {{current_user.username}}<br>
+      </p>
+      </div>
+    </div>
+  </div>
+  <div class="user-posts">
+    <div class="app">
+      <div class="posts-section">
+          {% for post in posts %}
+        <div class="posts">      
+          <a href="{{ url_for('show_post', post_id=post.id) }}">  
+              <h3>{{post.title}}</h3> <br>
+              {% if post.image_filename %}
+                <!-- <div style="display: flex; flex-direction: column;"> -->
+                  <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
+                <!-- </div> -->
+                {% else %}
+                  {{ post.content }}
+              {% endif %}
+          </a>
+        </div>
+          {% endfor %}
+        </div>
+    </div>
+  </div>
+
+
+</body>
 </html>
