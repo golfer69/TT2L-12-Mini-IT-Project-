@@ -11,7 +11,7 @@
     <div class="navigation">
         <a href="/">Home</a>
         {% if current_user.is_authenticated %}
-          {% if current_user.id == 5 or current_user.id == 6 %}
+          {% if current_user.id == 2 or current_user.id == 6 %}
             <a href="{{url_for('admin')}}">Admin Page</a>
           {% endif %}
         <a href="{{url_for('dashboard')}}">Dashboard</a>
@@ -30,6 +30,7 @@
  
         <!-- display content -->
         <div class="post">
+            <p>r/{{post.community.name}}</p><br>
             <h2>{{post.title}}</h2> <br>
             <p>{{ post.content }}</p> <br>
             <p>by: {{post.poster.username}}</p>
@@ -42,13 +43,15 @@
         {% endif %}
         
         <div class="comment-section">
-            <h1>Comment section</h1>
+            <br>
+            <b>Comment section</b>
 
             <form action="{{ url_for('show_post', post_id=post.id) }}" method="POST">
                 <input type="hidden" name="post_id" value="{{ post.id }}">  
-                <textarea name="username" rows="4" cols="50" placeholder="Enter username..."></textarea><br>
+                <p>{{current_user.username}}</p>
                 <textarea name="comment-content" rows="4" cols="50" placeholder="Enter comment..."></textarea><br>
                 <input type="submit" value="Save">
+                
             </form>
             
 
@@ -56,7 +59,7 @@
                     {% for comment in comments %}
                     <div>
                         <div class="info">
-                            <div class="username">{{comment.username}}</div>
+                            <div class="username">{{comment.poster.username}}</div>
                             <div>{{comment.date_added}}</div>
                             <div class="comment-content">{{comment.comment_content}}</div><br>
                         </div>
@@ -66,18 +69,13 @@
 
         <!-- delete button -->
         {% if current_user.is_authenticated %}
-            {% if current_user.id == 2 or current_user.id==post.poster_id %}
+            {% if current_user.id == 2 or current_user.id==post.poster_id  %}
             <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST">
                 <button type="submit">Delete</button>
                 {% endif %}
             </form>
         {% endif %}
 
-        <!-- {% if current_user.is_authenticated and current_user.id==post.poster_id %}
-            <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST">
-            <button type="submit">Delete</button>
-            </form>
-        {% endif %} -->
         
 
         <!-- edit button -->

@@ -47,6 +47,7 @@ class User(db.Model, UserMixin):
     password= db.Column(db.String(40), nullable=False)
     email= db.Column(db.String(80), nullable=False, unique=True)
     posts= db.relationship('Post', backref='poster', lazy=True)
+    comments= db.relationship('Comment', backref='poster', lazy=True)
 
     def get_token(self):
         return serializer.dumps({'user_id':self.id}, salt='password-reset-salt')
@@ -67,14 +68,23 @@ class Post(db.Model):
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
+    
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(255))
+    poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
     comment_content = db.Column(db.Text)
+
+class Community(db.Model):
+    __tablename__ = 'community'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    about = db.Column(db.String(255))
+    community = db.relationship('Post', backref='community', lazy=True)
 
 # create database
 with app.app_context():
@@ -129,34 +139,49 @@ def index():
 def create():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     texts = Post.query.all()
-    return render_template('create.html', texts=texts, pics=pics)
+    communities = Community.query.all()
+    return render_template('create.html', texts=texts, pics=pics,communities=communities)
+
+@app.route('/createcommunity', methods=['GET'])
+@login_required
+def createcomm():
+    return render_template('createcomm.html')
 
 @app.route('/upload', methods=['POST'])
 @login_required
 def upload():
+    item = request.form.get('item')
     if current_user.is_authenticated:
-        file = request.files['file']
         if request.method == 'POST':
-            title = request.form['title']
-            content = request.form['content'] # get text from html form
-            file = request.files['file']  # Access the uploaded file
-            poster= current_user.id
-            text = Post(title=title, content=content, poster_id=poster)
-            db.session.add(text)
-            db.session.commit()
-        
-            if file:
-
-                filename = secure_filename(file.filename)
-                file.save(os.path.join(
-                    app.config['UPLOAD_DIRECTORY'],
-                    secure_filename(file.filename)
-                ))
-
-                text.image_filename = filename
-                db.session.add(text)
+            if item == "post":
+                title = request.form['title']
+                content = request.form['content'] # get text from html form
+                file = request.files['file']  # Access the uploaded file
+                poster= current_user.id
+                community_id = request.form['community_id']
+                post = Post(title=title, content=content, poster_id=poster, community_id=community_id)
+                db.session.add(post)
                 db.session.commit()
-        
+            
+                if file:
+
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(
+                        app.config['UPLOAD_DIRECTORY'],
+                        secure_filename(file.filename)
+                    ))
+
+                    post.image_filename = filename
+                    db.session.add(post)
+                    db.session.commit()
+
+            if item == "community":
+                name = request.form.get('name')
+                about = request.form.get('about')
+                community = Community(name=name, about=about)
+                db.session.add(community)
+                db.session.commit()
+            
     return redirect('/')
 
 @app.route('/update', methods=['GET','POST'])
@@ -256,11 +281,8 @@ def dashboard():
 @login_required
 def admin():
     id= current_user.id
-    if id==2:
+    if id==2 or id==6:
         return render_template('admin.html')
-    else:
-        flash("Only admins can access this page")
-        return redirect(url_for('index'))
     
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 @login_required
@@ -296,11 +318,11 @@ def show_post(post_id):
     comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
 
     if request.method == 'POST':
-        username = request.form["username"]
+        poster_id= current_user.id
         comment_content = request.form["comment-content"]
         post_id = request.form["post_id"]  # Access post ID from the hidden field
 
-        comment = Comment(username=username, comment_content=comment_content, post_id=post_id)
+        comment = Comment(poster_id=poster_id, comment_content=comment_content, post_id=post_id)
         db.session.add(comment)
         db.session.commit()
 
@@ -309,6 +331,7 @@ def show_post(post_id):
 
     if not post:
         return redirect('/')  # Handle non-existent post
+    
     return render_template('post.html', post=post, comments=comments)
 
 

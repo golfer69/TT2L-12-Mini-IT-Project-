@@ -122,11 +122,6 @@ button[type='button']:hover {
 }
 
 
-
-/* .posts-section li:hover {
-  background-color: var(--almost-grey);
-}  */
-
 /* individual post on the main page */
 .posts {
   padding: 15px 0px;
@@ -141,11 +136,12 @@ button[type='button']:hover {
 }
 .posts:hover h3,
 .posts:hover img,
-.posts:hover a{
+.posts:hover a,
+.posts:hover p{
   background-color: var(--almost-grey) !important;
   display: block;
 }
-.posts h3 {
+.posts h3, p {
   padding: 0 20px;
 }
 .posts img {
