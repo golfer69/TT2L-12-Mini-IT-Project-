@@ -18,9 +18,6 @@ class Post(db.Model):
     votes = db.Column(db.Integer, default=0)
     date_added = db.Column(db.DateTime, default=datetime.now)
 
-# Create or migrate database
-db.create_all()
-
 # Define routes and other functionality here...
 @app.route('/vote', methods=['POST'])
 def vote():
