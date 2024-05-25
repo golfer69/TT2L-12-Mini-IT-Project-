@@ -3,15 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reddit-like Voting System</title>
-    <link rel="stylesheet" href="vote.css">
+    <title>Reddit Voting</title>
+    <style>
+        .vote-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 50px;
+        }
+        .vote-button {
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 20px;
+        }
+        .vote-count {
+            font-size: 18px;
+        }
+        .upvote {
+            color: green;
+        }
+        .downvote {
+            color: red;
+        }
+    </style>
 </head>
 <body>
-    <div class="vote-container">
-        <form action="{{ url_for('user_vote') }}" method="GET">
-        <input type="submit" value="▲">Vote<input type="submit" value="▼">
-    </form>
+    <div class="post">
+        <div class="content">
+            <h2>Post Title</h2>
+            <p>Post content goes here...</p>
+        </div>
+        <div class="vote-container">
+            <button class="vote-button upvote" onclick="vote('upvote')">⬆️</button>
+            <div class="vote-count" id="vote-count">Vote</div>
+            <button class="vote-button downvote" onclick="vote('downvote')">⬇️</button>
+        </div>
     </div>
+
+    <script>
+        let voteCount = 0;
+
+        function vote(type) {
+            if (type === 'upvote') {
+                voteCount++;
+            } else if (type === 'downvote') {
+                voteCount--;
+            }
+            document.getElementById('vote-count').innerText = voteCount;
+        }
+    </script>
 </body>
 </html>
 

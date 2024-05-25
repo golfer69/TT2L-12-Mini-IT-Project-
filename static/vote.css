@@ -1,40 +1,19 @@
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f7f7f7;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-
-.vote-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background-color: white;
-  padding: 20px;
+.comment {
   border: 1px solid #ddd;
-  border-radius: 5px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  padding: 10px;
+  margin-bottom: 10px;
 }
 
-.vote-button {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #888;
-  outline: none;
-  padding: 5px;
-  margin: 0;
+.voting {
+  display: flex;
+  align-items: center;
 }
 
-.upvote-button:hover {
-  color: orange;
+.voting form {
+  margin-right: 5px;
 }
 
-.downvote-button:hover {
-  color: blue;
+.votes {
+  margin-right: 10px;
 }
 
