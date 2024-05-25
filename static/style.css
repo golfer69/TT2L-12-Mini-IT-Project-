@@ -237,7 +237,7 @@ input[type=text] {
 
 .button-container {
   display: grid;
-  align-items: end;
+  align-items: flex-start;
   margin: 0;
   padding-right: 95%;
   width: 50px;
@@ -271,4 +271,25 @@ input[type=text] {
   background-color: #000000;
   color: var(--almost-white);
   
+}
+
+.card-body {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  
+}
+
+.card-title {
+  text-align: center;
+}
+
+.card-img-top {
+  max-width: 600px;
+  max-height: 400px;
+  
+}
+
+.btn {
+  align-items: center;
 }

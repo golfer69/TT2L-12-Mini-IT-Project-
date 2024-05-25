@@ -29,18 +29,21 @@
   </div>
 
   <div class="bio">
-    <div class="card">
-      <h3 class="card-header">{{current_user.username}}</h3>
-    </div>
-    <div class="card-body">
-      <h4 class="card-title">Bio</h4><br>
-      <div class="card-text">
-      <p>
-      <strong>Name: </strong> {{current_user.username}}<br>
-      <strong>Age: </strong> {{current_user.id}}<br>
-      <strong>Location: </strong> {{current_user.email}}<br>
-      <strong>Bio: </strong> {{current_user.username}}<br>
-      </p>
+    <div class="card" style="width: 18rem;">
+      <img src="uploads\timetable.jpg" class="card-img-top" alt="welp">
+      <div class="card-body">
+        <h5 class="card-title">{{current_user.username}}</h5>
+        <p class="card-text">
+          <strong>Name: </strong> {{update.name}}<br>
+          <strong>Age: </strong> {{update.age}}<br>
+          <strong>Email: </strong> {{current_user.email}}<br>
+          <strong>About: </strong> {{update.about}}<br>
+          <strong>Location: </strong> {{update.location}}<br>
+          <strong>Interests: </strong> {{update.interests}}<br>
+          <strong>Faculty: </strong> {{update.faculty}}<br>
+          <strong>Date Joined: </strong> {{user.date_joined}}<br>
+        </p>
+        <button a href="{{url_for('update_user_details')}}" class="btn btn-outline-primary">Update User</button>
       </div>
     </div>
   </div>

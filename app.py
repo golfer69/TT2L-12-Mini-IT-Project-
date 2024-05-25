@@ -48,6 +48,7 @@ class User(db.Model, UserMixin):
     email= db.Column(db.String(80), nullable=False, unique=True)
     posts= db.relationship('Post', backref='poster', lazy=True)
     comments= db.relationship('Comment', backref='poster', lazy=True)
+    date_joined= db.Column(db.DateTime, default=datetime.now)
 
     def get_token(self):
         return serializer.dumps({'user_id':self.id}, salt='password-reset-salt')
@@ -85,6 +86,18 @@ class Community(db.Model):
     name = db.Column(db.String(50))
     about = db.Column(db.String(255))
     community = db.relationship('Post', backref='community', lazy=True)
+
+class Update(db.Model):
+    __tablename__ = 'update'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50))
+    age = db.Column(db.Integer)
+    about = db.Column(db.String(1000))
+    location = db.Column(db.String(1000))
+    interests = db.Column(db.String(1000))
+    faculty = db.Column(db.String(1000))
+
+
 
 # create database
 with app.app_context():
@@ -127,6 +140,17 @@ class ResetPasswordForm(FlaskForm):
     def validate_confirm_password(self, confirm_password):
         if self.password.data != confirm_password.data:
             raise ValidationError('Passwords do not match!')
+
+
+class UpdateForm(FlaskForm):
+    name= StringField(label='Name')
+    age= StringField(label='Age', validators=[Length(max=3)])
+    about= StringField(label='About', validators=[Length(min=40, max=1000)])
+    location= StringField(label='Location', validators=[Length(min=40, max=100)])
+    interests= StringField(label='Interests', validators=[Length(min=40, max=1000)])    
+    faculty= StringField(label='Faculty', validators=[Length(min=40, max=100)])
+    submit= SubmitField('Submit')
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -282,6 +306,23 @@ def user_details():
     return render_template('user_details.html')
 
 
+@app.route('/update_user_details', methods=['GET', 'POST'])
+@login_required
+def update_user_details():
+    form=UpdateForm()
+    if form.validate_on_submit():
+        update_user_details= Update(name=form.name.data, 
+                                    age=form.age.data,
+                                    about=form.about.data,
+                                    location=form.location.data,
+                                    interests=form.interests.data,
+                                    faculty=form.faculty.data)
+        db.session.add(update_user_details)
+        db.session.commit()
+        return redirect(url_for('user_details'))
+    return render_template('update_user_details.html',title='Update User Details', form=form)
+
+
 @app.route('/admin')
 @login_required
 def admin():
@@ -338,6 +379,11 @@ def show_post(post_id):
         return redirect('/')  # Handle non-existent post
     
     return render_template('post.html', post=post, comments=comments)
+
+
+
+
+
 
 
 if  __name__ == '__main__':
