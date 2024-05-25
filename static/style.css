@@ -233,3 +233,42 @@ input[type=text] {
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }
+
+
+.button-container {
+  display: grid;
+  align-items: end;
+  margin: 0;
+  padding-right: 95%;
+  width: 50px;
+  height: 100px;
+}
+.previous-btn-1 {
+  background-color: #04AA6D;
+  color: black;
+  text-decoration: none;
+  display: inline-block;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  left: 50px;
+
+}
+.previous-btn-2 {
+  background-color: indianred;
+  color: black;
+  text-decoration: none;
+  display: inline-block;
+  padding: 8px 16px;
+  margin-bottom: 8px;
+  border-radius: 15px;
+  left: 50px;
+
+}
+
+
+.previous-btn-1:hover, .previous-btn-2:hover {
+  background-color: #000000;
+  color: var(--almost-white);
+  
+}

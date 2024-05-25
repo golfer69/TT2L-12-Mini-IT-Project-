@@ -28,8 +28,10 @@
     <div class="app">
 
         <!-- button to go back -->
-        <a href="{{ url_for('index') }}" class="previous-btn round"> &laquo; Previous </a>
- 
+        <div class="button-container">
+            <a href="{{ url_for('index') }}" class="previous-btn-1 round"> &laquo; Home </a>
+            <a href="{{ url_for('dashboard') }}" class="previous-btn-2 round"> &laquo; Dashboard </a>       
+        </div>
         <!-- display content -->
         <div class="post">
             <p>r/{{post.community.name}}</p><br>
