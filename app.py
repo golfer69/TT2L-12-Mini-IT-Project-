@@ -184,23 +184,16 @@ def show_post(post_id):
     post = Text.query.get(post_id)
     if not post:
         return redirect('/')  # Handle non-existent post
-    
-    return render_template('post.html',post=post)  # Render a separate template for single post
+    return render_template('post.html',post=post)  # Render post.html
 
 
-def calculate_time_difference(posted_time):
-    # Your time difference calculation function here
 
- @app.route('/post')
- def post():
+
+def post():
     posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
     time_since_posted = calculate_time_difference(posted_time)
     return render_template('post.html', time_since_posted=time_since_posted)
-
-
-
 #how far back was a post posted
-
 def calculate_time_difference(posted_time):
     current_time = datetime.now()
     time_difference = current_time - posted_time
@@ -232,9 +225,6 @@ def calculate_time_difference(posted_time):
 posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
 time_since_posted = calculate_time_difference(posted_time)
 print(time_since_posted)
-
-
-
 
 
 
