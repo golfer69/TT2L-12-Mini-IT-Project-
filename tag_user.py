@@ -36,7 +36,7 @@ User.comments = db.relationship('Comment', back_populates='user')
 Comment.tags = db.relationship('Tag', back_populates='comment')
 
 def parse_tags(comment_content):
-    pattern = r'@(\w+)'  # Find the username that starts with @
+    pattern = r'@(\w+)'  # Find the username starts with @
     usernames = re.findall(pattern, comment_content)
     return usernames
 
@@ -45,7 +45,7 @@ def submit_comment():
     user_id = request.form['user_id']
     content = request.form['content']
     
-    # Create comment
+    # Create comments
     comment = Comment(content=content, user_id=user_id)
     db.session.add(comment)
     db.session.commit()

@@ -15,10 +15,12 @@
         {% for comment in comments %}
         <li>
             <strong>{{ comment.user.username }}</strong>: 
+            <div>{{text.date_added}}</div>
             {{ comment.content | safe }}
             <ul>
                 {% for tag in comment.tags %}
                 <li>Tagged: {{ tag.user.username }}</li>
+                <div>{{text.date_added}}</div><br>
                 {% endfor %}
             </ul>
         </li>
