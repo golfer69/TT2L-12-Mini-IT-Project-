@@ -1,40 +1,5 @@
-
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Create post</title>
-  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
-  
-  <script>
-    function validateForm() {
-      var x = document.forms["post-form"]["form-title"].value;
-      if (x == "" || x == null) {
-        alert("Title must be filled out");
-        return false;
-      }
-    }
-    </script>
-
-</head>
-<body>
-<!-- nav bar -->
-<div class="navigation">
-    <a href="/">Home</a>
-    {% if current_user.is_authenticated %}
-        {% if current_user.id == 5 or current_user.id == 6 %}
-        <a href="{{url_for('admin')}}">Admin Page</a>
-        {% endif %}
-    <a href="{{url_for('dashboard')}}">Dashboard</a>
-    <a href="{{url_for('logout')}}">Log Out</a>
-    {% else %}
-    <a href="{{url_for('register')}}">Sign up</a>
-    <a href="{{url_for('login')}}">Log In</a>
-    {% endif %}
-</div>
-
+{% extends 'base.html' %}
+{% block content %}
   <div class="app">
     <!--  create form  -->
     <div class="form-section">
@@ -53,5 +18,4 @@
       </form>
 
   </div>
-</body>
-</html>
+{% endblock %}

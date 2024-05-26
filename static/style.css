@@ -36,8 +36,8 @@ input[type='file'] {
 
 input[type='submit'],
 button[type='button'] {
-  padding: 13px 20px;
-  font-size: 22px;
+  padding: 10px 20px;
+  font-size: 15px;
   font-weight: bold;
   color: var(--white);
   border: none;
@@ -67,11 +67,12 @@ button[type='button']:hover {
   background-color: white;
 }
 
-.navigation a {
+.navigation a,
+.navigation p{
   float: left;
   display: block;
   color: var(--almost-black);
-  padding: 14px 16px;
+  padding: 14px 16px; 
   text-align: center;
   text-decoration: none;
   box-sizing: border-box;
@@ -127,7 +128,6 @@ button[type='button']:hover {
   padding: 15px 0px;
   margin: 10px 0 10px 50px;
   border-radius: 20px;
-  border-bottom: 1px solid var(--almost-grey);
   text-align: left;
 }
 
@@ -139,7 +139,6 @@ button[type='button']:hover {
 .posts:hover a,
 .posts:hover p{
   background-color: var(--almost-grey) !important;
-  display: block;
 }
 .posts h3, p {
   padding: 0 20px;
@@ -206,7 +205,6 @@ input[type=text] {
   padding: 15px 0px;
   margin: 10px 0 10px 50px;
   border-radius: 20px;
-  border-bottom: 1px solid var(--almost-grey);
   text-align: left;
 }
 
@@ -215,12 +213,17 @@ input[type=text] {
 }
 .posts:hover h3,
 .posts:hover img,
-.posts:hover a{
+.posts:hover a,
+.posts:hover span{
   background-color: var(--almost-grey) !important;
-  display: block;
 }
 .posts h3 {
   padding: 0 20px;
+}
+.community-label {
+  padding: 0 20px;
+  width:auto;
+  display: inline;
 }
 .posts img {
   width: 50vw;  /* Set a maximum width for images */
@@ -234,3 +237,21 @@ input[type=text] {
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }
+
+.inline-block{
+  display: inline-block;
+}
+
+.admin-buttons{
+  margin: 10px 0;
+}
+
+.info {
+ text-align: left;
+ padding-left: 10vw;
+}
+
+.float-right {
+  float: right !important;
+}
+

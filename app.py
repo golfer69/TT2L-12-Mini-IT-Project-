@@ -132,7 +132,7 @@ class ResetPasswordForm(FlaskForm):
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     posts = Post.query.all()
-    return render_template('index.html', posts=posts, pics=pics)
+    return render_template('index.html', posts=posts, pics=pics, page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
 @login_required
@@ -140,12 +140,12 @@ def create():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     texts = Post.query.all()
     communities = Community.query.all()
-    return render_template('create.html', texts=texts, pics=pics,communities=communities)
+    return render_template('create.html', texts=texts, pics=pics,communities=communities, page_title="Create a post")
 
 @app.route('/createcommunity', methods=['GET'])
 @login_required
 def createcomm():
-    return render_template('createcomm.html')
+    return render_template('createcomm.html', page_title="Create community")
 
 @app.route('/upload', methods=['POST'])
 @login_required
@@ -181,6 +181,18 @@ def upload():
                 community = Community(name=name, about=about)
                 db.session.add(community)
                 db.session.commit()
+
+            if item == "comment":
+                poster_id= current_user.id
+                comment_content = request.form["comment-content"]
+                post_id = request.form["post_id"]  # Access post ID from the hidden field
+
+                comment = Comment(poster_id=poster_id, comment_content=comment_content, post_id=post_id)
+                db.session.add(comment)
+                db.session.commit()
+
+                # Redirect back to the updated post page using the correct post ID
+                return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
             
     return redirect('/')
 
@@ -274,12 +286,12 @@ def reset_token(token):
 @login_required
 def dashboard():
     user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    return render_template('dashboard.html', posts=user_posts)
+    return render_template('dashboard.html', posts=user_posts, page_title="Dashboard")
     
 @app.route('/user_details', methods=['GET', 'POST'])
 @login_required
 def user_details():
-    return render_template('user_details.html')
+    return render_template('user_details.html',page_title="User Details")
 
 
 @app.route('/admin')
@@ -287,7 +299,7 @@ def user_details():
 def admin():
     id= current_user.id
     if id==1 or id==6:
-        return render_template('admin.html')
+        return render_template('admin.html', page_title="Admin Page")
     
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 @login_required
@@ -322,27 +334,19 @@ def show_post(post_id):
     post = Post.query.get(post_id)
     comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
 
-    if request.method == 'POST':
-        poster_id= current_user.id
-        comment_content = request.form["comment-content"]
-        post_id = request.form["post_id"]  # Access post ID from the hidden field
-
-        comment = Comment(poster_id=poster_id, comment_content=comment_content, post_id=post_id)
-        db.session.add(comment)
-        db.session.commit()
-
-        # Redirect back to the updated post page using the correct post ID
-        return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
-
     if not post:
         return redirect('/')  # Handle non-existent post
     
-    return render_template('post.html', post=post, comments=comments)
+    return render_template('post.html', post=post, comments=comments, page_title=post.title)
 
-@app.route('/community/<int:community_id>', methods=['GET'])
-def show_community(community_id):
+@app.route('/community/<string:community_name>', methods=['GET'])
+def show_community(community_name):
+    community = Community.query.filter_by(name=community_name).first()
+    if community:
+      community_id = community.id # Get the id of the community
+    community = Community.query.get(community_id)
     community_posts = Post.query.filter_by(community_id=community_id)
-    return render_template('community.html', posts=community_posts)
+    return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
 
 if  __name__ == '__main__':
     with app.app_context():

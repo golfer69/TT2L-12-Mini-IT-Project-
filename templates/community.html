@@ -1,38 +1,14 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MMU Reddit</title>
-  <link rel="icon" href="https://www.mmu.edu.my/wp-content/themes/mmu2018/assets/images/cropped-mmulogo-only-192x192.png" sizes="192x192">
-  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
-</head>
-<body>
-    <div class="navigation">
-        <a href="/">Home</a>
-        {% if current_user.is_authenticated %}
-        {% if current_user.id == 1 or current_user.id == 6 %}
-            <a href="{{url_for('admin')}}">Admin Page</a>
-        {% endif %}
-        <a href="{{url_for('dashboard')}}">Dashboard</a>
-        <a href="{{url_for('user_details')}}">User</a>
-        <a href="{{url_for('logout')}}">Log Out</a>
-        {% else %}
-        <a href="{{url_for('register')}}">Sign up</a>
-        <a href="{{url_for('login')}}">Log In</a>
-        {% endif %}
-        <a class="btn" href="/create"> + Create</a>
-        <a class="btn" href="/createcommunity"> + Create community </a>
-    </div>
+{% extends 'base.html' %}
 
+{% block content %}
   <div class="app">
+    r/{{community.name}}
     <div class="posts-section">
       {% for post in posts %}
       <div class="posts">      
         <a href="{{ url_for('show_post', post_id=post.id) }}">  
-            <h3>{{post.title}}</h3> <br>
+            <h3>{{post.title}}</h3>
             <!-- if got img show img else the desc -->
             {% if post.image_filename %} 
                 <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
@@ -41,8 +17,8 @@
             {% endif %}
         </a>
       </div>
+      <hr>
       {% endfor %}
       </div>
   </div>
-</body>
-</html>
+{% endblock %}
