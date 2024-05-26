@@ -247,7 +247,7 @@ input[type=text] {
   width: 50px;
   height: 100px;
 }
-.previous-btn-1 {
+/* .previous-btn-1 {
   background-color: #04AA6D;
   color: black;
   text-decoration: none;
@@ -257,16 +257,18 @@ input[type=text] {
   border-radius: 12px;
   left: 50px;
 
-}
+} */
 .previous-btn-2 {
   background-color: indianred;
   color: black;
   text-decoration: none;
   display: inline-block;
   padding: 8px 16px;
-  margin-bottom: 8px;
+  /* margin-bottom: 8px; */
   border-radius: 15px;
-  left: 50px;
+  right: 500px;
+  text-decoration: indianred;
+
 
 }
 

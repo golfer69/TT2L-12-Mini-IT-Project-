@@ -145,10 +145,10 @@ class ResetPasswordForm(FlaskForm):
 class UpdateForm(FlaskForm):
     name= StringField(label='Name')
     age= StringField(label='Age', validators=[Length(max=3)])
-    about= StringField(label='About', validators=[Length(min=40, max=1000)])
-    location= StringField(label='Location', validators=[Length(min=40, max=100)])
-    interests= StringField(label='Interests', validators=[Length(min=40, max=1000)])    
-    faculty= StringField(label='Faculty', validators=[Length(min=40, max=100)])
+    about= StringField(label='About', validators=[Length(min=7, max=1000)])
+    location= StringField(label='Location', validators=[Length(min=1, max=100)])
+    interests= StringField(label='Interests', validators=[Length(min=1, max=1000)])    
+    faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
     submit= SubmitField('Submit')
 
 
@@ -315,21 +315,31 @@ def dashboard():
 @app.route('/user_details', methods=['GET', 'POST'])
 @login_required
 def user_details():
-    return render_template('user_details.html',page_title="User Details")
+    update=Update.query.filter_by(name=current_user.username).first()
+    return render_template('user_details.html', update=update, page_title="User Details")
 
 
 @app.route('/update_user_details', methods=['GET', 'POST'])
 @login_required
 def update_user_details():
     form=UpdateForm()
+    current_update=Update.query.filter_by(name=current_user.username).first()
     if form.validate_on_submit():
-        update_user_details= Update(name=form.name.data, 
-                                    age=form.age.data,
-                                    about=form.about.data,
-                                    location=form.location.data,
-                                    interests=form.interests.data,
-                                    faculty=form.faculty.data)
-        db.session.add(update_user_details)
+        if current_update:
+            current_update.name=form.name.data
+            current_update.age=form.age.data
+            current_update.location=form.location.data
+            current_update.about=form.about.data
+            current_update.interests=form.interests.data
+            current_update.faculty=form.faculty.data
+        else:
+            update_user_details= Update(name=form.name.data, 
+                                        age=form.age.data,
+                                        about=form.about.data,
+                                        location=form.location.data,
+                                        interests=form.interests.data,
+                                        faculty=form.faculty.data)
+            db.session.add(update_user_details)
         db.session.commit()
         return redirect(url_for('user_details'))
     return render_template('update_user_details.html',title='Update User Details', form=form)

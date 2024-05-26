@@ -14,14 +14,14 @@
       <div class="card-body">
         <h5 class="card-title">{{current_user.username}}</h5>
         <p class="card-text">
-          <strong>Name: </strong> {{update.name}}<br>
-          <strong>Age: </strong> {{update.age}}<br>
+          <strong>Name: </strong> {{update.name if update else 'N/A' }}<br>
+          <strong>Age: </strong> {{update.age if update else 'N/A'}}<br>
           <strong>Email: </strong> {{current_user.email}}<br>
-          <strong>About: </strong> {{update.about}}<br>
-          <strong>Location: </strong> {{update.location}}<br>
-          <strong>Interests: </strong> {{update.interests}}<br>
-          <strong>Faculty: </strong> {{update.faculty}}<br>
-          <strong>Date Joined: </strong> {{user.date_joined}}<br>
+          <strong>About: </strong> {{update.about if update else 'N/A'}}<br>
+          <strong>Location: </strong> {{update.location if update else 'N/A'}}<br>
+          <strong>Interests: </strong> {{update.interests if update else 'N/A'}}<br>
+          <strong>Faculty: </strong> {{update.faculty if update else 'N/A'}}<br>
+          <strong>Date Joined: </strong> {{current_user.date_joined}}<br>
         </p>
         <button a href="{{url_for('update_user_details')}}" class="btn btn-outline-primary">Update User</button>
       </div>
