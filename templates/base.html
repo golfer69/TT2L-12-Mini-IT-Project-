@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>{{ page_title }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   <link rel="icon" href="https://www.mmu.edu.my/wp-content/themes/mmu2018/assets/images/cropped-mmulogo-only-192x192.png" sizes="192x192">
   <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   {% block scripts %}
   {% endblock %}
 
@@ -27,13 +27,12 @@
         {% endif %}
         <p class="float-right">{{current_user.username}}</p>
         <a class="btn" href="/create"> + Create</a>
-        <a class="btn" href="/createcommunity"> + Create community </a>
+        
         
     </div>
   </header>
   <main>
     {% block content %}
-
     {% endblock %}
   </main>
 </body>

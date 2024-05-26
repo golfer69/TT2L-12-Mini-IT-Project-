@@ -118,7 +118,7 @@ button[type='button']:hover {
 /* posts section */
 .posts-section {
  text-align: center;
- width: 60vw;
+ width: 50vw;
  margin: auto;
 }
 
@@ -126,7 +126,7 @@ button[type='button']:hover {
 /* individual post on the main page */
 .posts {
   padding: 15px 0px;
-  margin: 10px 0 10px 50px;
+  margin: 10px 0px;
   border-radius: 20px;
   text-align: left;
 }
@@ -201,24 +201,17 @@ input[type=text] {
   text-align: center;
 }
 
-.posts {
-  padding: 15px 0px;
-  margin: 10px 0 10px 50px;
-  border-radius: 20px;
-  text-align: left;
-}
-
 .posts:hover{
   background-color: var(--almost-grey) !important;
 }
+
 .posts:hover h3,
 .posts:hover img,
-.posts:hover a,
-.posts:hover span{
+.posts:hover a{
   background-color: var(--almost-grey) !important;
 }
 .posts h3 {
-  padding: 0 20px;
+  padding: 4px 20px;
 }
 .community-label {
   padding: 0 20px;
@@ -255,3 +248,24 @@ input[type=text] {
   float: right !important;
 }
 
+.sidebar {
+  margin: 0;
+  padding: 0;
+  width: 19vw;
+  background-color: var(--almost-white);
+  position: fixed;
+  height: 100%;
+  overflow: auto;
+  float: left;
+}
+.sidebar a {
+  display: block;
+  color: black;
+  padding: 16px;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+.sidebar a:hover:not(.active) {
+  background-color: var(--almost-grey);
+}

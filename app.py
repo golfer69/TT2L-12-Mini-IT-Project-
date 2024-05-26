@@ -132,7 +132,8 @@ class ResetPasswordForm(FlaskForm):
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     posts = Post.query.all()
-    return render_template('index.html', posts=posts, pics=pics, page_title="MMU Reddit | Main Page")
+    communities = Community.query.all()
+    return render_template('index.html', posts=posts, pics=pics, communities=communities ,page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
 @login_required
