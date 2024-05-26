@@ -339,6 +339,10 @@ def show_post(post_id):
     
     return render_template('post.html', post=post, comments=comments)
 
+@app.route('/community/<int:community_id>', methods=['GET'])
+def show_community(community_id):
+    community_posts = Post.query.filter_by(community_id=community_id)
+    return render_template('community.html', posts=community_posts)
 
 if  __name__ == '__main__':
     with app.app_context():

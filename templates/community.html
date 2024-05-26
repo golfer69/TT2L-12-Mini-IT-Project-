@@ -10,32 +10,27 @@
   <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
 </head>
 <body>
-
-
-<div class="navigation">
-    <a href="/">Home</a>
-    {% if current_user.is_authenticated %}
-      {% if current_user.id == 1 or current_user.id == 6 %}
-        <a href="{{url_for('admin')}}">Admin Page</a>
-      {% endif %}
-    <a href="{{url_for('dashboard')}}">Dashboard</a>
-    <a href="{{url_for('user_details')}}">User</a>
-    <a href="{{url_for('logout')}}">Log Out</a>
-    {% else %}
-    <a href="{{url_for('register')}}">Sign up</a>
-    <a href="{{url_for('login')}}">Log In</a>
-    {% endif %}
-    <a class="btn" href="/create"> + Create</a>
-    <a class="btn" href="/createcommunity"> + Create community </a>
-</div>
+    <div class="navigation">
+        <a href="/">Home</a>
+        {% if current_user.is_authenticated %}
+        {% if current_user.id == 1 or current_user.id == 6 %}
+            <a href="{{url_for('admin')}}">Admin Page</a>
+        {% endif %}
+        <a href="{{url_for('dashboard')}}">Dashboard</a>
+        <a href="{{url_for('user_details')}}">User</a>
+        <a href="{{url_for('logout')}}">Log Out</a>
+        {% else %}
+        <a href="{{url_for('register')}}">Sign up</a>
+        <a href="{{url_for('login')}}">Log In</a>
+        {% endif %}
+        <a class="btn" href="/create"> + Create</a>
+        <a class="btn" href="/createcommunity"> + Create community </a>
+    </div>
 
   <div class="app">
     <div class="posts-section">
       {% for post in posts %}
-      <div class="posts">
-        <a href="{{ url_for('show_community', community_id=post.community_id) }}"> 
-          r/{{ post.community.name}}
-        </a>
+      <div class="posts">      
         <a href="{{ url_for('show_post', post_id=post.id) }}">  
             <h3>{{post.title}}</h3> <br>
             <!-- if got img show img else the desc -->

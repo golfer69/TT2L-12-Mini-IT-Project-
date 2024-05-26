@@ -148,6 +148,7 @@ button[type='button']:hover {
   width: 50vw;  /* Set a maximum width for images */
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
+  padding: 0 20px;
 }
 
 /* individual post page */
