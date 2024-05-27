@@ -349,11 +349,6 @@ def show_community(community_name):
     community_posts = Post.query.filter_by(community_id=community_id)
     return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
 
-if  __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
-
 def calculate_time_difference(posted_time):
     # Your time difference calculation function here
 
