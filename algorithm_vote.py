@@ -1,9 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///algorithm_vote.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///algorithm_vote.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    return app
+
+app=create_app()
+
 db = SQLAlchemy(app)
 
 class Post(db.Model):
