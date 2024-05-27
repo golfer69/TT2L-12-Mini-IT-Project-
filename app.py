@@ -347,7 +347,7 @@ def user_details(user_id):
 @app.route('/update_user', methods=['GET','POST'])
 def update():
     user_id = request.form['user_id'] 
-    post = Update.query.get(user_id)
+    user_details = Update.query.get(user_id)
     if request.method == 'POST' and user_id == current_user.id:
         
         new_about = request.form['about']
@@ -355,11 +355,13 @@ def update():
         new_interests = request.form['interests']
         new_faculty = request.form['faculty']
 
-        post.title = new_title
-        post.content = new_content
+        user_details.title = new_about
+        user_details.title = new_location
+        user_details.interests = new_interests
+        user_details.faculty = new_faculty
         
         db.session.commit()
-    return redirect(url_for('show_post', post_id=post_id))
+    return redirect(url_for('show_post', user_id=user_id))
 
 
 
