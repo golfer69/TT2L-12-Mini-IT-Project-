@@ -48,7 +48,7 @@ class User(db.Model, UserMixin):
     email= db.Column(db.String(80), nullable=False, unique=True)
     posts= db.relationship('Post', backref='poster', lazy=True)
     comments= db.relationship('Comment', backref='poster', lazy=True)
-    updates= db.relationship('Update', backref='updating', lazy=True)
+    updates= db.relationship('Update', backref='user', lazy=True)
     date_joined= db.Column(db.DateTime, default=datetime.now)
 
     def get_token(self):
@@ -96,7 +96,8 @@ class Update(db.Model):
     location = db.Column(db.String(1000))
     interests = db.Column(db.String(1000))
     faculty = db.Column(db.String(1000))
-    updating_id=db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id= db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
 
 
 
@@ -309,31 +310,6 @@ def reset_token(token):
     return render_template('change_password.html', title="Change Password", form=form)
 
 
-@app.route('/dashboard', methods=['GET', 'POST'])
-@login_required
-def dashboard():
-    user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    # if request.method == 'POST':
-    #     name=request.form["name"]
-    #     age=request.form["age"]
-    #     about=request.form["about"]
-    #     location=request.form["location"]
-    #     interests=request.form["interests"]
-    #     faculty=request.form["faculty"]
-    #     update=Update.query.filter_by(name=name, age=age, about=about, location=location, interests=interests, faculty=faculty).first()
-    # if not update:
-    #     update=Update(name='', age='', about='', location='', interests='', faculty='', updating_id=current_user.id)
-    #     db.session.add(update)
-    #     db.session.commit()
-    # updated_user=User.query.filter_by().all()
-    return render_template('dashboard.html', posts=user_posts,  page_title="Dashboard")
-    
-# @app.route('/user_details', methods=['GET', 'POST'])
-# @login_required
-# def user_details():
-#     update=Update.query.filter_by(name=current_user.username).first()
-#     return render_template('user_details.html', update=update, page_title="User Details")
-
 
 @app.route('/update_user_details', methods=['GET', 'POST'])
 def update_user_details():
@@ -344,11 +320,25 @@ def update_user_details():
                                  about=form.about.data,
                                  location=form.location.data,
                                  interests=form.interests.data,
-                                 faculty=form.faculty.data)
+                                 faculty=form.faculty.data,
+                                 user_id=current_user.id)
         db.session.add(current_update)  
         db.session.commit()
-        return redirect(url_for('login'))
+        return redirect(url_for('dashboard'))
     return render_template('update_user_details.html',title='Update User Details', form=form)
+
+
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    user_posts= Post.query.filter_by(poster_id=current_user.id).all()
+    user_details =Update.query.filter_by(user_id=current_user.id).order_by(Update.id.desc()).first()
+    return render_template('dashboard.html', posts=user_posts, user_details=user_details,  page_title="Dashboard")
+    
+
+
+
 
 
 @app.route('/admin')
