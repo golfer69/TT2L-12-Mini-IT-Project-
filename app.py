@@ -252,7 +252,7 @@ def register():
         new_user= User(email=form.email.data, username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        return redirect(url_for('login'))
+        return redirect(url_for('update_user_details'))
     return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -313,8 +313,20 @@ def reset_token(token):
 @login_required
 def dashboard():
     user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    update=Update.query.filter_by(name=current_user.username).first()
-    return render_template('dashboard.html', posts=user_posts, update=update, page_title="Dashboard")
+    # if request.method == 'POST':
+    #     name=request.form["name"]
+    #     age=request.form["age"]
+    #     about=request.form["about"]
+    #     location=request.form["location"]
+    #     interests=request.form["interests"]
+    #     faculty=request.form["faculty"]
+    #     update=Update.query.filter_by(name=name, age=age, about=about, location=location, interests=interests, faculty=faculty).first()
+    # if not update:
+    #     update=Update(name='', age='', about='', location='', interests='', faculty='', updating_id=current_user.id)
+    #     db.session.add(update)
+    #     db.session.commit()
+    # updated_user=User.query.filter_by().all()
+    return render_template('dashboard.html', posts=user_posts,  page_title="Dashboard")
     
 # @app.route('/user_details', methods=['GET', 'POST'])
 # @login_required
@@ -324,29 +336,18 @@ def dashboard():
 
 
 @app.route('/update_user_details', methods=['GET', 'POST'])
-@login_required
-def update_user_details(id):
+def update_user_details():
     form=EntryForm()
-    current_update=Update.query.filter_by(name=current_user.username).first()
     if form.validate_on_submit():
-        if current_update:
-            current_update.name=form.name.data
-            current_update.age=form.age.data
-            current_update.location=form.location.data
-            current_update.about=form.about.data
-            current_update.interests=form.interests.data
-            current_update.faculty=form.faculty.data
-        else:
-            current_update=Update(name=form.name.data, 
-                                    age=form.age.data,
-                                    about=form.about.data,
-                                    location=form.location.data,
-                                    interests=form.interests.data,
-                                    faculty=form.faculty.data)
-            db.session.add(current_update)
-
+        current_update=Update(name=form.name.data, 
+                                 age=form.age.data,
+                                 about=form.about.data,
+                                 location=form.location.data,
+                                 interests=form.interests.data,
+                                 faculty=form.faculty.data)
+        db.session.add(current_update)  
         db.session.commit()
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('login'))
     return render_template('update_user_details.html',title='Update User Details', form=form)
 
 
