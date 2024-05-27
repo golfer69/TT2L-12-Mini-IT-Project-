@@ -160,7 +160,8 @@ class EntryForm(FlaskForm):
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     posts = Post.query.all()
-    return render_template('index.html', posts=posts, pics=pics, page_title="MMU Reddit | Main Page")
+    communities = Community.query.all()
+    return render_template('index.html', posts=posts, pics=pics, communities=communities ,page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
 @login_required
@@ -394,16 +395,6 @@ def show_community(community_name):
     community = Community.query.get(community_id)
     community_posts = Post.query.filter_by(community_id=community_id)
     return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
-
-
-
-
-
-
-if  __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
 
 def calculate_time_difference(posted_time):
     # Your time difference calculation function here

@@ -3,6 +3,12 @@
 
 {% block content %}
   <div class="app">
+    <div class="sidebar">
+      <a class="btn" href="/createcommunity"> + Create community </a>
+      {% for community in communities %}
+        <a class="btn" href="{{ url_for('show_community', community_name=community.name) }}">{{community.name}}</a>
+      {% endfor %}
+    </div>
     <div class="posts-section">
       {% for post in posts %}
       <div class="posts">
@@ -10,7 +16,7 @@
           r/{{ post.community.name}}
         </a>
         <a href="{{ url_for('show_post', post_id=post.id) }}">  
-          <h3>{{post.title}}</h3> 
+          <h3 >{{post.title}}</h3> 
           <!-- if got img show img else the desc -->
           {% if post.image_filename %} 
               <img src="{{ url_for('serve_files', filename=post.image_filename) }}">

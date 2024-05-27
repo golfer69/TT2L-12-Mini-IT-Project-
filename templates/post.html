@@ -8,7 +8,9 @@
             <a href="javascript:history.back()" class="previous-btn round"> &laquo; Previous </a>
             <!-- display content -->
             <div class="post">
-                <p>r/{{post.community.name}}</p><br>
+                <a href="{{ url_for('show_community', community_name=post.community.name) }}" class="community-label"> 
+                    r/{{ post.community.name}}
+                </a>
                 <h2>{{post.title}}</h2> <br>
                 <p>{{ post.content }}</p> <br>
                 <p>by: {{post.poster.username}}</p>
@@ -24,7 +26,7 @@
                 <br>
                 <b>Comment section</b>
 
-                <form action="{{ url_for('show_post', post_id=post.id) }}" method="POST">
+                <form action="/upload" method="POST">
                     <input type="hidden" name="item" value="comment">
                     <input type="hidden" name="post_id" value="{{ post.id }}">  
                     <div class="">
