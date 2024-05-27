@@ -334,11 +334,32 @@ def update_user_details():
 @login_required
 def dashboard():
     user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    user_details =Update.query.filter_by(user_id=current_user.id).order_by(Update.id.desc()).first()
+    user_details =Update.query.filter_by(user_id=current_user.id).first()
     return render_template('dashboard.html', posts=user_posts, user_details=user_details,  page_title="Dashboard")
     
+@app.route('/user-details', methods=['GET', 'POST'])
+@login_required
+def user_details(user_id):
+    details=Update.query.get(user_id)
+    return render_template('user_details.html',details=details)
 
 
+@app.route('/update_user', methods=['GET','POST'])
+def update():
+    user_id = request.form['user_id'] 
+    post = Update.query.get(user_id)
+    if request.method == 'POST' and user_id == current_user.id:
+        
+        new_about = request.form['about']
+        new_location = request.form['location']
+        new_interests = request.form['interests']
+        new_faculty = request.form['faculty']
+
+        post.title = new_title
+        post.content = new_content
+        
+        db.session.commit()
+    return redirect(url_for('show_post', post_id=post_id))
 
 
 

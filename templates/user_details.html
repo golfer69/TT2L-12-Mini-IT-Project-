@@ -1,4 +1,4 @@
-<!-- {% extends 'base.html' %}
+{% extends 'base.html' %}
 
   {% block content %}
   <div class="app">
@@ -6,25 +6,20 @@
     <div class="app-user">
     <h1>Yo, {{current_user.username}} customize your user details man, please</h1>
     </div>
-  </div>
 
-  <div class="bio">
-    <div class="card" style="width: 18rem;">
-      <img src="uploads\timetable.jpg" class="card-img-top" alt="welp">
-      <div class="card-body">
-        <h5 class="card-title">{{current_user.username}}</h5>
-        <p class="card-text">
-          <strong>Name: </strong> {{update.name if update else 'N/A' }}<br>
-          <strong>Age: </strong> {{update.age if update else 'N/A'}}<br>
-          <strong>Email: </strong> {{current_user.email}}<br>
-          <strong>About: </strong> {{update.about if update else 'N/A'}}<br>
-          <strong>Location: </strong> {{update.location if update else 'N/A'}}<br>
-          <strong>Interests: </strong> {{update.interests if update else 'N/A'}}<br>
-          <strong>Faculty: </strong> {{update.faculty if update else 'N/A'}}<br>
-          <strong>Date Joined: </strong> {{current_user.date_joined}}<br>
-        </p>
-        <button><a href="{{url_for('update_user_details')}}" class="btn btn-primary">Update User</button>
-      </div>
-    </div>
-  </div>
-  {% endblock %} -->
+    <h2>Edit details</h2>
+
+      <form action="{{ url_for('update')}}" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+        <input type="hidden" name="user_id" value="{{ user_details.id }}">  
+        <input type="hidden" name="name" value="{{ user_details.name }}"> 
+        <input type="text" name="name" placeholder="Name" value="{{user_details.name}}"><br>
+        <input type="text" name="age" placeholder="Age" value="{{user_details.age}}"><br>
+        <input type="text" name="about" placeholder="About" value="{{user_details.about}}"><br>
+        <input type="text" name="location" placeholder="Location" value="{{user_details.location}}"><br>
+        <input type="text" name="interests" placeholder="Interests" value="{{user_details.interests}}"><br>
+        <input type="text" name="faculty" placeholder="Faculty" value="{{user_details.faculty}}"><br>
+        <input type="submit" value="Finish">
+      </form>
+
+
+  {% endblock %}
