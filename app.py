@@ -48,6 +48,7 @@ class User(db.Model, UserMixin):
     email= db.Column(db.String(80), nullable=False, unique=True)
     posts= db.relationship('Post', backref='poster', lazy=True)
     comments= db.relationship('Comment', backref='poster', lazy=True)
+    updates= db.relationship('Update', backref='updating', lazy=True)
     date_joined= db.Column(db.DateTime, default=datetime.now)
 
     def get_token(self):
@@ -70,7 +71,6 @@ class Post(db.Model):
     image_filename = db.Column(db.String(255))
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
-    
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 class Comment(db.Model):
@@ -96,6 +96,9 @@ class Update(db.Model):
     location = db.Column(db.String(1000))
     interests = db.Column(db.String(1000))
     faculty = db.Column(db.String(1000))
+    updating_id=db.Column(db.Integer, db.ForeignKey('user.id'))
+
+
 
 
 
@@ -142,7 +145,7 @@ class ResetPasswordForm(FlaskForm):
             raise ValidationError('Passwords do not match!')
 
 
-class UpdateForm(FlaskForm):
+class EntryForm(FlaskForm):
     name= StringField(label='Name')
     age= StringField(label='Age', validators=[Length(max=3)])
     about= StringField(label='About', validators=[Length(min=7, max=1000)])
@@ -310,19 +313,20 @@ def reset_token(token):
 @login_required
 def dashboard():
     user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    return render_template('dashboard.html', posts=user_posts, page_title="Dashboard")
-    
-@app.route('/user_details', methods=['GET', 'POST'])
-@login_required
-def user_details():
     update=Update.query.filter_by(name=current_user.username).first()
-    return render_template('user_details.html', update=update, page_title="User Details")
+    return render_template('dashboard.html', posts=user_posts, update=update, page_title="Dashboard")
+    
+# @app.route('/user_details', methods=['GET', 'POST'])
+# @login_required
+# def user_details():
+#     update=Update.query.filter_by(name=current_user.username).first()
+#     return render_template('user_details.html', update=update, page_title="User Details")
 
 
 @app.route('/update_user_details', methods=['GET', 'POST'])
 @login_required
-def update_user_details():
-    form=UpdateForm()
+def update_user_details(id):
+    form=EntryForm()
     current_update=Update.query.filter_by(name=current_user.username).first()
     if form.validate_on_submit():
         if current_update:
@@ -333,15 +337,16 @@ def update_user_details():
             current_update.interests=form.interests.data
             current_update.faculty=form.faculty.data
         else:
-            update_user_details= Update(name=form.name.data, 
-                                        age=form.age.data,
-                                        about=form.about.data,
-                                        location=form.location.data,
-                                        interests=form.interests.data,
-                                        faculty=form.faculty.data)
-            db.session.add(update_user_details)
+            current_update=Update(name=form.name.data, 
+                                    age=form.age.data,
+                                    about=form.about.data,
+                                    location=form.location.data,
+                                    interests=form.interests.data,
+                                    faculty=form.faculty.data)
+            db.session.add(current_update)
+
         db.session.commit()
-        return redirect(url_for('user_details'))
+        return redirect(url_for('dashboard'))
     return render_template('update_user_details.html',title='Update User Details', form=form)
 
 
