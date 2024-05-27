@@ -6,7 +6,7 @@
 </head>
 <body>
     <h1>Comments</h1>
-    <form action="{{ url_for('user_comment') }}" method="POST">
+    <form action="{{ url_for('submit_comment') }}" method="POST">
         <textarea name="user_id" rows="4" cols="50" placeholder="Enter username..."></textarea><br>
         <textarea name="content" rows="4" cols="50" placeholder="Enter comment..."></textarea><br>
         <input type="submit" value="Save">
@@ -15,12 +15,12 @@
         {% for comment in comments %}
         <li>
             <strong>{{ comment.user.username }}</strong>: 
-            <div>{{text.date_added}}</div>
+            <div>{{comment.date_added}}</div>
             {{ comment.content | safe }}
             <ul>
                 {% for tag in comment.tags %}
                 <li>Tagged: {{ tag.user.username }}</li>
-                <div>{{text.date_added}}</div><br>
+                <div>{{comment.date_added}}</div><br>
                 {% endfor %}
             </ul>
         </li>

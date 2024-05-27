@@ -389,11 +389,5 @@ time_since_posted = calculate_time_difference(posted_time)
 print(time_since_posted)
 
 
-
-
-
-
-
-
 if  __name__ == '__main__':
     app.run(debug=True)
