@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="bio">
+    <div class="card" style="width: 18rem;">
+      <img src="uploads\timetable.jpg" class="card-img-top" alt="welp">
+      <div class="card-body">
+        <p class="card-text">
+          <strong>Username: </strong> {{ current_user.username }}<br>
+          <strong>Email: </strong> {{ current_user.email }}<br>
+          <strong>Date Joined: </strong> {{ current_user.date_joined }}<br>
+          <strong>Name: </strong> {{ update.name }}<br>
+          <strong>Age: </strong> {{ update.age }}<br>
+          <strong>About: </strong> {{ update.about }}<br>
+          <strong>Location: </strong> {{ update.location }}<br>
+          <strong>Interests: </strong> {{ update.interests }}<br>
+          <strong>Faculty: </strong> {{ update.faculty }}<br>
+
+        </p>
+        <button><a href="{{url_for('update_user_details')}}" class="btn btn-primary">Update User</button>
+      </div>
+    </div>
+  </div>
+{%endblock%}
+
+
+

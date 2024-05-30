@@ -120,6 +120,7 @@ button[type='button']:hover {
  text-align: center;
  width: 50vw;
  margin: auto;
+ margin-top: 0;
 }
 
 
@@ -330,3 +331,4 @@ input[type=text] {
 .sidebar a:hover:not(.active) {
   background-color: var(--almost-grey);
 }
+

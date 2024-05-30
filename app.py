@@ -48,7 +48,7 @@ class User(db.Model, UserMixin):
     email= db.Column(db.String(80), nullable=False, unique=True)
     posts= db.relationship('Post', backref='poster', lazy=True)
     comments= db.relationship('Comment', backref='poster', lazy=True)
-    updates= db.relationship('Update', backref='user', lazy=True)
+    updates= db.relationship('Update', backref='poster', lazy=True)
     date_joined= db.Column(db.DateTime, default=datetime.now)
 
     def get_token(self):
@@ -96,7 +96,7 @@ class Update(db.Model):
     location = db.Column(db.String(1000))
     interests = db.Column(db.String(1000))
     faculty = db.Column(db.String(1000))
-    user_id= db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
 
@@ -247,20 +247,20 @@ def serve_files(filename):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('user_posts'))
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
         new_user= User(email=form.email.data, username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
-        return redirect(url_for('update_user_details'))
+        return redirect(url_for('login'))
     return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('user_posts'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -269,9 +269,10 @@ def login():
             return render_template('login.html', form=form)
         if bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user)
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('user_posts'))
         else:
             flash("Invalid username or password. Please try again")
+        return redirect(url_for('login'))
     return render_template('login.html', form=form)
 
 @app.route('/logout')
@@ -325,19 +326,23 @@ def update_user_details():
                                  user_id=current_user.id)
         db.session.add(current_update)  
         db.session.commit()
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('account'))
     return render_template('update_user_details.html',title='Update User Details', form=form)
 
 
 
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/user_posts', methods=['GET', 'POST'])
 @login_required
-def dashboard():
+def user_posts():
     user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    user_details =Update.query.filter_by(user_id=current_user.id).first()
-    return render_template('dashboard.html', posts=user_posts, user_details=user_details,  page_title="Dashboard")
+    return render_template('user_posts.html', posts=user_posts,  page_title="User Posts")
     
 
+@app.route('/account', methods=['GET', 'POST'])
+@login_required
+def account():
+    user_details = Update.query.filter_by(user_id=current_user.id).first()
+    return render_template('account.html', update=user_details,  page_title="User")
 
 
 
@@ -349,6 +354,8 @@ def admin():
     if id==1 or id==6:
         return render_template('admin.html', page_title="Admin Page")
     
+
+
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 @login_required
 def delete_post(post_id):

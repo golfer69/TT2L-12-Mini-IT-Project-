@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="app">
+    <h1>User Posts</h1><br>
+
+  <div class="user-posts">
+    <div class="app">
+      <div class="posts-section">
+          {% for post in posts %}
+        <div class="posts">      
+          <a href="{{ url_for('show_post', post_id=post.id) }}">  
+              <h3>{{post.title}}</h3> <br>
+              {% if post.image_filename %}
+                <!-- <div style="display: flex; flex-direction: column;"> -->
+                  <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
+                <!-- </div> -->
+                {% else %}
+                  <p>{{ post.content }}</p>
+              {% endif %}
+          </a>
+        </div>
+          {% endfor %}
+        </div>
+    </div>
+  </div>
+  </div>
+{% endblock %}

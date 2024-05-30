@@ -18,13 +18,15 @@
           {% if current_user.id == 1 or current_user.id == 6 %}
             <a href="{{url_for('admin')}}">Admin Page</a>
           {% endif %}
-        <a href="{{url_for('dashboard')}}">Dashboard</a>
+        <a href="{{url_for('user_posts')}}">Posts</a>
         <a href="{{url_for('logout')}}">Log Out</a>
         {% else %}
         <a href="{{url_for('register')}}">Sign up</a>
         <a href="{{url_for('login')}}">Log In</a>
         {% endif %}
-        <p class="float-right">{{current_user.username}}</p>
+        <div class="account-button">
+          <a class="btn" href="{{url_for('account')}}"> {{current_user.username}}</a>
+        </div>
         <a class="btn" href="/create"> + Create</a>
         
         
