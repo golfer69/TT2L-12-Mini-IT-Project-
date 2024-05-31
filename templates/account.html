@@ -16,7 +16,8 @@
           <strong>Faculty: </strong> {{ update.faculty }}<br>
 
         </p>
-        <button><a href="{{url_for('update_user_details')}}" class="btn btn-primary">Update User</button>
+        <button><a href="{{url_for('user_details', id=current_user.id)}}" class="btn btn-primary">User</button>
+        <button><a href="{{url_for('update_user_details', id=current_user.id)}}" class="btn btn-secondary">Update User 2</button>
       </div>
     </div>
   </div>

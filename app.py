@@ -313,9 +313,10 @@ def reset_token(token):
 
 
 
-@app.route('/update_user_details', methods=['GET', 'POST'])
-def update_user_details():
+@app.route('/user_details/<int:id>', methods=['GET', 'POST'])
+def user_details(id):
     form=EntryForm()
+    update=Update.query.filter_by(user_id=id).first()
     if form.validate_on_submit():
         current_update=Update(name=form.name.data, 
                                  age=form.age.data,
@@ -323,11 +324,33 @@ def update_user_details():
                                  location=form.location.data,
                                  interests=form.interests.data,
                                  faculty=form.faculty.data,
-                                 user_id=current_user.id)
+                                 user_id=id)
         db.session.add(current_update)  
         db.session.commit()
         return redirect(url_for('account'))
-    return render_template('update_user_details.html',title='Update User Details', form=form)
+    return render_template('user_details.html',update=update, title='User Details', form=form)
+
+
+
+@app.route('/update_user_details/<int:id>', methods=['GET', 'POST'])
+def update_user_details(id):
+    form=EntryForm()
+    update_user= Update.query.get_or_404(id)
+    if request.method=="POST":
+        update_user.name=request.form['name']
+        update_user.age=request.form['age']
+        update_user.about=request.form['about']
+        update_user.location=request.form['location']
+        update_user.interests=request.form['interests']
+        update_user.faculty=request.form['faculty']
+        try:
+            db.session.commit()
+            flash('user updated')
+            return redirect(url_for('account'))
+        except:
+            db.session.commit()
+            flash('failed')
+    return render_template('update_user_details.html',title='Update User Details', form=form, update_user=update_user, update=update_user)
 
 
 
@@ -342,7 +365,7 @@ def user_posts():
 @login_required
 def account():
     user_details = Update.query.filter_by(user_id=current_user.id).first()
-    return render_template('account.html', update=user_details,  page_title="User")
+    return render_template('account.html', user_details=user_details, update=user_details, page_title="User")
 
 
 
@@ -403,56 +426,50 @@ def show_community(community_name):
     community_posts = Post.query.filter_by(community_id=community_id)
     return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
 
-def calculate_time_difference(posted_time):
-    # Your time difference calculation function here
+# def calculate_time_difference(posted_time):
+#     # Your time difference calculation function here
 
- @app.route('/post')
- def post():
-    posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
-    time_since_posted = calculate_time_difference(posted_time)
-    return render_template('post.html', time_since_posted=time_since_posted)
-
-
-
-#how far back was a post posted
-
-def calculate_time_difference(posted_time):
-    current_time = datetime.now()
-    time_difference = current_time - posted_time
-
-    seconds = time_difference.total_seconds()
-    minutes = seconds / 60
-    hours = minutes / 60
-    days = hours / 24
-    weeks = days / 7
-    months = days / 30
-    years = days / 365
-
-    if seconds < 60:
-        return f"{int(seconds)} seconds ago"
-    elif minutes < 60:
-        return f"{int(minutes)} minutes ago"
-    elif hours < 24:
-        return f"{int(hours)} hours ago"
-    elif days < 7:
-        return f"{int(days)} days ago"
-    elif weeks < 4:
-        return f"{int(weeks)} weeks ago"
-    elif months < 12:
-        return f"{int(months)} months ago"
-    else:
-        return f"{int(years)} years ago"
-
-# Example usage
-posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
-time_since_posted = calculate_time_difference(posted_time)
-print(time_since_posted)
+#  @app.route('/post')
+#  def post():
+#     posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
+#     time_since_posted = calculate_time_difference(posted_time)
+#     return render_template('post.html', time_since_posted=time_since_posted)
 
 
 
+# #how far back was a post posted
 
+# def calculate_time_difference(posted_time):
+#     current_time = datetime.now()
+#     time_difference = current_time - posted_time
 
+#     seconds = time_difference.total_seconds()
+#     minutes = seconds / 60
+#     hours = minutes / 60
+#     days = hours / 24
+#     weeks = days / 7
+#     months = days / 30
+#     years = days / 365
 
+#     if seconds < 60:
+#         return f"{int(seconds)} seconds ago"
+#     elif minutes < 60:
+#         return f"{int(minutes)} minutes ago"
+#     elif hours < 24:
+#         return f"{int(hours)} hours ago"
+#     elif days < 7:
+#         return f"{int(days)} days ago"
+#     elif weeks < 4:
+#         return f"{int(weeks)} weeks ago"
+#     elif months < 12:
+#         return f"{int(months)} months ago"
+#     else:
+#         return f"{int(years)} years ago"
+
+# # Example usage
+# posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
+# time_since_posted = calculate_time_difference(posted_time)
+# print(time_since_posted)
 
 
 if  __name__ == '__main__':

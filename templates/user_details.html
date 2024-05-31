@@ -1,25 +1,35 @@
-<!-- {% extends 'base.html' %}
-
-  {% block content %}
-  <div class="app">
-    <h1>User Details Page</h1><br>
-    <div class="app-user">
-    <h1>Yo, {{current_user.username}} customize your user details man, please</h1>
-    </div>
-
-    <h2>Edit details</h2>
-
-      <form action="{{ url_for('update')}}" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
-        <input type="hidden" name="user_id" value="{{ user_details.id }}">  
-        <input type="hidden" name="name" value="{{ user_details.name }}"> 
-        <input type="text" name="name" placeholder="Name" value="{{user_details.name}}"><br>
-        <input type="text" name="age" placeholder="Age" value="{{user_details.age}}"><br>
-        <input type="text" name="about" placeholder="About" value="{{user_details.about}}"><br>
-        <input type="text" name="location" placeholder="Location" value="{{user_details.location}}"><br>
-        <input type="text" name="interests" placeholder="Interests" value="{{user_details.interests}}"><br>
-        <input type="text" name="faculty" placeholder="Faculty" value="{{user_details.faculty}}"><br>
-        <input type="submit" value="Finish">
-      </form>
-
-
-  {% endblock %} -->
+{% extends 'base.html' %}
+{% block content %}
+  <div class="update-user">
+    <form method="POST" action="{{ url_for('update_user_details', id=current_user.id) }}">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.name.label }}
+            {{ form.name }}
+        </div>
+        <div>
+            {{ form.age.label }}
+            {{ form.age }}
+        </div>
+        <div>
+            {{ form.about.label }}
+            {{ form.about }}
+        </div>
+        <div>
+            {{ form.location.label }}
+            {{ form.location }}
+        </div>
+        <div>
+            {{ form.interests.label }}
+            {{ form.interests }}
+        </div>
+        <div>
+            {{ form.faculty.label }}
+            {{ form.faculty }}
+        </div>
+        <div>
+            {{ form.submit }}
+        </div>
+    </form>
+  </div>
+{% endblock %}
