@@ -337,3 +337,7 @@ input[type=text] {
 .update-user{
   margin-top: 50px
 }
+
+.card-body{
+  margin-top: 50px;
+}

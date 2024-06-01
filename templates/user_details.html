@@ -1,8 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
   <div class="update-user">
-    <form method="POST" action="{{ url_for('user_details', id=current_user.id) }}">
+    <form method="POST" action="{{ url_for('user_details', id=current_user.id) }}" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
+        <div>
+            {{ form.profile_pic.label }}
+            {{ form.profile_pic }}
+        </div>
         <div>
             {{ form.name.label }}
             {{ form.name }}

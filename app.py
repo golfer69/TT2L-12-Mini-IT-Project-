@@ -5,10 +5,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, StringField, PasswordField, EmailField
+from wtforms import SubmitField, StringField, PasswordField, EmailField, FileField
+from flask_wtf.file import FileAllowed
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
-
+from werkzeug.utils import secure_filename
+import uuid as uuid
 
 
 def create_app():
@@ -78,6 +80,7 @@ class Update(db.Model):
     location = db.Column(db.String(1000), nullable=True)
     interests = db.Column(db.String(1000), nullable=True)
     faculty = db.Column(db.String(1000), nullable=True)
+    profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
@@ -120,16 +123,9 @@ class EntryForm(FlaskForm):
     location= StringField(label='Location', validators=[Length(min=1, max=100)])
     interests= StringField(label='Interests', validators=[Length(min=1, max=1000)])    
     faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
+    profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
 
-class UpdateForm(FlaskForm):
-    name= StringField(label='Name')
-    age= StringField(label='Age', validators=[Length(max=3)])
-    about= StringField(label='About', validators=[Length(min=7, max=1000)])
-    location= StringField(label='Location', validators=[Length(min=1, max=100)])
-    interests= StringField(label='Interests', validators=[Length(min=1, max=1000)])    
-    faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
-    submit= SubmitField('Submit')
 
 
 @app.route('/', methods=['GET'])
@@ -269,6 +265,19 @@ def account():
     update_user = Update.query.filter_by(user_id=current_user.id).first()
     return render_template('account.html', user=user, update_user=update_user, page_title="User")
 
+
+def save_profile_pic(profile_pic_file):
+    if profile_pic_file:
+        filename=secure_filename(profile_pic_file.filename)
+        upload_dir='profile pics'
+        os.makedirs(upload_dir, exist_ok=True)
+        profile_pic_path=os.path.join(upload_dir, filename)
+        profile_pic_file.save(profile_pic_path)
+        return profile_pic_path
+    else:
+        return None
+
+
 @app.route('/user_details/<int:id>', methods=['GET', 'POST'])
 @login_required
 def user_details(id):
@@ -284,6 +293,7 @@ def user_details(id):
             update_user.location = form.location.data
             update_user.interests = form.interests.data
             update_user.faculty = form.faculty.data
+            update_user.profile_pic = save_profile_pic(form.profile_pic.data)
         else:
             # Create new user details
             update_user = Update(
@@ -293,6 +303,7 @@ def user_details(id):
                 location=form.location.data,
                 interests=form.interests.data,
                 faculty=form.faculty.data,
+                profile_pic=save_profile_pic(form.profile_pic.data),
                 user_id=id
             )
             db.session.add(update_user)
@@ -313,63 +324,8 @@ def user_details(id):
         form.interests.data = update_user.interests
         form.faculty.data = update_user.faculty
 
+
     return render_template('user_details.html', title='User Details', form=form)
-    #     if update_user:
-    #         update_user.name=form.name.data
-    #         update_user.age=form.age.data
-    #         update_user.about=form.about.data
-    #         update_user.location=form.location.data
-    #         update_user.interests=form.interests.data
-    #         update_user.faculty=form.faculty.data
-    #     else:
-    #         update_user=Update(name=form.name.data, 
-    #                              age=form.age.data,
-    #                              about=form.about.data,
-    #                              location=form.location.data,
-    #                              interests=form.interests.data,
-    #                              faculty=form.faculty.data,
-    #                              user_id=id)
-    #         db.session.add(update_user)  
-    #     db.session.commit()
-    #     return redirect(url_for('account'))
-    # if update_user:
-    #     form.name.data=update_user.name
-    #     form.age.data=update_user.age
-    #     form.about.data=update_user.about
-    #     form.location.data= update_user.location
-    #     form.interests.data=update_user.interests
-    #     form.faculty.data=update_user.faculty
-    # return render_template('user_details.html', update_user=update_user, title='User Details', form=form)
-
-
-
-# @app.route('/update_user_details/<int:id>', methods=['GET', 'POST'])
-# def update_user_details(id):
-#     update_user= Update.query.filter_by(user_id=id).first()
-#     form=UpdateForm()
-#     if update_user is None:
-#         return redirect(url_for('account'))
-#     if request.method=="POST":
-#         update_user.name=request.form['name']
-#         update_user.age=request.form['age']
-#         update_user.about=request.form['about']
-#         update_user.location=request.form['location']
-#         update_user.interests=request.form['interests']
-#         update_user.faculty=request.form['faculty']
-#         try:
-#             db.session.commit()
-#             flash('user updated')
-#             return redirect(url_for('account'))
-#         except Exception as e:
-#             db.session.rollback()
-#             flash(f'Failed to update user: {str(e)}', 'danger')
-#     return render_template('update_user_details.html', update_user=update_user, form=form)
-
-
-
-
-    
-
 
 
 

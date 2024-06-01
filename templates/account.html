@@ -2,13 +2,13 @@
 {% block content %}
   <div class="bio">
     <div class="card" style="width: 18rem;">
-      <img src="uploads\timetable.jpg" class="card-img-top" alt="welp">
       <div class="card-body">
         <p class="card-text">
           <strong>Username: </strong> {{ user.username }}<br>
           <strong>Email: </strong> {{ user.email }}<br>
           <strong>Date Joined: </strong> {{ user.date_joined }}<br>
           {%if update_user%}
+            <strong>Profile Picture: </strong> {{ update_user.profile_pic }}<br>
             <strong>Name: </strong> {{ update_user.name }}<br>
             <strong>Age: </strong> {{ update_user.age }}<br>
             <strong>About: </strong> {{ update_user.about }}<br>
