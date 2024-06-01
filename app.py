@@ -72,12 +72,12 @@ class Community(db.Model):
 class Update(db.Model):
     __tablename__ = 'update'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
-    age = db.Column(db.Integer)
-    about = db.Column(db.String(1000))
-    location = db.Column(db.String(1000))
-    interests = db.Column(db.String(1000))
-    faculty = db.Column(db.String(1000))
+    name = db.Column(db.String(50), nullable=True)
+    age = db.Column(db.Integer, nullable=True)
+    about = db.Column(db.String(1000), nullable=True)
+    location = db.Column(db.String(1000), nullable=True)
+    interests = db.Column(db.String(1000), nullable=True)
+    faculty = db.Column(db.String(1000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
@@ -256,27 +256,64 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+@app.route('/user_posts', methods=['GET', 'POST'])
+@login_required
+def user_posts():
+    user_posts= Post.query.filter_by(poster_id=current_user.id).all()
+    return render_template('user_posts.html', posts=user_posts,  page_title="User Posts")
 
+@app.route('/account', methods=['GET'])
+@login_required
+def account():
+    user=current_user
+    update_user = Update.query.filter_by(user_id=current_user.id).first()
+    return render_template('account.html', user=user, update_user=update_user, page_title="User")
 
 @app.route('/user_details/<int:id>', methods=['GET', 'POST'])
+@login_required
 def user_details(id):
-    form=EntryForm()
+    form = EntryForm()
+    update_user = Update.query.filter_by(user_id=id).first()
+
     if form.validate_on_submit():
-        user_details=Update(name=form.name.data, 
-                                 age=form.age.data,
-                                 about=form.about.data,
-                                 location=form.location.data,
-                                 interests=form.interests.data,
-                                 faculty=form.faculty.data,
-                                 user_id=id)
-        db.session.add(user_details)
-        try:  
+        if update_user:
+            # Update existing user details
+            update_user.name = form.name.data
+            update_user.age = form.age.data
+            update_user.about = form.about.data
+            update_user.location = form.location.data
+            update_user.interests = form.interests.data
+            update_user.faculty = form.faculty.data
+        else:
+            # Create new user details
+            update_user = Update(
+                name=form.name.data,
+                age=form.age.data,
+                about=form.about.data,
+                location=form.location.data,
+                interests=form.interests.data,
+                faculty=form.faculty.data,
+                user_id=id
+            )
+            db.session.add(update_user)
+        
+        try:
             db.session.commit()
             return redirect(url_for('account'))
         except Exception as e:
             db.session.rollback()
-            print(f'commit failed: {str(e)}')
-    return render_template('user_details.html',  title='User Details', form=form)
+            flash(f'Failed to update user details: {str(e)}', 'danger')
+
+    # Prepopulate the form with existing data if available
+    if update_user:
+        form.name.data = update_user.name
+        form.age.data = update_user.age
+        form.about.data = update_user.about
+        form.location.data = update_user.location
+        form.interests.data = update_user.interests
+        form.faculty.data = update_user.faculty
+
+    return render_template('user_details.html', title='User Details', form=form)
     #     if update_user:
     #         update_user.name=form.name.data
     #         update_user.age=form.age.data
@@ -306,44 +343,35 @@ def user_details(id):
 
 
 
-@app.route('/update_user_details/<int:id>', methods=['GET', 'POST'])
-def update_user_details(id):
-    update_user= Update.query.filter_by(user_id=id).first()
-    form=UpdateForm()
-    if update_user is None:
-        return redirect(url_for('account'))
-    if request.method=="POST":
-        update_user.name=form.name.data
-        update_user.age=form.age.data
-        update_user.about=form.about.data
-        update_user.location=form.location.data
-        update_user.interests=form.interests.data
-        update_user.faculty=form.faculty.data
-        try:
-            db.session.commit()
-            flash('user updated')
-            return redirect(url_for('account'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Failed to update user: {str(e)}', 'danger')
-    return render_template('update_user_details.html', update_user=update_user, form=form)
+# @app.route('/update_user_details/<int:id>', methods=['GET', 'POST'])
+# def update_user_details(id):
+#     update_user= Update.query.filter_by(user_id=id).first()
+#     form=UpdateForm()
+#     if update_user is None:
+#         return redirect(url_for('account'))
+#     if request.method=="POST":
+#         update_user.name=request.form['name']
+#         update_user.age=request.form['age']
+#         update_user.about=request.form['about']
+#         update_user.location=request.form['location']
+#         update_user.interests=request.form['interests']
+#         update_user.faculty=request.form['faculty']
+#         try:
+#             db.session.commit()
+#             flash('user updated')
+#             return redirect(url_for('account'))
+#         except Exception as e:
+#             db.session.rollback()
+#             flash(f'Failed to update user: {str(e)}', 'danger')
+#     return render_template('update_user_details.html', update_user=update_user, form=form)
 
 
 
-@app.route('/account', methods=['GET'])
-@login_required
-def account():
-    user_details = Update.query.filter_by(user_id=current_user.id).first()
-    return render_template('account.html', user_details=user_details, update_details=user_details, page_title="User")
+
     
 
 
 
-@app.route('/user_posts', methods=['GET', 'POST'])
-@login_required
-def user_posts():
-    user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    return render_template('user_posts.html', posts=user_posts,  page_title="User Posts")
 
 
 @app.route('/admin')

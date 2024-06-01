@@ -5,26 +5,26 @@
       <img src="uploads\timetable.jpg" class="card-img-top" alt="welp">
       <div class="card-body">
         <p class="card-text">
-          <strong>Username: </strong> {{ current_user.username }}<br>
-          <strong>Email: </strong> {{ current_user.email }}<br>
-          <strong>Date Joined: </strong> {{ current_user.date_joined }}<br>
-          {%if update_details%}
-            <strong>Name: </strong> {{ update_details.name }}<br>
-            <strong>Age: </strong> {{ update_details.age }}<br>
-            <strong>About: </strong> {{ update_details.about }}<br>
-            <strong>Location: </strong> {{ update_details.location }}<br>
-            <strong>Interests: </strong> {{ update_details.interests }}<br>
-            <strong>Faculty: </strong> {{ update_details.faculty }}<br>
+          <strong>Username: </strong> {{ user.username }}<br>
+          <strong>Email: </strong> {{ user.email }}<br>
+          <strong>Date Joined: </strong> {{ user.date_joined }}<br>
+          {%if update_user%}
+            <strong>Name: </strong> {{ update_user.name }}<br>
+            <strong>Age: </strong> {{ update_user.age }}<br>
+            <strong>About: </strong> {{ update_user.about }}<br>
+            <strong>Location: </strong> {{ update_user.location }}<br>
+            <strong>Interests: </strong> {{ update_user.interests }}<br>
+            <strong>Faculty: </strong> {{ update_user.faculty }}<br>
           {%else%}
             <p>No additional details provided</p>
           {%endif%}
         </p>
-        {%if not update_details%}
-          <button><a href="{{url_for('user_details', id=current_user.id)}}" class="btn brn-outline btn-primary">Update User</button>
-        {%endif%}
+        <!-- {%if not update_details%} -->
+        <button><a href="{{url_for('user_details', id=user.id)}}" class="btn btn-primary btn-outline ">Update User</button>
+        <!-- {%endif%}
         {%if update_details%}
         <button><a href="{{url_for('update_user_details', id=current_user.id)}}" class="btn btn-outline btn-secondary">Update User</button>
-        {%endif%}
+        {%endif%} -->
       </div>
     </div>
   </div>
