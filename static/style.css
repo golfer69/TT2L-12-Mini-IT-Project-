@@ -269,3 +269,12 @@ input[type=text] {
 .sidebar a:hover:not(.active) {
   background-color: var(--almost-grey);
 }
+
+.voted {
+  /* Customize the appearance for downvoted buttons */
+  background: #ff9999 !important; /* Reddish color */
+  border-color: #cc0000 !important; /* Red border */
+}
+.voted:hover {
+  box-shadow: inset 0 -25px 25px #cc0000 !important;
+}
