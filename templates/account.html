@@ -8,16 +8,23 @@
           <strong>Username: </strong> {{ current_user.username }}<br>
           <strong>Email: </strong> {{ current_user.email }}<br>
           <strong>Date Joined: </strong> {{ current_user.date_joined }}<br>
-          <strong>Name: </strong> {{ update.name }}<br>
-          <strong>Age: </strong> {{ update.age }}<br>
-          <strong>About: </strong> {{ update.about }}<br>
-          <strong>Location: </strong> {{ update.location }}<br>
-          <strong>Interests: </strong> {{ update.interests }}<br>
-          <strong>Faculty: </strong> {{ update.faculty }}<br>
-
+          {%if update_details%}
+            <strong>Name: </strong> {{ update_details.name }}<br>
+            <strong>Age: </strong> {{ update_details.age }}<br>
+            <strong>About: </strong> {{ update_details.about }}<br>
+            <strong>Location: </strong> {{ update_details.location }}<br>
+            <strong>Interests: </strong> {{ update_details.interests }}<br>
+            <strong>Faculty: </strong> {{ update_details.faculty }}<br>
+          {%else%}
+            <p>No additional details provided</p>
+          {%endif%}
         </p>
-        <button><a href="{{url_for('user_details', id=current_user.id)}}" class="btn btn-primary">User</button>
-        <button><a href="{{url_for('update_user_details', id=current_user.id)}}" class="btn btn-secondary">Update User 2</button>
+        {%if not update_details%}
+          <button><a href="{{url_for('user_details', id=current_user.id)}}" class="btn brn-outline btn-primary">Update User</button>
+        {%endif%}
+        {%if update_details%}
+        <button><a href="{{url_for('update_user_details', id=current_user.id)}}" class="btn btn-outline btn-secondary">Update User</button>
+        {%endif%}
       </div>
     </div>
   </div>

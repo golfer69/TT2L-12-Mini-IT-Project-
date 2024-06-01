@@ -8,8 +8,7 @@ from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired
-from flask_mail import Mail, Message
+
 
 
 def create_app():
@@ -18,19 +17,12 @@ def create_app():
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['MAIL_SERVER']='smtp.gmail.com'
-    app.config['MAIL_PORT']=465
-    app.config['MAIL_USE_TLS']=False
-    app.config['MAIL_USE_SSL']=True
-    app.config['MAIL_USERNAME'] = 'halimalif13@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'alifakmalbinabdulhalim'
     return app
 
 app=create_app()
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
-mail=Mail(app)
-serializer=URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
 
 login_manager=LoginManager()
 login_manager.init_app(app)
@@ -51,16 +43,6 @@ class User(db.Model, UserMixin):
     updates= db.relationship('Update', backref='poster', lazy=True)
     date_joined= db.Column(db.DateTime, default=datetime.now)
 
-    def get_token(self):
-        return serializer.dumps({'user_id':self.id}, salt='password-reset-salt')
-                                
-    @staticmethod
-    def verify_token(token):
-        try:
-            user_id = serializer.loads(token, salt='password-reset-salt', max_age=300)['user_id']
-        except:
-            SignatureExpired()
-        return User.query.get(user_id)
     
 class Post(db.Model):
     __tablename__ = 'post'
@@ -131,22 +113,16 @@ class LoginForm(FlaskForm):
     submit= SubmitField('Login')
 
 
-class ResetRequestForm(FlaskForm):
-    email= StringField(label='Email', validators=[InputRequired()])
-    submit= SubmitField(label='Reset Password', validators=[InputRequired()])
-
-
-class ResetPasswordForm(FlaskForm):
-    password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
-    confirm_password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Confirm Password'})
-    submit= SubmitField('Change Password')
-
-    def validate_confirm_password(self, confirm_password):
-        if self.password.data != confirm_password.data:
-            raise ValidationError('Passwords do not match!')
-
-
 class EntryForm(FlaskForm):
+    name= StringField(label='Name')
+    age= StringField(label='Age', validators=[Length(max=3)])
+    about= StringField(label='About', validators=[Length(min=7, max=1000)])
+    location= StringField(label='Location', validators=[Length(min=1, max=100)])
+    interests= StringField(label='Interests', validators=[Length(min=1, max=1000)])    
+    faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
+    submit= SubmitField('Submit')
+
+class UpdateForm(FlaskForm):
     name= StringField(label='Name')
     age= StringField(label='Age', validators=[Length(max=3)])
     about= StringField(label='About', validators=[Length(min=7, max=1000)])
@@ -260,7 +236,7 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('user_posts'))
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -269,7 +245,7 @@ def login():
             return render_template('login.html', form=form)
         if bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user)
-            return redirect(url_for('user_posts'))
+            return redirect(url_for('index'))
         else:
             flash("Invalid username or password. Please try again")
         return redirect(url_for('login'))
@@ -280,43 +256,12 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-def send_mail(user):
-    token=user.get_token()
-    msg=Message('Password Reset Request', recipients=[user.email], sender='noreply@demo.com')
-    msg.body=f''' To reset your password, please follow the link: {url_for(reset_token, token=token, _external=True)} If you didn't send a password request, please ignore this email'''
-    Mail.send(msg)
-
-@app.route('/reset_password', methods=['GET', 'POST'])
-def reset_request():
-    form=ResetRequestForm()
-    if form.validate_on_submit():
-        user=User.query.filter_by(email=form.email.data).first()
-        if user:
-            send_mail(user)
-            return redirect(url_for('login'))
-    return render_template('reset_request.html', form=form)
-
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
-def reset_token(token):
-    user=User.verify_token(token)
-    if user is None:
-        flash('That is an invalid or expired token, please try again', 'warning')
-        return redirect(url_for('reset_request'))
-    
-    form=ResetPasswordForm()
-    if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
-        db.session.add(hashed_password)
-        db.session.commit()
-        return redirect(url_for('login'))
-    return render_template('change_password.html', title="Change Password", form=form)
-
 
 
 @app.route('/user_details/<int:id>', methods=['GET', 'POST'])
 def user_details(id):
     form=EntryForm()
-    update=Update.query.filter_by(user_id=id).first()
+    update_user=Update.query.filter_by(user_id=id).first()
     if form.validate_on_submit():
         current_update=Update(name=form.name.data, 
                                  age=form.age.data,
@@ -328,29 +273,36 @@ def user_details(id):
         db.session.add(current_update)  
         db.session.commit()
         return redirect(url_for('account'))
-    return render_template('user_details.html',update=update, title='User Details', form=form)
+    return render_template('user_details.html', update_user=update_user, title='User Details', form=form)
 
 
 
 @app.route('/update_user_details/<int:id>', methods=['GET', 'POST'])
 def update_user_details(id):
-    form=EntryForm()
-    update_user= Update.query.get_or_404(id)
-    if request.method=="POST":
-        update_user.name=request.form['name']
-        update_user.age=request.form['age']
-        update_user.about=request.form['about']
-        update_user.location=request.form['location']
-        update_user.interests=request.form['interests']
-        update_user.faculty=request.form['faculty']
+    form=UpdateForm()
+    update_user= Update.query.filter_by(user_id=id).first()
+    if request.method=="POST" and form.validate_on_submit():
+        update_user.name=form.name.data
+        update_user.age=form.age.data
+        update_user.about=form.about.data
+        update_user.location=form.location.data
+        update_user.interests=form.interests.data
+        update_user.faculty=form.faculty.data
         try:
             db.session.commit()
             flash('user updated')
             return redirect(url_for('account'))
-        except:
-            db.session.commit()
-            flash('failed')
-    return render_template('update_user_details.html',title='Update User Details', form=form, update_user=update_user, update=update_user)
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Failed to update user: {str(e)}', 'danger')
+    elif request.method=="GET":
+        form.name.data=update_user.name
+        form.age.data=update_user.age
+        form.about.data=update_user.about
+        form.location.data= update_user.location
+        form.interests.data=update_user.interests
+        form.faculty.data=update_user.faculty
+    return render_template('update_user_details.html', update_user=update_user, form=form )
 
 
 
@@ -361,11 +313,11 @@ def user_posts():
     return render_template('user_posts.html', posts=user_posts,  page_title="User Posts")
     
 
-@app.route('/account', methods=['GET', 'POST'])
+@app.route('/account', methods=['GET'])
 @login_required
 def account():
     user_details = Update.query.filter_by(user_id=current_user.id).first()
-    return render_template('account.html', user_details=user_details, update=user_details, page_title="User")
+    return render_template('account.html', user_details=user_details, update_details=user_details, page_title="User")
 
 
 
