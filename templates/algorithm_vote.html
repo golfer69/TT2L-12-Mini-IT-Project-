@@ -2,44 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name = "viewport" content="width=device-width, initial-scale=1.0">
     <title>Upvote/Downvote System</title>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel = "stylesheet" href="{{url_for('static', filename='styles.css')}}">
 </head>
 <body>
-    <h1>Posts</h1>
-    <ul>
+    <div id="posts">
         {% for post in posts %}
-            <li>
-                <h2>{{ post.title }}</h2>
-                <p>{{ post.content }}</p>
-                <button class="upvote" data-id="{{ post.id }}">Upvote</button> <span>{{ post.upvotes }}</span>
-                <button class="downvote" data-id="{{ post.id }}">Downvote</button> <span>{{ post.downvotes }}</span>
-            </li>
+        <div class="post" data-id="{{ post.id }}">
+            <h2>{{ post.title }}</h2>
+            <p>{{ post.content }}</p>
+            <button class="upvote">Upvote</button>
+            <span class="upvotes">{{ post.upvotes }}</span>
+            <button class="downvote">Downvote</button>
+            <span class="downvotes">{{ post.downvotes }}</span>
+        </div>
         {% endfor %}
-    </ul>
+    </div>
 
-    <script>
-        $(document).ready(function() {
-            $('.upvote').click(function() {
-                var post_id = $(this).data('id');
-                var button = $(this);
-                $.post('/upvote/' + post_id, function(data) {
-                    if (data.success) {
-                        button.next('span').text(data.upvotes);
-                    }
-                });
-            });
-
-            $('.downvote').click(function() {
-                var post_id = $(this).data('id');
-                var button = $(this);
-                $.post('/downvote/' + post_id, function(data) {
-                    if (data.success) {
-                        button.next('span').text(data.downvotes);
-                    }
-                });
-            });
-        });
-    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
