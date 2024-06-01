@@ -11,8 +11,8 @@
     </div>
     <div class="posts-section">
       {% for post in posts %}
-      <button type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>
-      <button type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
+      <button data-vote-type="upvote" type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>
+      <button data-vote-type="downvote" type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
       <div class="posts">
         <a href="{{ url_for('show_community', community_name=post.community.name) }}" class="community-label"> 
           r/{{ post.community.name}}
@@ -68,6 +68,11 @@ function upvotePost(button) {
               // Update vote count in the DOM
               const voteCountElement = document.getElementById(`vote-count-${postId}`);
               voteCountElement.textContent = data.votes;
+              // Get the other button element
+              const otherButton = document.querySelector(`[data-vote-type="downvote"]`);
+            
+              // Remove the "voted" class from the other button
+              otherButton.classList.remove('voted');
               button.classList.add('voted');
             } else {
               console.error('Upvote failed:', data.error);
@@ -111,6 +116,10 @@ function downvotePost(button) {
                   // Update vote count in the DOM
                   const voteCountElement = document.getElementById(`vote-count-${postId}`);
                   voteCountElement.textContent = data.votes;
+                  const otherButton = document.querySelector(`[data-vote-type="upvote"]`);
+            
+                  // Remove the "voted" class from the other button
+                  otherButton.classList.remove('voted');
                   button.classList.add('voted');
                 } else {
                   console.error('Downvote failed:', data.error);

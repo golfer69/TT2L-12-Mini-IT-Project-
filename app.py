@@ -371,10 +371,6 @@ def upvote(post_id):
         existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
         if existing_vote and existing_vote.vote_type == "downvote":
             existing_vote.vote_type = "upvote"
-        elif existing_vote and existing_vote.vote_type == "upvote":
-            # User already downvoted, so remove the vote
-            db.session.delete(existing_vote)
-            db.session.commit()
         else:
             vote = Votes(user_id=user_id, post_id=post_id, vote_type="upvote")
             db.session.add(vote)
@@ -397,10 +393,6 @@ def downvote(post_id):
         existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
         if existing_vote and existing_vote.vote_type == "upvote":
             existing_vote.vote_type = "downvote"
-        elif existing_vote and existing_vote.vote_type == "downvote":
-            # User already downvoted, so remove the vote
-            db.session.delete(existing_vote)
-            db.session.commit()
         else:
             vote = Votes(user_id=user_id, post_id=post_id, vote_type="downvote")
             db.session.add(vote)
