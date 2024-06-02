@@ -11,8 +11,6 @@
     </div>
     <div class="posts-section">
       {% for post in posts %}
-      <button data-vote-type="upvote" type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>
-      <button data-vote-type="downvote" type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
       <div class="posts">
         <a href="{{ url_for('show_community', community_name=post.community.name) }}" class="community-label"> 
           r/{{ post.community.name}}
@@ -28,10 +26,13 @@
           {% endif %}
           
         </a>
+        <div class="clear"></div>
+        <button class="vote-btn" data-vote-type="upvote" type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>
+        <button class="vote-btn" data-vote-type="downvote" type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
       </div>
       <hr>
       {% endfor %}
-      </div>
+    </div>
   </div>
 {% endblock %}
 

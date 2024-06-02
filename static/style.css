@@ -131,6 +131,12 @@ button[type='button']:hover {
   text-align: left;
 }
 
+.posts:after {
+  content: "";
+  display: block;
+  clear: both;
+}
+
 .posts:hover{
   background-color: var(--almost-grey) !important;
 }
@@ -201,13 +207,12 @@ input[type=text] {
   text-align: center;
 }
 
-.posts:hover{
-  background-color: var(--almost-grey) !important;
-}
 
+.posts:hover,
 .posts:hover h3,
 .posts:hover img,
-.posts:hover a{
+.posts:hover a,
+.posts:hover span{
   background-color: var(--almost-grey) !important;
 }
 .posts h3 {
@@ -242,6 +247,13 @@ input[type=text] {
 .info {
  text-align: left;
  padding-left: 10vw;
+}
+
+.vote-btn {
+  float: left !important;
+  display: block;
+  padding: 0 15px !important;
+  margin: 0 5px;
 }
 
 .float-right {
