@@ -4,11 +4,16 @@
     <div class="card" style="width: 18rem;">
       <div class="card-body">
         <p class="card-text">
+          {%if update_user%}
+            {%if update_user.profile_pic%}
+              <strong>Profile Picture: </strong><br>
+              <img src="{{url_for('static', filename='profile_pics/' + update_user.profile_pic)}}" alt="Profile Picture" class="img-thumbnail"><br>
+            {%endif%}
+          {%endif%}
           <strong>Username: </strong> {{ user.username }}<br>
           <strong>Email: </strong> {{ user.email }}<br>
           <strong>Date Joined: </strong> {{ user.date_joined }}<br>
           {%if update_user%}
-            <strong>Profile Picture: </strong> {{ update_user.profile_pic }}<br>
             <strong>Name: </strong> {{ update_user.name }}<br>
             <strong>Age: </strong> {{ update_user.age }}<br>
             <strong>About: </strong> {{ update_user.about }}<br>

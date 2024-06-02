@@ -269,11 +269,12 @@ def account():
 def save_profile_pic(profile_pic_file):
     if profile_pic_file:
         filename=secure_filename(profile_pic_file.filename)
-        upload_dir='profile pics'
+        unique_id_filename=str(uuid.uuid1()) + '_' + filename
+        upload_dir='static/profile_pics'
         os.makedirs(upload_dir, exist_ok=True)
-        profile_pic_path=os.path.join(upload_dir, filename)
+        profile_pic_path=os.path.join(upload_dir, unique_id_filename)
         profile_pic_file.save(profile_pic_path)
-        return profile_pic_path
+        return unique_id_filename
     else:
         return None
 
@@ -285,6 +286,7 @@ def user_details(id):
     update_user = Update.query.filter_by(user_id=id).first()
 
     if form.validate_on_submit():
+        profile_pic_filename=save_profile_pic(form.profile_pic.data)
         if update_user:
             # Update existing user details
             update_user.name = form.name.data
@@ -293,7 +295,8 @@ def user_details(id):
             update_user.location = form.location.data
             update_user.interests = form.interests.data
             update_user.faculty = form.faculty.data
-            update_user.profile_pic = save_profile_pic(form.profile_pic.data)
+            if profile_pic_filename:
+                update_user.profile_pic = profile_pic_filename
         else:
             # Create new user details
             update_user = Update(
@@ -303,7 +306,7 @@ def user_details(id):
                 location=form.location.data,
                 interests=form.interests.data,
                 faculty=form.faculty.data,
-                profile_pic=save_profile_pic(form.profile_pic.data),
+                profile_pic=profile_pic_filename,
                 user_id=id
             )
             db.session.add(update_user)
