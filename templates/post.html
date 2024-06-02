@@ -21,6 +21,25 @@
                 <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
             </div>
             {% endif %}
+
+            <!-- delete button -->
+            {% if current_user.is_authenticated %}
+            {% if current_user.id == 1 or current_user.id==post.poster_id  %}
+            <form action="{{ url_for('delete') }}" method="POST" class="inline-block admin-buttons">
+                <input type="hidden" name="item" value="post" >
+                <input type="hidden" name="post_id" value="{{ post.id }}"> 
+                <button type="submit">Delete</button>
+                {% endif %}
+            </form>
+            {% endif %}
+
+            <!-- edit button -->
+            {% if current_user.is_authenticated and current_user.id==post.poster_id %}
+                <input type="hidden" name="post_id" value="{{ post.id }}">  
+                <form action="{{ url_for('edit_post', post_id=post.id) }}" method="POST" class="inline-block admin-buttons">
+                <button type="submit">Edit</button>
+                </form>
+            {% endif %}
             
             <div class="comment-section">
                 <br>
@@ -29,7 +48,7 @@
                 <form action="/upload" method="POST">
                     <input type="hidden" name="item" value="comment">
                     <input type="hidden" name="post_id" value="{{ post.id }}">  
-                    <div class="">
+                    <div class="comment-input-container">
                         <input type="text" name="comment-content" placeholder="Enter comment..."><br>
                         <input type="submit" value="Comment">
                     </div>
@@ -39,35 +58,29 @@
                 
 
                 <div class="comments">
-                        {% for comment in comments %}
-                        <div>
-                            <div class="info">
-                                <div class="username"><b>{{comment.poster.username}}</b></div>
-                                <div>{{comment.date_added}}</div>
-                                <div class="comment-content">{{comment.comment_content}}</div><br>
-                            </div>
+                    {% for comment in comments %}
+                        <div class="comment">
+                            <div class="username"><b>{{comment.poster.username}}</b></div>
+                            <div>{{comment.date_added}}</div>
+                            <div class="comment-content">{{comment.comment_content}}</div><br>
+                            {% if current_user.is_authenticated %}
+                                {% if current_user.id==comment.poster_id  %}
+                                    <div class="comment-delete">
+                                        <form action="{{ url_for('delete')}}" method="POST" class="float-right">
+                                            <input type="hidden" name="item" value="comment" >
+                                            <input type="hidden" name="post_id" value="{{ post.id }}"> 
+                                            <input type="hidden" name="comment_id" value="{{ comment.id }}"> 
+                                            <button class="float-right" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
                         </div>
-                        {% endfor %}
+                    {% endfor %}
+                </div>
             </div>
 
-            <!-- delete button -->
-            {% if current_user.is_authenticated %}
-                {% if current_user.id == 1 or current_user.id==post.poster_id  %}
-                <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST" class="inline-block admin-buttons">
-                    <button type="submit">Delete</button>
-                    {% endif %}
-                </form>
-            {% endif %}
 
-            
-
-            <!-- edit button -->
-            {% if current_user.is_authenticated and current_user.id==post.poster_id %}
-                <input type="hidden" name="post_id" value="{{ post.id }}">  
-                <form action="{{ url_for('edit_post', post_id=post.id) }}" method="POST" class="inline-block admin-buttons">
-                <button type="submit">Edit</button>
-                </form>
-            {% endif %}
 
         </div>
     </div>
