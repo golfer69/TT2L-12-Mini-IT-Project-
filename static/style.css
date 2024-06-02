@@ -195,6 +195,9 @@ input[type=text] {
   height: auto;
   text-align: justify;
   padding-left: 45%;
+  margin-top: 50%;
+  align-content: center;
+  margin-right: 50%;
 }
 
 .app-user {
@@ -241,17 +244,7 @@ input[type=text] {
   width: 50px;
   height: 100px;
 }
-/* .previous-btn-1 {
-  background-color: #04AA6D;
-  color: black;
-  text-decoration: none;
-  display: inline-block;
-  padding: 8px 16px;
-  margin-bottom: 8px;
-  border-radius: 12px;
-  left: 50px;
 
-} */
 .previous-btn-2 {
   background-color: indianred;
   color: black;
@@ -338,6 +331,8 @@ input[type=text] {
   margin-top: 50px
 }
 
-.card-body{
-  margin-top: 50px;
+
+.update-user-button{
+  margin-top: 450px;
+  padding-right: 100px;
 }
