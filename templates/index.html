@@ -29,42 +29,6 @@
 </div>
 
   <div class="app">
-<<<<<<< HEAD
-    
-    <div class="form-section">
-
-      {% if current_user.id == 5 or current_user.id == 6 %}
-        <h2>Administrator</h2>
-      {% endif %}
-
-      <h2>{{current_user.username}}</h2>
-      
-      <h1>Text Saver</h1>
-      <form action="{{ url_for('index') }}" method="POST">
-          <textarea name="content" rows="4" cols="50"></textarea><br>
-          <input type="submit" value="Save">
-      </form>
-      <h2>Saved Texts</h2>
-      <ul>
-          {% for text in texts %}
-              <li>{{ text.content }}</li>
-          {% endfor %}
-      </ul>
-
-      <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="file">
-        <input type="submit" value="Upload">
-      </form>
-
-    </div>
-
-    <div class="images-section">
-
-      {% for file in files: %}
-        <a href="{{ url_for('serve_files', filename=file) }}" target="_blank">
-          <img src="{{ url_for('serve_files', filename=file) }}">
-        </a>
-=======
     <div class="posts-section">
       {% for post in posts %}
       <div class="posts">      
@@ -78,7 +42,6 @@
             {% endif %}
         </a>
       </div>
->>>>>>> main
       {% endfor %}
       </div>
   </div>
