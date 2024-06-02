@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_from_directory, url_for, flash
+from flask import Flask, render_template, request, redirect, send_from_directory, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
@@ -69,14 +69,14 @@ class Post(db.Model):
     image_filename = db.Column(db.String(255))
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
-    
-    id_for_comments = db.relationship('Comment', backref='text', lazy=True)
+    votes = db.Column(db.Integer, default=0)
+    hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     
 class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     comment_content = db.Column(db.Text)
 
 class Community(db.Model):
@@ -85,6 +85,13 @@ class Community(db.Model):
     name = db.Column(db.String(50))
     about = db.Column(db.String(255))
     community = db.relationship('Post', backref='community', lazy=True)
+
+class Votes(db.Model):
+    __tablename__ = 'votes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    vote_type = db.Column(db.Integer)
 
 # create database
 with app.app_context():
@@ -138,10 +145,8 @@ def index():
 @app.route('/create', methods=['GET'])
 @login_required
 def create():
-    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    texts = Post.query.all()
     communities = Community.query.all()
-    return render_template('create.html', texts=texts, pics=pics,communities=communities, page_title="Create a post")
+    return render_template('create.html',communities=communities, page_title="Create a post")
 
 @app.route('/createcommunity', methods=['GET'])
 @login_required
@@ -361,7 +366,75 @@ def calculate_time_difference(posted_time):
     time_since_posted = calculate_time_difference(posted_time)
     return render_template('post.html', time_since_posted=time_since_posted)
 
+@app.route('/upvote/<int:post_id>', methods=['POST'])
+def upvote(post_id):
+    user_id = current_user.id
+    post = Post.query.get(post_id)
+    if post:
+        existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if existing_vote and existing_vote.vote_type == "downvote":
+            existing_vote.vote_type = "upvote"
+        else:
+            vote = Votes(user_id=user_id, post_id=post_id, vote_type="upvote")
+            db.session.add(vote)
 
+        # Count upvotes and downvotes separately
+        upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
+        downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
+
+        post.votes = upvote_count - downvote_count
+        db.session.commit()
+        return jsonify({'message': 'Upvoted successfully', 'votes': post.votes})
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+
+@app.route('/downvote/<int:post_id>', methods=['POST'])
+def downvote(post_id):
+    user_id = current_user.id
+    post = Post.query.get(post_id)
+    if post:
+        existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if existing_vote and existing_vote.vote_type == "upvote":
+            existing_vote.vote_type = "downvote"
+        else:
+            vote = Votes(user_id=user_id, post_id=post_id, vote_type="downvote")
+            db.session.add(vote)
+
+        # Count upvotes and downvotes separately
+        upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
+        downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
+
+        post.votes = upvote_count - downvote_count
+        db.session.commit()
+        return jsonify({'message': 'Downvoted successfully', 'votes': post.votes})
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+
+@app.route('/unvote/<int:post_id>', methods=['POST'])
+def unvote(post_id):
+    user_id = current_user.id
+    post = Post.query.get(post_id)
+    if post:
+        existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if existing_vote:
+            db.session.delete(existing_vote)
+            # Count upvotes and downvotes separately
+            upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
+            downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
+
+            post.votes = upvote_count - downvote_count
+            db.session.commit()
+            return jsonify({'message': 'Vote removed successfully', 'votes': post.votes})
+        else:
+            return jsonify({'error': 'No vote found to remove'}), 404
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+    
+@app.route('/check_vote/<int:post_id>/<vote_type>', methods=['GET'])
+def check_vote(post_id, vote_type):
+  user_id = current_user.id
+  vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
+  return jsonify({'voted': vote_exists is not None})
 
 #how far back was a post posted
 
