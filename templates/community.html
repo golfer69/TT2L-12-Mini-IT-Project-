@@ -1,0 +1,24 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="app">
+    r/{{community.name}}
+    <div class="posts-section">
+      {% for post in posts %}
+      <div class="posts">      
+        <a href="{{ url_for('show_post', post_id=post.id) }}">  
+            <h3>{{post.title}}</h3>
+            <!-- if got img show img else the desc -->
+            {% if post.image_filename %} 
+                <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
+              {% else %}
+                <p>{{ post.content }}</p>
+            {% endif %}
+        </a>
+      </div>
+      <hr>
+      {% endfor %}
+      </div>
+  </div>
+{% endblock %}
