@@ -252,8 +252,8 @@ input[type=text] {
 .vote-btn {
   float: left !important;
   display: block;
-  padding: 0 15px !important;
-  margin: 0 5px;
+  padding: 5px 15px !important;
+  margin: 0 0 0 10px;
 }
 
 .float-right {
