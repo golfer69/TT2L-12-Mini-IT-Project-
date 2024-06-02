@@ -307,27 +307,35 @@ def admin():
     if id==1 or id==6:
         return render_template('admin.html', page_title="Admin Page")
     
-@app.route('/delete_post/<int:post_id>', methods=['POST'])
+@app.route('/delete', methods=['POST'])
 @login_required
-def delete_post(post_id):
-  post = Post.query.get(post_id)
-  poster=current_user.id
-  if post.poster_id==poster:
-    # Delete the post object from the database
-    db.session.delete(post)
-    db.session.commit()
-    
-    # Delete the image file if it exists
-    image_filename = post.image_filename
-    if image_filename:
-      image_path = os.path.join(app.config['UPLOAD_DIRECTORY'], image_filename)
-      if os.path.exists(image_path):
-        try:
-          os.remove(image_path)
-        except OSError as e:
-          print(f"Error deleting image file: {e}")
-          
-  return redirect('/')
+def delete():
+    item = request.form.get('item')
+    if current_user.is_authenticated:
+        if item == "post":
+            post_id = request.form.get('post_id')
+            post = Post.query.get(post_id)
+            if post.poster_id == current_user.id:
+                db.session.delete(post)
+                db.session.commit()
+                # Delete the image file if it exists
+                image_filename = post.image_filename
+                if image_filename:
+                    image_path = os.path.join(app.config['UPLOAD_DIRECTORY'], image_filename)
+                    if os.path.exists(image_path):
+                        try:
+                            os.remove(image_path)
+                        except OSError as e:
+                            print(f"Error deleting image file: {e}")
+            return redirect('/')
+        if item == "comment":
+            comment_id = request.form.get('comment_id')
+            post_id = request.form.get('post_id')
+            comment = Comment.query.get(comment_id)
+            if comment.poster_id == current_user.id:
+                db.session.delete(comment)
+                db.session.commit()
+            return redirect(url_for('show_post', post_id=post_id))
 
 @app.route('/edit/<int:post_id>', methods=['GET','POST'])
 def edit_post(post_id):
@@ -466,12 +474,6 @@ def calculate_time_difference(posted_time):
 posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
 time_since_posted = calculate_time_difference(posted_time)
 print(time_since_posted)
-
-
-
-
-
-
 
 
 if  __name__ == '__main__':
