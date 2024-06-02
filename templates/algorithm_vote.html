@@ -2,24 +2,67 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name = "viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upvote/Downvote System</title>
-    <link rel = "stylesheet" href="{{url_for('static', filename='styles.css')}}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voting System</title>
 </head>
 <body>
-    <div id="posts">
-        {% for post in posts %}
-        <div class="post" data-id="{{ post.id }}">
-            <h2>{{ post.title }}</h2>
-            <p>{{ post.content }}</p>
-            <button class="upvote">Upvote</button>
-            <span class="upvotes">{{ post.upvotes }}</span>
-            <button class="downvote">Downvote</button>
-            <span class="downvotes">{{ post.downvotes }}</span>
-        </div>
-        {% endfor %}
-    </div>
+    <script>
+        // Your JavaScript code here
+        let posts = [
+            { id: 1, title: "Post 1", upvotes: 0, downvotes: 0, score: 0 },
+            { id: 2, title: "Post 2", upvotes: 0, downvotes: 0, score: 0 }
+        ];
 
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+        let userVotes = {
+            user1: { 1: 0, 2: 0 },
+            user2: { 1: 0, 2: 0 }
+        };
+
+        function castVote(userId, postId, vote) {
+            if (!userVotes[userId] || !posts.find(post => post.id === postId)) {
+                console.log("Invalid user or post");
+                return;
+            }
+
+            let post = posts.find(post => post.id === postId);
+            let currentVote = userVotes[userId][postId];
+
+            if (vote === 1) {
+                if (currentVote === 1) {
+                    console.log("User already upvoted this post");
+                    return;
+                } else if (currentVote === -1) {
+                    post.downvotes--;
+                }
+                post.upvotes++;
+            } else if (vote === -1) {
+                if (currentVote === -1) {
+                    console.log("User already downvoted this post");
+                    return;
+                } else if (currentVote === 1) {
+                    post.upvotes--;
+                }
+                post.downvotes++;
+            } else {
+                console.log("Invalid vote");
+                return;
+            }
+
+            userVotes[userId][postId] = vote;
+            post.score = post.upvotes - post.downvotes;
+            console.log(`User ${userId} voted on post ${postId}. New score: ${post.score}`);
+        }
+
+        // Simulating votes
+        castVote('user1', 1, 1);
+        castVote('user1', 2, -1);
+        castVote('user2', 1, 1);
+        castVote('user1', 1, -1);
+        castVote('user2', 2, 1);
+        castVote('user1', 2, 1);
+
+        // Display final post scores
+        console.log(posts);
+    </script>
 </body>
 </html>
