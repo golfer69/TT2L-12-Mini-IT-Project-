@@ -123,7 +123,7 @@ class EntryForm(FlaskForm):
     location= StringField(label='Location', validators=[Length(min=1, max=100)])
     interests= StringField(label='Interests', validators=[Length(min=1, max=1000)])    
     faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
-    profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png', 'jpeg'])])
     submit= SubmitField('Submit')
 
 
