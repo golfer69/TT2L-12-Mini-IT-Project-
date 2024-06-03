@@ -131,14 +131,24 @@ class EntryForm(FlaskForm):
     profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
 
-
+@app.context_processor
+def inject_user():
+    if current_user.is_authenticated:
+        update_user=Update.query.filter_by(user_id=current_user.id).first()
+        return dict(update_user=update_user)
+    return dict(update_user=None)
 
 @app.route('/', methods=['GET'])
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     posts = Post.query.all()
     communities = Community.query.all()
-    return render_template('index.html', posts=posts, pics=pics, communities=communities ,page_title="MMU Reddit | Main Page")
+    profile_pic= None
+    if current_user.is_authenticated:
+        update_user=Update.query.filter_by(user_id=current_user.id).first()
+        if update_user and update_user.profile_pic:
+            profile_pic=url_for('static', filename='profile_pics/' + update_user.profile_pic)
+    return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
 @login_required
@@ -146,7 +156,11 @@ def create():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     texts = Post.query.all()
     communities = Community.query.all()
-    return render_template('create.html', texts=texts, pics=pics,communities=communities, page_title="Create a post")
+    update_user=Update.query.filter_by(user_id=current_user.id).first()
+    profile_pic= None
+    if update_user and update_user.profile_pic:
+        profile_pic=url_for('static', filename='profile_pics/' + update_user.profile_pic)
+    return render_template('create.html', texts=texts, pics=pics,communities=communities, profile_pic=profile_pic, page_title="Create a post")
 
 @app.route('/createcommunity', methods=['GET'])
 @login_required

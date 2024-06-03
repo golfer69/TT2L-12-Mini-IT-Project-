@@ -373,3 +373,12 @@ input[type=text] {
 .comment-input-container input[type="submit"] {
   margin-left: 10px; /* Adjust spacing as needed */
 }
+
+.profile-pic{
+  max-width:20px;
+  max-height: 20px;
+  border-radius: 10px;
+  border-color: white;
+  float: right;
+  align-items: flex-end;
+}
