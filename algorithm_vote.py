@@ -1,68 +1,25 @@
-from flask import Flask, render_template, request, jsonify
-from datetime import datetime 
-from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime, timedelta
 
-def create_app():
-    app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///algorithm_vote.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    return app
+# Function to calculate hidden votes
+def calculate_hidden_votes(posted_time, decay_rate):
+    # Get the current time
+    current_time = datetime.now()
+    
+    # Calculate the time difference in seconds
+    time_difference = (current_time - posted_time).total_seconds()
+    
+    # Calculate hidden votes
+    hidden_votes = time_difference * decay_rate
+    
+    return hidden_votes
 
-app=create_app()
+# Example usage
+# Posted time (for example, 2 hours ago from now)
+posted_time = datetime.now() - timedelta(hours=2)
 
-db = SQLAlchemy()
-db.init_app(app)
+# Decay rate (example value)
+decay_rate = 0.001  # This is the rate at which votes become hidden per second
 
-class Comment(db.Model):
-    __tablename__ = 'comment'
-    id = db.Column(db.Integer, primary_key=True)
-    message_content = db.Column(db.String(255))
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    date_added= db.Column(db.DateTime, default=datetime.now)
-
-class Post(db.Model):
-    __tablename__='post'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    content = db.Column(db.String(255))
-    date_added= db.Column(db.DateTime, default=datetime.now)
-    image_filename = db.Column(db.String(255))
-    poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
-    upvotes = db.Column(db.Integer, default=0)
-    downvotes = db.Column(db.Integer, default=0)
-    id_for_comments = db.relationship('Comment', backref='post', lazy= True)
-
-@app.route('/')
-def index():
-    posts = Post.query.all()
-    return render_template('algorithm_vote.html', posts=posts)
-
-@app.route('/vote', methods=['POST'])
-def vote():
-    data = request.json
-    post_id = data.get('post_id')
-    vote_type = data.get('vote_type')
-
-    post = Post.query.get(post_id)
-
-    if post:
-        if vote_type == 'upvote':
-            post.upvotes += 1
-        elif vote_type == 'downvote':
-            post.downvotes += 1
-        db.session.commit()
-
-        return jsonify({'success': True, 'post':{
-            'id': post.id,
-            'upvotes': post.upvotes,
-            'downvotes': post.downvotes
-        }})
-    else:
-        return jsonify({'success': False, 'error': 'Post not found'}), 404
-
-
-if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-    app.run(debug=True)
+# Calculate hidden votes
+hidden_votes = calculate_hidden_votes(posted_time, decay_rate)
+print(f"Hidden Votes: {hidden_votes}")
