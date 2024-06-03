@@ -408,6 +408,8 @@ def show_community(community_name):
 
 @app.route('/upvote/<int:post_id>', methods=['POST'])
 def upvote(post_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
     user_id = current_user.id
     post = Post.query.get(post_id)
     if post:
@@ -430,6 +432,8 @@ def upvote(post_id):
 
 @app.route('/downvote/<int:post_id>', methods=['POST'])
 def downvote(post_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
     user_id = current_user.id
     post = Post.query.get(post_id)
     if post:
@@ -471,10 +475,12 @@ def unvote(post_id):
         return jsonify({'error': 'Post not found'}), 404
     
 @app.route('/check_vote/<int:post_id>/<vote_type>', methods=['GET'])
+@login_required
 def check_vote(post_id, vote_type):
-  user_id = current_user.id
-  vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
-  return jsonify({'voted': vote_exists is not None})
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
+        return jsonify({'voted': vote_exists is not None})
 
 #how far back was a post posted
 
