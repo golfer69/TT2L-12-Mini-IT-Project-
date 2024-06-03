@@ -414,7 +414,10 @@ def upvote(post_id):
         else:
             vote = Votes(user_id=user_id, post_id=post_id, vote_type="upvote")
             db.session.add(vote)
-
+            
+        # Count upvotes and downvotes separately
+        upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
+        downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
 
         post.votes = upvote_count - downvote_count
         db.session.commit()
