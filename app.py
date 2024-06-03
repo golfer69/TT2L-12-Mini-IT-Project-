@@ -55,6 +55,8 @@ class Post(db.Model):
     image_filename = db.Column(db.String(255))
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
+    votes = db.Column(db.Integer, default=0)
+    hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 class Comment(db.Model):
@@ -71,6 +73,13 @@ class Community(db.Model):
     about = db.Column(db.String(255))
     community = db.relationship('Post', backref='community', lazy=True)
 
+class Votes(db.Model):
+    __tablename__ = 'votes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    vote_type = db.Column(db.Integer)
+
 class Update(db.Model):
     __tablename__ = 'update'
     id = db.Column(db.Integer, primary_key=True)
@@ -82,10 +91,6 @@ class Update(db.Model):
     faculty = db.Column(db.String(1000), nullable=True)
     profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
-
-
-
-
 
 
 # create database
@@ -340,9 +345,7 @@ def admin():
     if id==1 or id==6:
         return render_template('admin.html', page_title="Admin Page")
     
-
-
-@app.route('/delete_post/<int:post_id>', methods=['POST'])
+@app.route('/delete', methods=['POST'])
 @login_required
 def delete_post(post_id):
   post = Post.query.get(post_id)
@@ -398,8 +401,108 @@ def show_community(community_name):
 #     time_since_posted = calculate_time_difference(posted_time)
 #     return render_template('post.html', time_since_posted=time_since_posted)
 
+@app.route('/upvote/<int:post_id>', methods=['POST'])
+def upvote(post_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    user_id = current_user.id
+    post = Post.query.get(post_id)
+    if post:
+        existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if existing_vote and existing_vote.vote_type == "downvote":
+            existing_vote.vote_type = "upvote"
+        else:
+            vote = Votes(user_id=user_id, post_id=post_id, vote_type="upvote")
+            db.session.add(vote)
 
 
+        post.votes = upvote_count - downvote_count
+        db.session.commit()
+        return jsonify({'message': 'Upvoted successfully', 'votes': post.votes})
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+
+@app.route('/downvote/<int:post_id>', methods=['POST'])
+def downvote(post_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    user_id = current_user.id
+    post = Post.query.get(post_id)
+    if post:
+        existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if existing_vote and existing_vote.vote_type == "upvote":
+            existing_vote.vote_type = "downvote"
+        else:
+            vote = Votes(user_id=user_id, post_id=post_id, vote_type="downvote")
+            db.session.add(vote)
+
+        # Count upvotes and downvotes separately
+        upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
+        downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
+
+        post.votes = upvote_count - downvote_count
+        db.session.commit()
+        return jsonify({'message': 'Downvoted successfully', 'votes': post.votes})
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+
+@app.route('/unvote/<int:post_id>', methods=['POST'])
+def unvote(post_id):
+    user_id = current_user.id
+    post = Post.query.get(post_id)
+    if post:
+        existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if existing_vote:
+            db.session.delete(existing_vote)
+            # Count upvotes and downvotes separately
+            upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
+            downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
+
+            post.votes = upvote_count - downvote_count
+            db.session.commit()
+            return jsonify({'message': 'Vote removed successfully', 'votes': post.votes})
+        else:
+            return jsonify({'error': 'No vote found to remove'}), 404
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+    
+@app.route('/check_vote/<int:post_id>/<vote_type>', methods=['GET'])
+@login_required
+def check_vote(post_id, vote_type):
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
+        return jsonify({'voted': vote_exists is not None})
+
+#how far back was a post posted
+
+# def calculate_time_difference(posted_time):
+#     current_time = datetime.now()
+#     time_difference = current_time - posted_time
+
+#     seconds = time_difference.total_seconds()
+#     minutes = seconds / 60
+#     hours = minutes / 60
+#     days = hours / 24
+#     weeks = days / 7
+#     months = days / 30
+#     years = days / 365
+
+    #     if seconds < 60:
+#         return f"{int(seconds)} seconds ago"
+#     elif minutes < 60:
+#         return f"{int(minutes)} minutes ago"
+#     elif hours < 24:
+#         return f"{int(hours)} hours ago"
+#     elif days < 7:
+#         return f"{int(days)} days ago"
+#     elif weeks < 4:
+#         return f"{int(weeks)} weeks ago"
+#     elif months < 12:
+#         return f"{int(months)} months ago"
+#     else:
+#         return f"{int(years)} years ago"
+    
 # #how far back was a post posted
 
 # def calculate_time_difference(posted_time):
