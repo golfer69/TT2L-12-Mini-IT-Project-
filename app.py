@@ -85,17 +85,6 @@ class Update(db.Model):
     profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
-class Update(db.Model):
-    __tablename__ = 'update'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=True)
-    age = db.Column(db.Integer, nullable=True)
-    about = db.Column(db.String(1000), nullable=True)
-    location = db.Column(db.String(1000), nullable=True)
-    interests = db.Column(db.String(1000), nullable=True)
-    faculty = db.Column(db.String(1000), nullable=True)
-    profile_pic= db.Column(db.String(10000), nullable=True)
-    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
 class Votes(db.Model):
     __tablename__ = 'votes'
