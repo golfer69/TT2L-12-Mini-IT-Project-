@@ -1,53 +1,87 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Details</title>
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css')}}">
-</head>
-<body>
-    <div class="navigation">
-        <a href="/">Home</a>
-        {% if current_user.is_authenticated %}
-          {% if current_user.id == 5 or current_user.id == 6 %}
-            <a href="{{url_for('admin')}}">Admin Page</a>
-          {% endif %}
-        <a href="{{url_for('dashboard')}}">Dashboard</a>
-        <a href="{{url_for('logout')}}">Log Out</a>
-        {% else %}
-        <a href="{{url_for('register')}}">Sign up</a>
-        <a href="{{url_for('login')}}">Log In</a>
-        {% endif %}
-    </div>
-    
+{% extends 'base.html' %}
 
+  {% block content %}
     <div class="app">
+        <div class="posts-section">
+            <!-- button to go back -->
+            <a href="javascript:history.back()" class="previous-btn round"> &laquo; Previous </a>
+    
+            <!-- display content -->
+            <div class="post">
+                <a href="{{ url_for('show_community', community_name=post.community.name) }}" class="community-label"> 
+                    r/{{ post.community.name}}
+                </a>
+                <h2>{{post.title}}</h2> <br>
+                <p>{{ post.content }}</p> <br>
+                <p>by: {{post.poster.username}}</p>
 
-        <!-- button to go back -->
-        <a href="{{ url_for('index') }}" class="previous-btn round"> &laquo; Previous </a>
- 
-        <!-- display content -->
-        <h2>{{post.title}}</h2> <br>
-        <p>{{ post.content }}</p>
 
-        <!-- check if theres img -->
-        {% if post.image_filename %} 
-        <div class="post">
-            <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
-        </div>
-        {% endif %}
+            <!-- check if theres img -->
+            {% if post.image_filename %} 
+                <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
+            </div>
+            {% endif %}
 
-        <!-- delete button -->
-        {% if current_user.is_authenticated %}
-            {% if current_user.id == 5 or current_user.id == 6 %}
-        
-            <form action="{{ url_for('delete_post', post_id=post.id) }}" method="POST">
+            <!-- delete button -->
+            {% if current_user.is_authenticated %}
+            {% if current_user.id == 1 or current_user.id==post.poster_id  %}
+            <form action="{{ url_for('delete') }}" method="POST" class="inline-block admin-buttons">
+                <input type="hidden" name="item" value="post" >
+                <input type="hidden" name="post_id" value="{{ post.id }}"> 
                 <button type="submit">Delete</button>
                 {% endif %}
-        {% endif %}
-        </form>
+            </form>
+            {% endif %}
+
+            <!-- edit button -->
+            {% if current_user.is_authenticated and current_user.id==post.poster_id %}
+                <input type="hidden" name="post_id" value="{{ post.id }}">  
+                <form action="{{ url_for('edit_post', post_id=post.id) }}" method="POST" class="inline-block admin-buttons">
+                <button type="submit">Edit</button>
+                </form>
+            {% endif %}
+            
+            <div class="comment-section">
+                <br>
+                <b>Comment section</b>
+
+                <form action="/upload" method="POST">
+                    <input type="hidden" name="item" value="comment">
+                    <input type="hidden" name="post_id" value="{{ post.id }}">  
+                    <div class="comment-input-container">
+                        <input type="text" name="comment-content" placeholder="Enter comment..."><br>
+                        <input type="submit" value="Comment">
+                    </div>
+                    
+                    
+                </form>
+                
+
+                <div class="comments">
+                    {% for comment in comments %}
+                        <div class="comment">
+                            <div class="username"><b>{{comment.poster.username}}</b></div>
+                            <div>{{comment.date_added}}</div>
+                            <div class="comment-content">{{comment.comment_content}}</div><br>
+                            {% if current_user.is_authenticated %}
+                                {% if current_user.id==comment.poster_id  %}
+                                    <div class="comment-delete">
+                                        <form action="{{ url_for('delete')}}" method="POST" class="float-right">
+                                            <input type="hidden" name="item" value="comment" >
+                                            <input type="hidden" name="post_id" value="{{ post.id }}"> 
+                                            <input type="hidden" name="comment_id" value="{{ comment.id }}"> 
+                                            <button class="float-right" type="submit">Delete</button>
+                                        </form>
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+
+
+        </div>
     </div>
-</body>
-</html>
+{% endblock %}

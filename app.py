@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, send_from_directory, url_for, flash
+from flask import Flask, render_template, request, redirect, send_from_directory, url_for, flash, jsonify
 from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
@@ -46,9 +46,28 @@ class Text(db.Model):
     content = db.Column(db.String(255))
     date_added = db.Column(db.DateTime, default=datetime.now)
     image_filename = db.Column(db.String(255))
+    poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
+    votes = db.Column(db.Integer, default=0)
+    hidden_votes = db.Column(db.Integer, default=0) # for algorithms
+    
+class Comment(db.Model):
+    __tablename__ = 'comment'
+    id = db.Column(db.Integer, primary_key=True)
+    poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    comment_content = db.Column(db.Text)
 
     
 
+class Votes(db.Model):
+    __tablename__ = 'votes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    vote_type = db.Column(db.Integer)
+
+# create database
 with app.app_context():
     db.create_all()
 
@@ -70,8 +89,20 @@ class LoginForm(FlaskForm):
 @app.route('/', methods=['GET'])
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    texts = Text.query.all()
-    return render_template('index.html', texts=texts, pics=pics)
+    posts = Post.query.all()
+    communities = Community.query.all()
+    return render_template('index.html', posts=posts, pics=pics, communities=communities ,page_title="MMU Reddit | Main Page")
+
+@app.route('/create', methods=['GET'])
+@login_required
+def create():
+    communities = Community.query.all()
+    return render_template('create.html',communities=communities, page_title="Create a post")
+
+@app.route('/createcommunity', methods=['GET'])
+@login_required
+def createcomm():
+    return render_template('createcomm.html', page_title="Create community")
 
 @app.route('/upload', methods=['POST'])
 def upload():
@@ -92,10 +123,29 @@ def upload():
                 secure_filename(file.filename)
             ))
 
-            text.image_filename = filename
-            db.session.add(text)
-            db.session.commit()
-        
+            post.image_filename = filename
+                    db.session.add(post)
+                    db.session.commit()
+
+            if item == "community":
+                name = request.form.get('name')
+                about = request.form.get('about')
+                community = Community(name=name, about=about)
+                db.session.add(community)
+                db.session.commit()
+
+            if item == "comment":
+                poster_id= current_user.id
+                comment_content = request.form["comment-content"]
+                post_id = request.form["post_id"]  # Access post ID from the hidden field
+
+                comment = Comment(poster_id=poster_id, comment_content=comment_content, post_id=post_id)
+                db.session.add(comment)
+                db.session.commit()
+
+                # Redirect back to the updated post page using the correct post ID
+                return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
+            
     return redirect('/')
 
 @app.route('/create', methods=['GET'])
@@ -148,44 +198,70 @@ def logout():
 @app.route('/dashboard', methods=['GET', 'POST'])
 @login_required
 def dashboard():
-    return render_template('dashboard.html')
+    user_posts= Post.query.filter_by(poster_id=current_user.id).all()
+    return render_template('dashboard.html', posts=user_posts, page_title="Dashboard")
+    
+@app.route('/user_details', methods=['GET', 'POST'])
+@login_required
+def user_details():
+    return render_template('user_details.html',page_title="User Details")
+
 
 @app.route('/admin')
 @login_required
 def admin():
     id= current_user.id
-    if id==5 or id==6:
-        return render_template('admin.html')
-    else:
-        flash("Only admins can access this page")
-        return redirect(url_for('index'))
-@app.route('/delete_post/<int:post_id>', methods=['POST'])
-def delete_post(post_id):
-  post = Text.query.get(post_id)
-  if post:
-    # Delete the post object from the database
-    db.session.delete(post)
-    db.session.commit()
+    if id==1 or id==6:
+        return render_template('admin.html', page_title="Admin Page")
     
-    # Delete the image file if it exists
-    image_filename = post.image_filename
-    if image_filename:
-      image_path = os.path.join(app.config['UPLOAD_DIRECTORY'], image_filename)
-      if os.path.exists(image_path):
-        try:
-          os.remove(image_path)
-        except OSError as e:
-          print(f"Error deleting image file: {e}")
-          
-  return redirect('/')
+@app.route('/delete', methods=['POST'])
+@login_required
+def delete():
+    item = request.form.get('item')
+    if current_user.is_authenticated:
+        if item == "post":
+            post_id = request.form.get('post_id')
+            post = Post.query.get(post_id)
+            if post.poster_id == current_user.id:
+                db.session.delete(post)
+                db.session.commit()
+                # Delete the image file if it exists
+                image_filename = post.image_filename
+                if image_filename:
+                    image_path = os.path.join(app.config['UPLOAD_DIRECTORY'], image_filename)
+                    if os.path.exists(image_path):
+                        try:
+                            os.remove(image_path)
+                        except OSError as e:
+                            print(f"Error deleting image file: {e}")
+            return redirect('/')
+        if item == "comment":
+            comment_id = request.form.get('comment_id')
+            post_id = request.form.get('post_id')
+            comment = Comment.query.get(comment_id)
+            if comment.poster_id == current_user.id:
+                db.session.delete(comment)
+                db.session.commit()
+            return redirect(url_for('show_post', post_id=post_id))
 
 @app.route('/post/<int:post_id>', methods=['GET'])
 def show_post(post_id):
-    post = Text.query.get(post_id)
+    post = Post.query.get(post_id)
+    comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
+
     if not post:
         return redirect('/')  # Handle non-existent post
-    return render_template('post.html',post=post)  # Render post.html
+    
+    return render_template('post.html', post=post, comments=comments, page_title=post.title)
 
+@app.route('/community/<string:community_name>', methods=['GET'])
+def show_community(community_name):
+    community = Community.query.filter_by(name=community_name).first()
+    if community:
+      community_id = community.id # Get the id of the community
+    community = Community.query.get(community_id)
+    community_posts = Post.query.filter_by(community_id=community_id)
+    return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
 
 
 
@@ -193,6 +269,77 @@ def post():
     posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
     time_since_posted = calculate_time_difference(posted_time)
     return render_template('post.html', time_since_posted=time_since_posted)
+
+@app.route('/upvote/<int:post_id>', methods=['POST'])
+def upvote(post_id):
+    user_id = current_user.id
+    post = Post.query.get(post_id)
+    if post:
+        existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if existing_vote and existing_vote.vote_type == "downvote":
+            existing_vote.vote_type = "upvote"
+        else:
+            vote = Votes(user_id=user_id, post_id=post_id, vote_type="upvote")
+            db.session.add(vote)
+
+        # Count upvotes and downvotes separately
+        upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
+        downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
+
+        post.votes = upvote_count - downvote_count
+        db.session.commit()
+        return jsonify({'message': 'Upvoted successfully', 'votes': post.votes})
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+
+@app.route('/downvote/<int:post_id>', methods=['POST'])
+def downvote(post_id):
+    user_id = current_user.id
+    post = Post.query.get(post_id)
+    if post:
+        existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if existing_vote and existing_vote.vote_type == "upvote":
+            existing_vote.vote_type = "downvote"
+        else:
+            vote = Votes(user_id=user_id, post_id=post_id, vote_type="downvote")
+            db.session.add(vote)
+
+        # Count upvotes and downvotes separately
+        upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
+        downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
+
+        post.votes = upvote_count - downvote_count
+        db.session.commit()
+        return jsonify({'message': 'Downvoted successfully', 'votes': post.votes})
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+
+@app.route('/unvote/<int:post_id>', methods=['POST'])
+def unvote(post_id):
+    user_id = current_user.id
+    post = Post.query.get(post_id)
+    if post:
+        existing_vote = Votes.query.filter_by(user_id=user_id, post_id=post_id).first()
+        if existing_vote:
+            db.session.delete(existing_vote)
+            # Count upvotes and downvotes separately
+            upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
+            downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
+
+            post.votes = upvote_count - downvote_count
+            db.session.commit()
+            return jsonify({'message': 'Vote removed successfully', 'votes': post.votes})
+        else:
+            return jsonify({'error': 'No vote found to remove'}), 404
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+    
+@app.route('/check_vote/<int:post_id>/<vote_type>', methods=['GET'])
+def check_vote(post_id, vote_type):
+  user_id = current_user.id
+  vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
+  return jsonify({'voted': vote_exists is not None})
+
 #how far back was a post posted
 def calculate_time_difference(posted_time):
     current_time = datetime.now()
@@ -225,9 +372,6 @@ def calculate_time_difference(posted_time):
 posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
 time_since_posted = calculate_time_difference(posted_time)
 print(time_since_posted)
-
-
-
 
 
 if  __name__ == '__main__':

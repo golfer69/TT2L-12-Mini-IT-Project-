@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+  {% block scripts %}
+  <script>
+    function validateForm() {
+      var x = document.forms["post-form"]["form-title"].value;
+      if (x == "" || x == null) {
+        alert("Title must be filled out");
+        return false;
+      }
+    }
+    </script>
+    {% endblock %}
+{% block content %}
+<!-- nav bar -->
+  <div class="app">
+    <!--  create form  -->
+    <div class="form-section">
+
+      <h2>{{current_user.username}}</h2>
+    
+      <h2>Edit post</h2>
+
+      <form action="{{ url_for('update')}}" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+        <input type="hidden" name="post_id" value="{{ post.id }}">  
+        <input type="text" name="title" placeholder="Title" value="{{post.title}}"><br>
+        <textarea type="text" name="content" class="form-content" placeholder="Content">{{ post.content }}</textarea><br>
+        <input type="submit" value="Finish">
+      </form>
+
+  </div>
+{% endblock %}
