@@ -5,11 +5,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, StringField, PasswordField, EmailField
+from wtforms import SubmitField, StringField, PasswordField, EmailField, FileField
+from flask_wtf.file import FileAllowed
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
-from itsdangerous import URLSafeTimedSerializer, SignatureExpired
-from flask_mail import Mail, Message
+from werkzeug.utils import secure_filename
+import uuid as uuid
 
 
 def create_app():
@@ -18,19 +19,12 @@ def create_app():
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['MAIL_SERVER']='smtp.gmail.com'
-    app.config['MAIL_PORT']=465
-    app.config['MAIL_USE_TLS']=False
-    app.config['MAIL_USE_SSL']=True
-    app.config['MAIL_USERNAME'] = 'halimalif13@gmail.com'
-    app.config['MAIL_PASSWORD'] = 'alifakmalbinabdulhalim'
     return app
 
 app=create_app()
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
-mail=Mail(app)
-serializer=URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
 
 login_manager=LoginManager()
 login_manager.init_app(app)
@@ -48,17 +42,9 @@ class User(db.Model, UserMixin):
     email= db.Column(db.String(80), nullable=False, unique=True)
     posts= db.relationship('Post', backref='poster', lazy=True)
     comments= db.relationship('Comment', backref='poster', lazy=True)
+    updates= db.relationship('Update', backref='poster', lazy=True)
+    date_joined= db.Column(db.DateTime, default=datetime.now)
 
-    def get_token(self):
-        return serializer.dumps({'user_id':self.id}, salt='password-reset-salt')
-                                
-    @staticmethod
-    def verify_token(token):
-        try:
-            user_id = serializer.loads(token, salt='password-reset-salt', max_age=300)['user_id']
-        except:
-            SignatureExpired()
-        return User.query.get(user_id)
     
 class Post(db.Model):
     __tablename__ = 'post'
@@ -71,6 +57,7 @@ class Post(db.Model):
     community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
+    id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 class Comment(db.Model):
     __tablename__ = 'comment'
@@ -92,6 +79,18 @@ class Votes(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     vote_type = db.Column(db.Integer)
+
+class Update(db.Model):
+    __tablename__ = 'update'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=True)
+    age = db.Column(db.Integer, nullable=True)
+    about = db.Column(db.String(1000), nullable=True)
+    location = db.Column(db.String(1000), nullable=True)
+    interests = db.Column(db.String(1000), nullable=True)
+    faculty = db.Column(db.String(1000), nullable=True)
+    profile_pic= db.Column(db.String(10000), nullable=True)
+    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
 # create database
 with app.app_context():
@@ -121,19 +120,17 @@ class LoginForm(FlaskForm):
     submit= SubmitField('Login')
 
 
-class ResetRequestForm(FlaskForm):
-    email= StringField(label='Email', validators=[InputRequired()])
-    submit= SubmitField(label='Reset Password', validators=[InputRequired()])
+class EntryForm(FlaskForm):
+    name= StringField(label='Name')
+    age= StringField(label='Age', validators=[Length(max=3)])
+    about= StringField(label='About', validators=[Length(min=7, max=1000)])
+    location= StringField(label='Location', validators=[Length(min=1, max=100)])
+    interests= StringField(label='Interests', validators=[Length(min=1, max=1000)])    
+    faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
+    profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png', 'jpeg'])])
+    submit= SubmitField('Submit')
 
 
-class ResetPasswordForm(FlaskForm):
-    password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
-    confirm_password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Confirm Password'})
-    submit= SubmitField('Change Password')
-
-    def validate_confirm_password(self, confirm_password):
-        if self.password.data != confirm_password.data:
-            raise ValidationError('Passwords do not match!')
 
 @app.route('/', methods=['GET'])
 def index():
@@ -224,7 +221,7 @@ def serve_files(filename):
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('user_posts'))
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
@@ -237,7 +234,7 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -246,9 +243,10 @@ def login():
             return render_template('login.html', form=form)
         if bcrypt.check_password_hash(user.password, form.password.data):
             login_user(user)
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('index'))
         else:
             flash("Invalid username or password. Please try again")
+        return redirect(url_for('login'))
     return render_template('login.html', form=form)
 
 @app.route('/logout')
@@ -256,48 +254,85 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
-def send_mail(user):
-    token=user.get_token()
-    msg=Message('Password Reset Request', recipients=[user.email], sender='noreply@demo.com')
-    msg.body=f''' To reset your password, please follow the link: {url_for(reset_token, token=token, _external=True)} If you didn't send a password request, please ignore this email'''
-    Mail.send(msg)
-
-@app.route('/reset_password', methods=['GET', 'POST'])
-def reset_request():
-    form=ResetRequestForm()
-    if form.validate_on_submit():
-        user=User.query.filter_by(email=form.email.data).first()
-        if user:
-            send_mail(user)
-            return redirect(url_for('login'))
-    return render_template('reset_request.html', form=form)
-
-@app.route('/reset_password/<token>', methods=['GET', 'POST'])
-def reset_token(token):
-    user=User.verify_token(token)
-    if user is None:
-        flash('That is an invalid or expired token, please try again', 'warning')
-        return redirect(url_for('reset_request'))
-    
-    form=ResetPasswordForm()
-    if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
-        db.session.add(hashed_password)
-        db.session.commit()
-        return redirect(url_for('login'))
-    return render_template('change_password.html', title="Change Password", form=form)
-
-
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/user_posts', methods=['GET', 'POST'])
 @login_required
-def dashboard():
+def user_posts():
     user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    return render_template('dashboard.html', posts=user_posts, page_title="Dashboard")
-    
-@app.route('/user_details', methods=['GET', 'POST'])
+    return render_template('user_posts.html', posts=user_posts,  page_title="User Posts")
+
+@app.route('/account', methods=['GET'])
 @login_required
-def user_details():
-    return render_template('user_details.html',page_title="User Details")
+def account():
+    user=current_user
+    update_user = Update.query.filter_by(user_id=current_user.id).first()
+    return render_template('account.html', user=user, update_user=update_user, page_title="User")
+
+
+def save_profile_pic(profile_pic_file):
+    if profile_pic_file:
+        filename=secure_filename(profile_pic_file.filename)
+        unique_id_filename=str(uuid.uuid1()) + '_' + filename
+        upload_dir='static/profile_pics'
+        os.makedirs(upload_dir, exist_ok=True)
+        profile_pic_path=os.path.join(upload_dir, unique_id_filename)
+        profile_pic_file.save(profile_pic_path)
+        return unique_id_filename
+    else:
+        return None
+
+
+@app.route('/user_details/<int:id>', methods=['GET', 'POST'])
+@login_required
+def user_details(id):
+    form = EntryForm()
+    update_user = Update.query.filter_by(user_id=id).first()
+
+    if form.validate_on_submit():
+        profile_pic_filename=save_profile_pic(form.profile_pic.data)
+        if update_user:
+            # Update existing user details
+            update_user.name = form.name.data
+            update_user.age = form.age.data
+            update_user.about = form.about.data
+            update_user.location = form.location.data
+            update_user.interests = form.interests.data
+            update_user.faculty = form.faculty.data
+            if profile_pic_filename:
+                update_user.profile_pic = profile_pic_filename
+        else:
+            # Create new user details
+            update_user = Update(
+                name=form.name.data,
+                age=form.age.data,
+                about=form.about.data,
+                location=form.location.data,
+                interests=form.interests.data,
+                faculty=form.faculty.data,
+                profile_pic=profile_pic_filename,
+                user_id=id
+            )
+            db.session.add(update_user)
+        
+        try:
+            db.session.commit()
+            return redirect(url_for('account'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Failed to update user details: {str(e)}', 'danger')
+
+    # Prepopulate the form with existing data if available
+    if update_user:
+        form.name.data = update_user.name
+        form.age.data = update_user.age
+        form.about.data = update_user.about
+        form.location.data = update_user.location
+        form.interests.data = update_user.interests
+        form.faculty.data = update_user.faculty
+
+
+    return render_template('user_details.html', title='User Details', form=form)
+
+
 
 
 @app.route('/admin')
@@ -362,14 +397,14 @@ def show_community(community_name):
     community_posts = Post.query.filter_by(community_id=community_id)
     return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
 
-def calculate_time_difference(posted_time):
-    # Your time difference calculation function here
+# def calculate_time_difference(posted_time):
+#     # Your time difference calculation function here
 
- @app.route('/post')
- def post():
-    posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
-    time_since_posted = calculate_time_difference(posted_time)
-    return render_template('post.html', time_since_posted=time_since_posted)
+#  @app.route('/post')
+#  def post():
+#     posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
+#     time_since_posted = calculate_time_difference(posted_time)
+#     return render_template('post.html', time_since_posted=time_since_posted)
 
 @app.route('/upvote/<int:post_id>', methods=['POST'])
 def upvote(post_id):
@@ -443,37 +478,66 @@ def check_vote(post_id, vote_type):
 
 #how far back was a post posted
 
-def calculate_time_difference(posted_time):
-    current_time = datetime.now()
-    time_difference = current_time - posted_time
+# def calculate_time_difference(posted_time):
+#     current_time = datetime.now()
+#     time_difference = current_time - posted_time
 
-    seconds = time_difference.total_seconds()
-    minutes = seconds / 60
-    hours = minutes / 60
-    days = hours / 24
-    weeks = days / 7
-    months = days / 30
-    years = days / 365
+#     seconds = time_difference.total_seconds()
+#     minutes = seconds / 60
+#     hours = minutes / 60
+#     days = hours / 24
+#     weeks = days / 7
+#     months = days / 30
+#     years = days / 365
 
-    if seconds < 60:
-        return f"{int(seconds)} seconds ago"
-    elif minutes < 60:
-        return f"{int(minutes)} minutes ago"
-    elif hours < 24:
-        return f"{int(hours)} hours ago"
-    elif days < 7:
-        return f"{int(days)} days ago"
-    elif weeks < 4:
-        return f"{int(weeks)} weeks ago"
-    elif months < 12:
-        return f"{int(months)} months ago"
-    else:
-        return f"{int(years)} years ago"
+    #     if seconds < 60:
+#         return f"{int(seconds)} seconds ago"
+#     elif minutes < 60:
+#         return f"{int(minutes)} minutes ago"
+#     elif hours < 24:
+#         return f"{int(hours)} hours ago"
+#     elif days < 7:
+#         return f"{int(days)} days ago"
+#     elif weeks < 4:
+#         return f"{int(weeks)} weeks ago"
+#     elif months < 12:
+#         return f"{int(months)} months ago"
+#     else:
+#         return f"{int(years)} years ago"
+    
+# #how far back was a post posted
 
-# Example usage
-posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
-time_since_posted = calculate_time_difference(posted_time)
-print(time_since_posted)
+# def calculate_time_difference(posted_time):
+#     current_time = datetime.now()
+#     time_difference = current_time - posted_time
+
+#     seconds = time_difference.total_seconds()
+#     minutes = seconds / 60
+#     hours = minutes / 60
+#     days = hours / 24
+#     weeks = days / 7
+#     months = days / 30
+#     years = days / 365
+
+#     if seconds < 60:
+#         return f"{int(seconds)} seconds ago"
+#     elif minutes < 60:
+#         return f"{int(minutes)} minutes ago"
+#     elif hours < 24:
+#         return f"{int(hours)} hours ago"
+#     elif days < 7:
+#         return f"{int(days)} days ago"
+#     elif weeks < 4:
+#         return f"{int(weeks)} weeks ago"
+#     elif months < 12:
+#         return f"{int(months)} months ago"
+#     else:
+#         return f"{int(years)} years ago"
+
+# # Example usage
+# posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
+# time_since_posted = calculate_time_difference(posted_time)
+# print(time_since_posted)
 
 
 if  __name__ == '__main__':
