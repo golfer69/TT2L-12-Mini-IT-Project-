@@ -1,31 +1,20 @@
 {% extends 'base.html' %}
-
-  {% block scripts %}
-  <script>
-    function validateForm() {
-      var x = document.forms["post-form"]["form-title"].value;
-      if (x == "" || x == null) {
-        alert("Title must be filled out");
-        return false;
-      }
-    }
-    </script>
-    {% endblock %}
 {% block content %}
-<!-- nav bar -->
   <div class="app">
     <!--  create form  -->
     <div class="form-section">
 
-      <h2>{{current_user.username}}</h2>
+      {% if current_user.id == 5 or current_user.id == 6 %}
+        <h2>Administrator</h2>
+      {% endif %}
     
-      <h2>Edit post</h2>
+      <h2>Create a community</h2>
 
-      <form action="{{ url_for('update')}}" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
-        <input type="hidden" name="post_id" value="{{ post.id }}">  
-        <input type="text" name="title" placeholder="Title" value="{{post.title}}"><br>
-        <textarea type="text" name="content" class="form-content" placeholder="Content">{{ post.content }}</textarea><br>
-        <input type="submit" value="Finish">
+      <form action="/upload" name="post-form" method="POST" onsubmit="return validateForm()">
+        <input type="hidden" name="item" value="community">
+        <input type="text" name="name" placeholder="Name"><br>
+        <textarea type="text" name="about"  class="form-content" placeholder="About (you can change this later)"></textarea><br>
+        <input type="submit" value="Upload">
       </form>
 
   </div>
