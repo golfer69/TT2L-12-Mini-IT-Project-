@@ -55,6 +55,7 @@ class Post(db.Model):
     image_filename = db.Column(db.String(255))
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
+    id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     
@@ -84,11 +85,6 @@ class Update(db.Model):
     profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
-
-
-
-
-
 class Update(db.Model):
     __tablename__ = 'update'
     id = db.Column(db.Integer, primary_key=True)
@@ -100,11 +96,6 @@ class Update(db.Model):
     faculty = db.Column(db.String(1000), nullable=True)
     profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
-
-
-
-
-
 
 class Votes(db.Model):
     __tablename__ = 'votes'
@@ -164,25 +155,29 @@ def createcomm():
     return render_template('createcomm.html', page_title="Create community")
 
 @app.route('/upload', methods=['POST'])
+@login_required
 def upload():
-    file = request.files['file']
-    if request.method == 'POST':
-        title = request.form['title']
-        content = request.form['content'] # get text from html form
-        file = request.files['file']  # Access the uploaded file
-        text = Text(title=title, content=content)
-        db.session.add(text)
-        db.session.commit()
-    
-        if file:
+    item = request.form.get('item')
+    if current_user.is_authenticated:
+        if request.method == 'POST':
+            if item == "post":
+                title = request.form['title']
+                content = request.form['content'] # get text from html form
+                file = request.files['file']  # Access the uploaded file
+                poster= current_user.id
+                community_id = request.form['community_id']
+                post = Post(title=title, content=content, poster_id=poster, community_id=community_id)
+                db.session.add(post)
+                db.session.commit()
+            
+                if file:
+                    filename = secure_filename(file.filename)
+                    file.save(os.path.join(
+                        app.config['UPLOAD_DIRECTORY'],
+                        secure_filename(file.filename)
+                    ))
 
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(
-                app.config['UPLOAD_DIRECTORY'],
-                secure_filename(file.filename)
-            ))
-
-            post.image_filename = filename
+                    post.image_filename = filename
                     db.session.add(post)
                     db.session.commit()
 
@@ -208,10 +203,10 @@ def upload():
     return redirect('/')
 
 @app.route('/create', methods=['GET'])
+@login_required
 def create():
-    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    texts = Text.query.all()
-    return render_template('create.html', texts=texts, pics=pics)
+    communities = Community.query.all()
+    return render_template('create.html',communities=communities, page_title="Create a post")
 
 
 @app.route('/uploads/<path:filename>')
@@ -464,41 +459,6 @@ def unvote(post_id):
             return jsonify({'error': 'No vote found to remove'}), 404
     else:
         return jsonify({'error': 'Post not found'}), 404
-    
-@app.route('/check_vote/<int:post_id>/<vote_type>', methods=['GET'])
-def check_vote(post_id, vote_type):
-  user_id = current_user.id
-  vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
-  return jsonify({'voted': vote_exists is not None})
-
-# #how far back was a post posted
-
-# def calculate_time_difference(posted_time):
-#     current_time = datetime.now()
-#     time_difference = current_time - posted_time
-
-#     seconds = time_difference.total_seconds()
-#     minutes = seconds / 60
-#     hours = minutes / 60
-#     days = hours / 24
-#     weeks = days / 7
-#     months = days / 30
-#     years = days / 365
-
-    # if seconds < 60:
-    #     return f"{int(seconds)} seconds ago"
-    # elif minutes < 60:
-    #     return f"{int(minutes)} minutes ago"
-    # elif hours < 24:
-    #     return f"{int(hours)} hours ago"
-    # elif days < 7:
-    #     return f"{int(days)} days ago"
-    # elif weeks < 4:
-    #     return f"{int(weeks)} weeks ago"
-    # elif months < 12:
-    #     return f"{int(months)} months ago"
-    # else:
-    #     return jsonify({'error': 'Post not found'}), 404
     
 @app.route('/check_vote/<int:post_id>/<vote_type>', methods=['GET'])
 def check_vote(post_id, vote_type):

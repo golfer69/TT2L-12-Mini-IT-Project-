@@ -350,18 +350,13 @@ input[type=text] {
   background-color: var(--almost-grey);
 }
 
-
-
 .update-user{
   margin-top: 50px
 }
-
-
 .update-user-button{
   margin-top: 450px;
   padding-right: 100px;
 }
-
 .voted {
   /* Customize the appearance for downvoted buttons */
   background: #ff9999 !important; /* Reddish color */
