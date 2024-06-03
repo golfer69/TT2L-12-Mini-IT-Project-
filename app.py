@@ -505,12 +505,6 @@ def check_vote(post_id, vote_type):
 #     else:
 #         return f"{int(years)} years ago"
     
-@app.route('/check_vote/<int:post_id>/<vote_type>', methods=['GET'])
-def check_vote(post_id, vote_type):
-  user_id = current_user.id
-  vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
-  return jsonify({'voted': vote_exists is not None})
-
 # #how far back was a post posted
 
 # def calculate_time_difference(posted_time):
