@@ -120,6 +120,7 @@ button[type='button']:hover {
  text-align: center;
  width: 50vw;
  margin: auto;
+ margin-top: 0;
 }
 
 
@@ -202,6 +203,9 @@ input[type=text] {
   height: auto;
   text-align: justify;
   padding-left: 45%;
+  margin-top: 50%;
+  align-content: center;
+  margin-right: 50%;
 }
 
 .app-user {
@@ -238,6 +242,57 @@ input[type=text] {
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }
 
+
+.button-container {
+  display: grid;
+  align-items: flex-start;
+  margin: 0;
+  padding-right: 95%;
+  width: 50px;
+  height: 100px;
+}
+
+.previous-btn-2 {
+  background-color: indianred;
+  color: black;
+  text-decoration: none;
+  display: inline-block;
+  padding: 8px 16px;
+  /* margin-bottom: 8px; */
+  border-radius: 15px;
+  right: 500px;
+  text-decoration: indianred;
+
+
+}
+
+
+.previous-btn-1:hover, .previous-btn-2:hover {
+  background-color: #000000;
+  color: var(--almost-white);
+  
+}
+
+.card-body {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  
+}
+
+.card-title {
+  text-align: center;
+}
+
+.card-img-top {
+  max-width: 600px;
+  max-height: 400px;
+  
+}
+
+.btn {
+  align-items: center;
+}
 .inline-block{
   display: inline-block;
 }
@@ -293,6 +348,18 @@ input[type=text] {
 
 .sidebar a:hover:not(.active) {
   background-color: var(--almost-grey);
+}
+
+
+
+.update-user{
+  margin-top: 50px
+}
+
+
+.update-user-button{
+  margin-top: 450px;
+  padding-right: 100px;
 }
 
 .voted {

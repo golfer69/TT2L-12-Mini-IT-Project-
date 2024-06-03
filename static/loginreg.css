@@ -31,7 +31,8 @@
 
 .reglink {
   text-decoration: underline;
-  color: black
+  color: black;
+  align-items: center;
 }
 
 .reglink:hover {
@@ -85,3 +86,6 @@ button[type='button']:hover {
   color: var(--almost-white);
   
 }
+
+
+
