@@ -24,12 +24,17 @@
         <a href="{{url_for('register')}}">Sign up</a>
         <a href="{{url_for('login')}}">Log In</a>
         {% endif %}
-        <div class="account-button">
-          <a class="btn" href="{{url_for('account')}}"> {{current_user.username}}</a>
+        <div class="right-buttons">
+          <a class="btn" href="/create"> + Create</a>
+          {%if update_user%}
+            {%if update_user.profile_pic%}
+              <a href="{{url_for('account')}}"><img class="profile-pic" src="{{url_for('static', filename='profile_pics/' + update_user.profile_pic)}}" alt="Profile Picture"></a>
+            {%endif%}
+          {%else%}
+          <a href="{{url_for('account')}}"><img class="profile-pic" src="{{url_for('static', filename='profile_pics/blank_profile_photo.png')}}" alt="Profile Picture"></a>
+          {%endif%}
         </div>
-        <a class="btn" href="/create"> + Create</a>
-        
-        
+      </div>
     </div>
   </header>
   <main>
