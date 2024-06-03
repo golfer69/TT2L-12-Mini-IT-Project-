@@ -100,7 +100,7 @@ button[type='button']:hover {
 }
 
 .previous-btn {
-  background-color: red;
+  background-color: #04AA6D;
   color: black;
   text-decoration: none;
   display: inline-block;
@@ -124,6 +124,11 @@ button[type='button']:hover {
 }
 
 
+
+.posts-section li:hover {
+  background-color: var(--almost-grey);
+} 
+
 /* individual post on the main page */
 .posts {
   padding: 15px 0px;
@@ -143,12 +148,11 @@ button[type='button']:hover {
 }
 .posts:hover h3,
 .posts:hover img,
-.posts:hover a,
-.posts:hover p{
+.posts:hover a{
   background-color: var(--almost-grey) !important;
 }
-.posts h3, p {
-  padding: 0 20px;
+.posts h3 {
+  padding: 0 10px;
 }
 .posts img {
   width: 50vw;  /* Set a maximum width for images */
@@ -163,8 +167,6 @@ button[type='button']:hover {
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }
-
-
 
 input[type=text] {
   width: 40vw;
