@@ -6,10 +6,8 @@
   <link rel="icon" href="https://www.mmu.edu.my/wp-content/themes/mmu2018/assets/images/cropped-mmulogo-only-192x192.png" sizes="192x192">
   <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <script>   
-    {% block scripts %}
-    {% endblock %}
-  </script>
+  {% block scripts %}
+  {% endblock %}
 
 </head>
 <body>
@@ -26,17 +24,12 @@
         <a href="{{url_for('register')}}">Sign up</a>
         <a href="{{url_for('login')}}">Log In</a>
         {% endif %}
-        <div class="right-buttons">
-          <a class="btn" href="/create"> + Create</a>
-          {%if update_user%}
-            {%if update_user.profile_pic%}
-              <a href="{{url_for('account')}}"><img class="profile-pic" src="{{url_for('static', filename='profile_pics/' + update_user.profile_pic)}}" alt="Profile Picture"></a>
-            {%endif%}
-          {%else%}
-          <a href="{{url_for('account')}}"><img class="profile-pic" src="{{url_for('static', filename='profile_pics/blank_profile_photo.png')}}" alt="Profile Picture"></a>
-          {%endif%}
+        <div class="account-button">
+          <a class="btn" href="{{url_for('account')}}"> {{current_user.username}}</a>
         </div>
-      </div>
+        <a class="btn" href="/create"> + Create</a>
+        
+        
     </div>
   </header>
   <main>
