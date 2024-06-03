@@ -4,7 +4,7 @@
   {% block scripts %}
   <script>
     function validateForm() {
-      var x = document.forms["post-form"]["form-title"].value;
+      var x = document.forms["post-form"]["title"].value;
       if (x == "" || x == null) {
         alert("Title must be filled out");
         return false;
@@ -35,7 +35,6 @@
           {% endfor %}
         </select>
         <input type="file" name="file">
-
         <input type="submit" value="Upload">
       </form>
 

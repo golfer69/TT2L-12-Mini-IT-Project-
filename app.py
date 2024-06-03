@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, StringField, PasswordField, EmailField, FileField
+from wtforms import SubmitField, StringField, PasswordField, FileField
 from flask_wtf.file import FileAllowed
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
@@ -17,14 +17,15 @@ def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY']='chickenstuffe'
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///user.db'
+    app.config['SQLALCHEMY_BINDS'] = {'data': 'sqlite:///data.db'}
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     return app
 
 app=create_app()
+
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
-
 
 login_manager=LoginManager()
 login_manager.init_app(app)
@@ -35,7 +36,6 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 class User(db.Model, UserMixin):
-    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)  
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
@@ -85,6 +85,18 @@ class Update(db.Model):
     profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
+class Update(db.Model):
+    __tablename__ = 'update'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=True)
+    age = db.Column(db.Integer, nullable=True)
+    about = db.Column(db.String(1000), nullable=True)
+    location = db.Column(db.String(1000), nullable=True)
+    interests = db.Column(db.String(1000), nullable=True)
+    faculty = db.Column(db.String(1000), nullable=True)
+    profile_pic= db.Column(db.String(10000), nullable=True)
+    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+
 class Votes(db.Model):
     __tablename__ = 'votes'
     id = db.Column(db.Integer, primary_key=True)
@@ -94,25 +106,17 @@ class Votes(db.Model):
 
 # create database
 with app.app_context():
-    # Create Text table first
     db.create_all()
 
 class RegisterForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
-    email= EmailField(validators=[InputRequired(), Length(min=10, max=100)], render_kw={'placeholder':'Email'})
     submit= SubmitField('Register')
 
     def validate_username(self, username):
         existing_username=User.query.filter_by(username=username.data).first()
         if existing_username:
             raise ValidationError('That username already exists. Please choose another one')
-
-    def validate_email(self, email):
-        existing_email=User.query.filter_by(email=email.data).first()
-        if existing_email:
-            raise ValidationError('That email already exists. Please choose another one')
-
 
 class LoginForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
@@ -167,7 +171,6 @@ def upload():
                 db.session.commit()
             
                 if file:
-
                     filename = secure_filename(file.filename)
                     file.save(os.path.join(
                         app.config['UPLOAD_DIRECTORY'],
@@ -199,24 +202,17 @@ def upload():
             
     return redirect('/')
 
-@app.route('/update', methods=['GET','POST'])
-def update():
-    post_id = request.form['post_id'] 
-    post = Post.query.get(post_id)
-    if request.method == 'POST' and post.poster_id == current_user.id:
-        
-        new_title = request.form['title']
-        new_content = request.form['content']
+@app.route('/create', methods=['GET'])
+@login_required
+def create():
+    communities = Community.query.all()
+    return render_template('create.html',communities=communities, page_title="Create a post")
 
-        post.title = new_title
-        post.content = new_content
-        
-        db.session.commit()
-    return redirect(url_for('show_post', post_id=post_id))
 
 @app.route('/uploads/<path:filename>')
 def serve_files(filename):
     return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -225,7 +221,7 @@ def register():
     form = RegisterForm()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
-        new_user= User(email=form.email.data, username=form.username.data, password=hashed_password)
+        new_user= User(username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
@@ -372,13 +368,7 @@ def delete():
                 db.session.commit()
             return redirect(url_for('show_post', post_id=post_id))
 
-@app.route('/edit/<int:post_id>', methods=['GET','POST'])
-def edit_post(post_id):
-    post = Post.query.get(post_id)
-    return render_template('edit.html',post=post)
-
-
-@app.route('/post/<int:post_id>', methods=['GET', 'POST'])
+@app.route('/post/<int:post_id>', methods=['GET'])
 def show_post(post_id):
     post = Post.query.get(post_id)
     comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
