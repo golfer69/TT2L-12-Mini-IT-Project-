@@ -57,6 +57,7 @@ class Post(db.Model):
     community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
+    id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 class Comment(db.Model):
     __tablename__ = 'comment'
@@ -72,46 +73,24 @@ class Community(db.Model):
     about = db.Column(db.String(255))
     community = db.relationship('Post', backref='community', lazy=True)
 
-class Update(db.Model):
-    __tablename__ = 'update'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=True)
-    age = db.Column(db.Integer, nullable=True)
-    about = db.Column(db.String(1000), nullable=True)
-    location = db.Column(db.String(1000), nullable=True)
-    interests = db.Column(db.String(1000), nullable=True)
-    faculty = db.Column(db.String(1000), nullable=True)
-    profile_pic= db.Column(db.String(10000), nullable=True)
-    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
-
-
-
-
-
-
-class Update(db.Model):
-    __tablename__ = 'update'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=True)
-    age = db.Column(db.Integer, nullable=True)
-    about = db.Column(db.String(1000), nullable=True)
-    location = db.Column(db.String(1000), nullable=True)
-    interests = db.Column(db.String(1000), nullable=True)
-    faculty = db.Column(db.String(1000), nullable=True)
-    profile_pic= db.Column(db.String(10000), nullable=True)
-    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
-
-
-
-
-
-
 class Votes(db.Model):
     __tablename__ = 'votes'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     vote_type = db.Column(db.Integer)
+
+class Update(db.Model):
+    __tablename__ = 'update'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=True)
+    age = db.Column(db.Integer, nullable=True)
+    about = db.Column(db.String(1000), nullable=True)
+    location = db.Column(db.String(1000), nullable=True)
+    interests = db.Column(db.String(1000), nullable=True)
+    faculty = db.Column(db.String(1000), nullable=True)
+    profile_pic= db.Column(db.String(10000), nullable=True)
+    user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
 # create database
 with app.app_context():
@@ -472,6 +451,7 @@ def check_vote(post_id, vote_type):
   return jsonify({'voted': vote_exists is not None})
 
 # #how far back was a post posted
+#how far back was a post posted
 
 # def calculate_time_difference(posted_time):
 #     current_time = datetime.now()
@@ -485,27 +465,21 @@ def check_vote(post_id, vote_type):
 #     months = days / 30
 #     years = days / 365
 
-    # if seconds < 60:
-    #     return f"{int(seconds)} seconds ago"
-    # elif minutes < 60:
-    #     return f"{int(minutes)} minutes ago"
-    # elif hours < 24:
-    #     return f"{int(hours)} hours ago"
-    # elif days < 7:
-    #     return f"{int(days)} days ago"
-    # elif weeks < 4:
-    #     return f"{int(weeks)} weeks ago"
-    # elif months < 12:
-    #     return f"{int(months)} months ago"
-    # else:
-    #     return jsonify({'error': 'Post not found'}), 404
+    #     if seconds < 60:
+#         return f"{int(seconds)} seconds ago"
+#     elif minutes < 60:
+#         return f"{int(minutes)} minutes ago"
+#     elif hours < 24:
+#         return f"{int(hours)} hours ago"
+#     elif days < 7:
+#         return f"{int(days)} days ago"
+#     elif weeks < 4:
+#         return f"{int(weeks)} weeks ago"
+#     elif months < 12:
+#         return f"{int(months)} months ago"
+#     else:
+#         return f"{int(years)} years ago"
     
-@app.route('/check_vote/<int:post_id>/<vote_type>', methods=['GET'])
-def check_vote(post_id, vote_type):
-  user_id = current_user.id
-  vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
-  return jsonify({'voted': vote_exists is not None})
-
 # #how far back was a post posted
 
 # def calculate_time_difference(posted_time):
