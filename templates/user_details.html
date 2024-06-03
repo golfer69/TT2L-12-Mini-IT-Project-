@@ -1,27 +1,48 @@
 {% extends 'base.html' %}
-
-  {% block content %}
-  <div class="app">
-    <h1>User Details Page</h1><br>
-    <div class="app-user">
-    <h1>Yo, {{current_user.username}} customize your user details man, please</h1>
-    </div>
+{% block content %}
+  <div class="update-user">
+    <form method="POST" action="{{ url_for('user_details', id=current_user.id) }}" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <div>
+            {{ form.profile_pic.label }}
+            {{ form.profile_pic }}
+        </div>
+        <div>
+            {{ form.name.label }}
+            {{ form.name }}
+        </div>
+        <div>
+            {{ form.age.label }}
+            {{ form.age }}
+        </div>
+        <div>
+            {{ form.about.label }}
+            {{ form.about }}
+        </div>
+        <div>
+            {{ form.location.label }}
+            {{ form.location }}
+        </div>
+        <div>
+            {{ form.interests.label }}
+            {{ form.interests }}
+        </div>
+        <div>
+            {{ form.faculty.label }}
+            {{ form.faculty }}
+        </div>
+        <div>
+            {{ form.submit }}
+        </div>
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="error"> 
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+    </form>
   </div>
-
-  <div class="bio">
-    <div class="card">
-      <h3 class="card-header">{{current_user.username}}</h3>
-    </div>
-    <div class="card-body">
-      <h4 class="card-title">Bio</h4><br>
-      <div class="card-text">
-      <p>
-      <strong>Name: </strong> {{current_user.username}}<br>
-      <strong>Age: </strong> {{current_user.id}}<br>
-      <strong>Location: </strong> {{current_user.email}}<br>
-      <strong>Bio: </strong> {{current_user.username}}<br>
-      </p>
-      </div>
-    </div>
-  </div>
-  {% endblock %}
+{% endblock %}

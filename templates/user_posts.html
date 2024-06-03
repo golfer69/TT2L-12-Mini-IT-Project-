@@ -1,11 +1,7 @@
 {% extends 'base.html' %}
 {% block content %}
   <div class="app">
-    <h1>Dashboard Page</h1><br>
-    <div class="app-user">
-    <h1>Hello, {{current_user.username}} you are logged in</h1>
-    </div>
-  </div>
+    <h1>User Posts</h1><br>
 
   <div class="user-posts">
     <div class="app">
@@ -26,5 +22,6 @@
           {% endfor %}
         </div>
     </div>
+  </div>
   </div>
 {% endblock %}
