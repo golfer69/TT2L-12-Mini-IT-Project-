@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField, FileField
 from flask_wtf.file import FileAllowed
@@ -542,6 +542,29 @@ def check_vote(post_id, vote_type):
 # time_since_posted = calculate_time_difference(posted_time)
 # print(time_since_posted)
 
+def calculate_hidden_votes(posted_time, decay_rate=0.001):
+    current_time = datetime.now()
+    
+    # Calculate the time difference in seconds
+    time_difference = (current_time - posted_time).total_seconds()
+    
+    # Calculate hidden votes and round to the nearest whole number
+    hidden_votes = round(time_difference * decay_rate)
+    return hidden_votes
+
+def main():
+    # Example: Posted time (2 hours ago from now)
+    posted_time = datetime.now() - timedelta(hours=2)
+
+    decay_rate = 0.001  # This is the rate at which votes become hidden per second
+    
+    # Calculate hidden votes
+    hidden_votes = calculate_hidden_votes(posted_time, decay_rate)
+    
+    print(f"Posted Time: {posted_time}")
+    print(f"Decay Rate: {decay_rate} votes/second")
+    print(f"Hidden Votes: {hidden_votes}")
+    
 
 if  __name__ == '__main__':
     app.run(debug=True)
