@@ -26,14 +26,15 @@
         <a href="{{url_for('register')}}">Sign up</a>
         <a href="{{url_for('login')}}">Log In</a>
         {% endif %}
-        <a class="btn" href="/create"> + Create</a>
         <div class="account-button">
           {%if current_user.is_authenticated and update_user and update_user.profile_pic%}
-            <a href="{{url_for('account')}}"><img class="profile-pic" src="{{url_for('static', filename='profile_pics/' + update_user.profile_pic)}}" alt="Profile Picture"></a>
+            <a class="float-right" href="{{url_for('account')}}"><img class="profile-pic" src="{{url_for('static', filename='profile_pics/' + update_user.profile_pic)}}" alt="Profile Picture"></a>
           {%else%}
-            <a href="{{ url_for('account') }}"><img class="profile-pic" src="{{ url_for('static', filename='profile_pics/blank_profile_photo.png') }}" alt="Profile Picture"></a>
+            <a class="float-right" href="{{ url_for('account') }}"><img class="profile-pic" src="{{ url_for('static', filename='profile_pics/blank_profile_photo.png') }}" alt="Profile Picture"></a>
           {%endif%}
         </div>
+        <a class="btn" href="/create"> + Create</a>
+
     </div>
   </header>
   <main>
