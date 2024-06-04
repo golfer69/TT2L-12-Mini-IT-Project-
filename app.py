@@ -413,6 +413,7 @@ def show_community(community_name):
 #     time_since_posted = calculate_time_difference(posted_time)
 #     return render_template('post.html', time_since_posted=time_since_posted)
 
+# Upvotes and downvotes
 @app.route('/upvote/<int:post_id>', methods=['POST'])
 def upvote(post_id):
     if not current_user.is_authenticated:
