@@ -153,14 +153,12 @@ def index():
 @app.route('/create', methods=['GET'])
 @login_required
 def create():
-    pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    texts = Post.query.all()
     communities = Community.query.all()
     update_user=Update.query.filter_by(user_id=current_user.id).first()
-    profile_pic= None
+    profile_pic= None # this is not necessary
     if update_user and update_user.profile_pic:
         profile_pic=url_for('static', filename='profile_pics/' + update_user.profile_pic)
-    return render_template('create.html', texts=texts, pics=pics,communities=communities, profile_pic=profile_pic, page_title="Create a post")
+    return render_template('create.html', communities=communities, profile_pic=profile_pic, page_title="Create a post")
 
 @app.route('/createcommunity', methods=['GET'])
 @login_required

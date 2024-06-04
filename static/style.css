@@ -143,26 +143,33 @@ button[type='button']:hover {
   clear: both;
 }
 
-.posts:hover{
-  background-color: var(--almost-grey) !important;
-}
+.posts:hover,
 .posts:hover h3,
 .posts:hover img,
 .posts:hover a,
+.posts:hover span,
 .posts:hover p{
   background-color: var(--almost-grey) !important;
 }
 .posts h3,
+.posts img,
+.posts a,
+.posts span,
 .posts p{
-  padding: 0 10px;
+  padding: 0 0 0 20px;
 }
+.community-label {
+  padding: 0 20px;
+  width:auto;
+  display: inline;
+}
+
 .posts img {
   width: 50vw;  /* Set a maximum width for images */
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
   padding: 0 20px;
 }
-
 /* individual post page */
 .post img {
   width: 50vw;  /* Set a maximum width for images */
@@ -214,36 +221,6 @@ input[type=text] {
   padding-bottom: 100px;
   text-align: center;
 }
-
-
-.posts:hover,
-.posts:hover h3,
-.posts:hover img,
-.posts:hover a,
-.posts:hover span{
-  background-color: var(--almost-grey) !important;
-}
-.posts h3 {
-  padding: 4px 20px;
-}
-.community-label {
-  padding: 0 20px;
-  width:auto;
-  display: inline;
-}
-.posts img {
-  width: 50vw;  /* Set a maximum width for images */
-  height: 60vh; /* Set a maximum height for images */
-  object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
-}
-
-/* individual post page */
-.post img {
-  width: 50vw;  /* Set a maximum width for images */
-  height: 60vh; /* Set a maximum height for images */
-  object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
-}
-
 
 .button-container {
   display: grid;
