@@ -63,7 +63,7 @@ class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
     comment_content = db.Column(db.Text)
 
 class Community(db.Model):
@@ -127,23 +127,37 @@ class EntryForm(FlaskForm):
     location= StringField(label='Location', validators=[Length(min=1, max=100)])
     interests= StringField(label='Interests', validators=[Length(min=1, max=1000)])    
     faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
-    profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png', 'jpeg'])])
+    profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
 
-
+@app.context_processor
+def inject_user():
+    if current_user.is_authenticated:
+        update_user=Update.query.filter_by(user_id=current_user.id).first()
+        return dict(update_user=update_user)
+    return dict(update_user=None)
 
 @app.route('/', methods=['GET'])
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     posts = Post.query.all()
     communities = Community.query.all()
-    return render_template('index.html', posts=posts, pics=pics, communities=communities ,page_title="MMU Reddit | Main Page")
+    profile_pic= None
+    if current_user.is_authenticated:
+        update_user=Update.query.filter_by(user_id=current_user.id).first()
+        if update_user and update_user.profile_pic:
+            profile_pic=url_for('static', filename='profile_pics/' + update_user.profile_pic)
+    return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
 @login_required
 def create():
     communities = Community.query.all()
-    return render_template('create.html',communities=communities, page_title="Create a post")
+    update_user=Update.query.filter_by(user_id=current_user.id).first()
+    profile_pic= None # this is not necessary
+    if update_user and update_user.profile_pic:
+        profile_pic=url_for('static', filename='profile_pics/' + update_user.profile_pic)
+    return render_template('create.html', communities=communities, profile_pic=profile_pic, page_title="Create a post")
 
 @app.route('/createcommunity', methods=['GET'])
 @login_required
@@ -409,8 +423,11 @@ def show_community(community_name):
 #     time_since_posted = calculate_time_difference(posted_time)
 #     return render_template('post.html', time_since_posted=time_since_posted)
 
+# Upvotes and downvotes
 @app.route('/upvote/<int:post_id>', methods=['POST'])
 def upvote(post_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
     user_id = current_user.id
     post = Post.query.get(post_id)
     if post:
@@ -420,7 +437,7 @@ def upvote(post_id):
         else:
             vote = Votes(user_id=user_id, post_id=post_id, vote_type="upvote")
             db.session.add(vote)
-
+            
         # Count upvotes and downvotes separately
         upvote_count = Votes.query.filter_by(post_id=post_id, vote_type="upvote").count()
         downvote_count = Votes.query.filter_by(post_id=post_id, vote_type="downvote").count()
@@ -433,6 +450,8 @@ def upvote(post_id):
 
 @app.route('/downvote/<int:post_id>', methods=['POST'])
 def downvote(post_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
     user_id = current_user.id
     post = Post.query.get(post_id)
     if post:
@@ -474,12 +493,14 @@ def unvote(post_id):
         return jsonify({'error': 'Post not found'}), 404
     
 @app.route('/check_vote/<int:post_id>/<vote_type>', methods=['GET'])
+@login_required
 def check_vote(post_id, vote_type):
-  user_id = current_user.id
-  vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
-  return jsonify({'voted': vote_exists is not None})
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
+        return jsonify({'voted': vote_exists is not None})
 
-#how far back was a post posted
+
 
 # def calculate_time_difference(posted_time):
 #     current_time = datetime.now()
