@@ -9,7 +9,6 @@ from wtforms import SubmitField, StringField, PasswordField, EmailField, FileFie
 from flask_wtf.file import FileAllowed
 from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
-from werkzeug.utils import secure_filename
 import uuid as uuid
 
 
@@ -78,7 +77,7 @@ class Votes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    vote_type = db.Column(db.Integer)
+    vote_type = db.Column(db.String(10))
 
 class Update(db.Model):
     __tablename__ = 'update'
@@ -587,5 +586,7 @@ def main():
     print(f"Hidden Votes: {hidden_votes}")
     
 
-if  __name__ == '__main__':
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
     app.run(debug=True)
