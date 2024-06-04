@@ -143,24 +143,30 @@ button[type='button']:hover {
   clear: both;
 }
 
-.posts:hover{
-  background-color: var(--almost-grey) !important;
-}
+.posts:hover,
 .posts:hover h3,
 .posts:hover img,
-.posts:hover a{
+.posts:hover a,
+.posts:hover span,
+.posts:hover p{
   background-color: var(--almost-grey) !important;
 }
-.posts h3 {
-  padding: 0 10px;
+.posts h3,
+.posts img,
+.posts p{
+  padding-left: 20px;
 }
+.community-label {
+  width:auto;
+  display: inline;
+  padding-left: 20px;
+}
+
 .posts img {
   width: 50vw;  /* Set a maximum width for images */
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
-  padding: 0 20px;
 }
-
 /* individual post page */
 .post img {
   width: 50vw;  /* Set a maximum width for images */
@@ -212,36 +218,6 @@ input[type=text] {
   padding-bottom: 100px;
   text-align: center;
 }
-
-
-.posts:hover,
-.posts:hover h3,
-.posts:hover img,
-.posts:hover a,
-.posts:hover span{
-  background-color: var(--almost-grey) !important;
-}
-.posts h3 {
-  padding: 4px 20px;
-}
-.community-label {
-  padding: 0 20px;
-  width:auto;
-  display: inline;
-}
-.posts img {
-  width: 50vw;  /* Set a maximum width for images */
-  height: 60vh; /* Set a maximum height for images */
-  object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
-}
-
-/* individual post page */
-.post img {
-  width: 50vw;  /* Set a maximum width for images */
-  height: 60vh; /* Set a maximum height for images */
-  object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
-}
-
 
 .button-container {
   display: grid;
@@ -350,6 +326,13 @@ input[type=text] {
   background-color: var(--almost-grey);
 }
 
+.update-user{
+  margin-top: 50px
+}
+.update-user-button{
+  margin-top: 450px;
+  padding-right: 100px;
+}
 .voted {
   /* Customize the appearance for downvoted buttons */
   background: #ff9999 !important; /* Reddish color */
@@ -367,14 +350,15 @@ input[type=text] {
   margin-left: 10px; /* Adjust spacing as needed */
 }
 
-
-
-.update-user{
-  margin-top: 50px
-}
-
-
-.update-user-button{
-  margin-top: 450px;
-  padding-right: 100px;
+.profile-pic{
+  max-width:22px;
+  max-height: 22px;
+  border-radius: 10px;
+  border-color: white;
+  float: right;
+  align-items: flex-end;
+  margin: auto;
+  border: 1px solid #ddd;
+  /* padding: 5px; */
+  width: 150px;
 }
