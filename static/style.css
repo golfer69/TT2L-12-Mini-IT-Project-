@@ -153,14 +153,13 @@ button[type='button']:hover {
 }
 .posts h3,
 .posts img,
-.posts a,
-.posts span,
 .posts p{
   padding-left: 20px;
 }
 .community-label {
   width:auto;
   display: inline;
+  padding-left: 20px;
 }
 
 .posts img {
