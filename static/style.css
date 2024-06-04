@@ -148,10 +148,12 @@ button[type='button']:hover {
 }
 .posts:hover h3,
 .posts:hover img,
-.posts:hover a{
+.posts:hover a,
+.posts:hover p{
   background-color: var(--almost-grey) !important;
 }
-.posts h3 {
+.posts h3,
+.posts p{
   padding: 0 10px;
 }
 .posts img {
