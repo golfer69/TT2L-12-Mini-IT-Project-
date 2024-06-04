@@ -92,7 +92,6 @@ class Update(db.Model):
     profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
 
-
 # create database
 with app.app_context():
     # Create Text table first
@@ -498,7 +497,7 @@ def check_vote(post_id, vote_type):
         vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
         return jsonify({'voted': vote_exists is not None})
 
-#how far back was a post posted
+
 
 # def calculate_time_difference(posted_time):
 #     current_time = datetime.now()
