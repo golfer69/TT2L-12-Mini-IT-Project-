@@ -19,6 +19,9 @@ def create_app():
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    uploads_dir = app.config['UPLOAD_DIRECTORY']
+    os.makedirs(uploads_dir, exist_ok=True)
     return app
 
 app=create_app()
