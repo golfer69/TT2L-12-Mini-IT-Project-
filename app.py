@@ -133,6 +133,8 @@ class EntryForm(FlaskForm):
     profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
 
+
+#community profile pic
 def save_profile_pic(comm_profile_pic_file):
     if comm_profile_pic_file:
         filename=secure_filename(comm_profile_pic_file.filename)
@@ -141,6 +143,19 @@ def save_profile_pic(comm_profile_pic_file):
         os.makedirs(upload_dir, exist_ok=True)
         profile_pic_path=os.path.join(upload_dir, unique_id_filename)
         comm_profile_pic_file.save(profile_pic_path)
+        return unique_id_filename
+    else:
+        return None
+
+#user profile pic
+def save_profile_pic(profile_pic_file):
+    if profile_pic_file:
+        filename=secure_filename(profile_pic_file.filename)
+        unique_id_filename=str(uuid.uuid1()) + '_' + filename
+        upload_dir='static/profile_pics'
+        os.makedirs(upload_dir, exist_ok=True)
+        profile_pic_path=os.path.join(upload_dir, unique_id_filename)
+        profile_pic_file.save(profile_pic_path)
         return unique_id_filename
     else:
         return None
@@ -300,17 +315,6 @@ def account():
     return render_template('account.html', user=user, update_user=update_user, page_title="User")
 
 
-def save_profile_pic(profile_pic_file):
-    if profile_pic_file:
-        filename=secure_filename(profile_pic_file.filename)
-        unique_id_filename=str(uuid.uuid1()) + '_' + filename
-        upload_dir='static/profile_pics'
-        os.makedirs(upload_dir, exist_ok=True)
-        profile_pic_path=os.path.join(upload_dir, unique_id_filename)
-        profile_pic_file.save(profile_pic_path)
-        return unique_id_filename
-    else:
-        return None
 
 
 @app.route('/user_details/<int:id>', methods=['GET', 'POST'])

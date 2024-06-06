@@ -4,6 +4,11 @@
 {% block content %}
   <div class="app">
     r/{{community.name}}
+    {%if community.comm_profile_pic%}
+      <img src="url_for('static', filename='comm_profile_pics/' + community.comm_profile_pic)" alt="Community Profile Picture">
+      {%endif%}
+    <p>{{community.about}}</p>
+    
     <div class="posts-section">
       {% for post in posts %}
       <div class="posts">      
