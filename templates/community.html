@@ -9,6 +9,8 @@
       <img class="comm-profile-pic"  src="{{url_for('static', filename='comm_profile_pics/' + community.comm_profile_pic) }}" alt="Community Profile Picture">
     {%endif%}
     <p>{{community.about}}</p>
+    <div class="update-user-button">
+      <button><a href="{{url_for('updatecomm', id=community.id)}}" class="btn btn-primary">Update Community</button>
     
     <div class="posts-section">
       {% for post in posts %}

@@ -133,6 +133,11 @@ class EntryForm(FlaskForm):
     profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
 
+class UpdateCommunityForm(FlaskForm):
+    about=StringField(label='About', validators=[Length(min=7, max=10000)])
+    comm_profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    submit=SubmitField('Update')
+
 
 #community profile pic
 def save_comm_profile_pic(comm_profile_pic_file):
@@ -195,7 +200,25 @@ def create():
 def createcomm():
     return render_template('createcomm.html', page_title="Create community")
 
-@app.route('/upload', methods=['POST'])
+@app.route('/updatecommunity/<int:id>', methods=['GET', 'POST'])
+@login_required
+def updatecomm(id):
+    form=UpdateCommunityForm()
+    community=Community.query.get(id)
+    if form.validate_on_submit():
+        community.about=form.about.data
+
+        if form.comm_profile_pic:
+            comm_profile_pic_filename=save_comm_profile_pic(form.comm_profile_pic.data)
+            community.comm_profile_pic=comm_profile_pic_filename
+
+        db.session.commit()
+        return redirect(url_for('show_community', community_name=community.name))
+    elif request.method=='GET':
+        form.about.data=community.about
+    return render_template('updatecomm.html', form=form, community=community, page_title="Update community")
+
+@app.route('/upload', methods=['GET','POST'])
 @login_required
 def upload():
     item = request.form.get('item')
