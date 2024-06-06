@@ -16,26 +16,22 @@
   <div class="app">
     <!--  create form  -->
     <div class="form-section">
-
-      {% if current_user.id == 1 or current_user.id == 6 %}
-        <h2>Administrator</h2>
-      {% endif %}
-
-      <h2>{{current_user.username}}</h2>
-    
-      <h2>Create a post</h2>
+      <h2>Create a post</h2><br>
 
       <form action="/upload" name="post-form" method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
         <input type="hidden" name="item" value="post">
-        <input type="text" name="title" placeholder="Title"><br>
-        <textarea type="text" name="content"  class="form-content" placeholder="Content"></textarea><br>
+        Community: 
         <select name="community_id">
           {% for community in communities %}
             <option value="{{community.id}}">{{community.name}}</option>
           {% endfor %}
-        </select>
+        </select> <br><br>
+        <label for="anonymous"> Anonymous posting?</label>
+        <input type="checkbox" name="anonymous" value=1>
+        <br>
+        <input type="text" name="title" placeholder="Title"><br>
+        <textarea type="text" name="content"  class="form-content" placeholder="Content"></textarea><br>
         <input type="file" name="file">
-
         <input type="submit" value="Upload">
       </form>
 
