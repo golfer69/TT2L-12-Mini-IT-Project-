@@ -72,6 +72,8 @@ class Community(db.Model):
     name = db.Column(db.String(50))
     about = db.Column(db.String(255))
     community = db.relationship('Post', backref='community', lazy=True)
+    comm_profile_pic= db.Column(db.String(10000), nullable=False)
+
 
 class Votes(db.Model):
     __tablename__ = 'votes'
@@ -130,6 +132,19 @@ class EntryForm(FlaskForm):
     faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
     profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
+
+def save_profile_pic(comm_profile_pic_file):
+    if comm_profile_pic_file:
+        filename=secure_filename(comm_profile_pic_file.filename)
+        unique_id_filename=str(uuid.uuid1()) + '_' + filename
+        upload_dir='static/comm_profile_pics'
+        os.makedirs(upload_dir, exist_ok=True)
+        profile_pic_path=os.path.join(upload_dir, unique_id_filename)
+        comm_profile_pic_file.save(profile_pic_path)
+        return unique_id_filename
+    else:
+        return None
+
 
 @app.context_processor
 def inject_user():
@@ -196,7 +211,9 @@ def upload():
             if item == "community":
                 name = request.form.get('name')
                 about = request.form.get('about')
-                community = Community(name=name, about=about)
+                comm_profile_pic=request.files.get('comm_profile_pic')
+                comm_profile_pic_filename=save_profile_pic(comm_profile_pic)
+                community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename)
                 db.session.add(community)
                 db.session.commit()
 
@@ -412,14 +429,6 @@ def show_community(community_name):
     community_posts = Post.query.filter_by(community_id=community_id)
     return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
 
-# def calculate_time_difference(posted_time):
-#     # Your time difference calculation function here
-
-#  @app.route('/post')
-#  def post():
-#     posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
-#     time_since_posted = calculate_time_difference(posted_time)
-#     return render_template('post.html', time_since_posted=time_since_posted)
 
 # Upvotes and downvotes
 @app.route('/upvote/<int:post_id>', methods=['POST'])
