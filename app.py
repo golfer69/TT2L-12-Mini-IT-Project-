@@ -72,7 +72,7 @@ class Community(db.Model):
     name = db.Column(db.String(50))
     about = db.Column(db.String(255))
     community = db.relationship('Post', backref='community', lazy=True)
-    comm_profile_pic= db.Column(db.String(10000), nullable=False)
+    comm_profile_pic= db.Column(db.String(10000), nullable=True)
 
 
 class Votes(db.Model):
@@ -135,7 +135,7 @@ class EntryForm(FlaskForm):
 
 
 #community profile pic
-def save_profile_pic(comm_profile_pic_file):
+def save_comm_profile_pic(comm_profile_pic_file):
     if comm_profile_pic_file:
         filename=secure_filename(comm_profile_pic_file.filename)
         unique_id_filename=str(uuid.uuid1()) + '_' + filename
@@ -148,7 +148,7 @@ def save_profile_pic(comm_profile_pic_file):
         return None
 
 #user profile pic
-def save_profile_pic(profile_pic_file):
+def save_user_profile_pic(profile_pic_file):
     if profile_pic_file:
         filename=secure_filename(profile_pic_file.filename)
         unique_id_filename=str(uuid.uuid1()) + '_' + filename
@@ -227,7 +227,7 @@ def upload():
                 name = request.form.get('name')
                 about = request.form.get('about')
                 comm_profile_pic=request.files.get('comm_profile_pic')
-                comm_profile_pic_filename=save_profile_pic(comm_profile_pic)
+                comm_profile_pic_filename=save_comm_profile_pic(comm_profile_pic)
                 community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename)
                 db.session.add(community)
                 db.session.commit()
@@ -324,7 +324,7 @@ def user_details(id):
     update_user = Update.query.filter_by(user_id=id).first()
 
     if form.validate_on_submit():
-        profile_pic_filename=save_profile_pic(form.profile_pic.data)
+        profile_pic_filename=save_user_profile_pic(form.profile_pic.data)
         if update_user:
             # Update existing user details
             update_user.name = form.name.data
@@ -427,10 +427,9 @@ def show_post(post_id):
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
     community = Community.query.filter_by(name=community_name).first()
-    if community:
-      community_id = community.id # Get the id of the community
-    community = Community.query.get(community_id)
-    community_posts = Post.query.filter_by(community_id=community_id)
+    if not community:
+      return render_template('404.html'), 404
+    community_posts = Post.query.filter_by(community_id=community.id).all()
     return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
 
 
