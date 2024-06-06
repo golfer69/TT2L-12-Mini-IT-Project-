@@ -153,22 +153,19 @@ button[type='button']:hover {
 }
 .posts h3,
 .posts img,
-.posts a,
-.posts span,
 .posts p{
-  padding: 0 0 0 20px;
+  padding-left: 20px;
 }
 .community-label {
-  padding: 0 20px;
   width:auto;
   display: inline;
+  padding-left: 20px;
 }
 
 .posts img {
   width: 50vw;  /* Set a maximum width for images */
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
-  padding: 0 20px;
 }
 /* individual post page */
 .post img {
@@ -288,9 +285,9 @@ input[type=text] {
 }
 .comment {
  text-align: left;
- padding-left: 10vw;
+ justify-content: center;
  display: flex;
- margin: 2px 0;
+ margin: 5px 0;
 }
 .comment-delete {
   display: flex;

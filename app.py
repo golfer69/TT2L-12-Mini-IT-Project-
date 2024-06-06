@@ -55,6 +55,7 @@ class Post(db.Model):
     image_filename = db.Column(db.String(255))
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
+    anonymous  = db.Column(db.Integer)
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
@@ -65,6 +66,7 @@ class Comment(db.Model):
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
     comment_content = db.Column(db.Text)
+    anonymous  = db.Column(db.Integer)
 
 class Community(db.Model):
     __tablename__ = 'community'
@@ -93,7 +95,6 @@ class Update(db.Model):
     faculty = db.Column(db.String(1000), nullable=True)
     profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
-
 
 # create database
 with app.app_context():
@@ -230,7 +231,8 @@ def upload():
                 file = request.files['file']  # Access the uploaded file
                 poster= current_user.id
                 community_id = request.form['community_id']
-                post = Post(title=title, content=content, poster_id=poster, community_id=community_id)
+                anonymous = request.form.get('anonymous')  # Default to False for non-checked checkbox
+                post = Post(title=title, content=content, poster_id=poster, community_id=community_id, anonymous=anonymous)
                 db.session.add(post)
                 db.session.commit()
             
@@ -259,8 +261,8 @@ def upload():
                 poster_id= current_user.id
                 comment_content = request.form["comment-content"]
                 post_id = request.form["post_id"]  # Access post ID from the hidden field
-
-                comment = Comment(poster_id=poster_id, comment_content=comment_content, post_id=post_id)
+                anonymous = request.form.get('anonymous') 
+                comment = Comment(poster_id=poster_id, comment_content=comment_content, post_id=post_id, anonymous=anonymous)
                 db.session.add(comment)
                 db.session.commit()
 
@@ -533,7 +535,7 @@ def check_vote(post_id, vote_type):
         vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
         return jsonify({'voted': vote_exists is not None})
 
-#how far back was a post posted
+
 
 # def calculate_time_difference(posted_time):
 #     current_time = datetime.now()
