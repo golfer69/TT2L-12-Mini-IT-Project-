@@ -11,7 +11,7 @@ from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 import uuid as uuid
-
+from flask_migrate import Migrate
 
 def create_app():
     app = Flask(__name__)
@@ -24,7 +24,7 @@ def create_app():
 app=create_app()
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
-
+migrate = Migrate(app,db)
 
 login_manager=LoginManager()
 login_manager.init_app(app)
