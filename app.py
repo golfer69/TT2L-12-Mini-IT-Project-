@@ -4,6 +4,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
+from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField, FileField
 from flask_wtf.file import FileAllowed
@@ -26,6 +27,7 @@ def create_app():
 
 app=create_app()
 db = SQLAlchemy(app)
+migrate=Migrate(app, db)
 bcrypt=Bcrypt(app)
 
 
@@ -47,6 +49,8 @@ class User(db.Model, UserMixin):
     comments= db.relationship('Comment', backref='poster', lazy=True)
     updates= db.relationship('Update', backref='poster', lazy=True)
     date_joined= db.Column(db.DateTime, default=datetime.now)
+    reports= db.relationship('Report', backref='reporter', foreign_keys='Report.report_user_id', lazy=True)
+
 
     
 class Post(db.Model):
@@ -62,6 +66,7 @@ class Post(db.Model):
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
+    report_post = db.relationship('Report', backref='report', lazy=True)
     
 class Comment(db.Model):
     __tablename__ = 'comment'
@@ -98,6 +103,18 @@ class Update(db.Model):
     faculty = db.Column(db.String(1000), nullable=True)
     profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+
+
+class Report(db.Model):
+    __tablename__='report'
+    id = db.Column(db.Integer, primary_key=True)
+    report_username=db.Column(db.Integer, db.ForeignKey('user.username'))
+    report_user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+    report_post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    about= db.Column(db.String(400), nullable=False)
+    date_reported=db.Column(db.DateTime, default=datetime.now)
+    status= db.Column(db.String(100), default='Pending')
+
 
 # create database
 with app.app_context():
@@ -141,6 +158,11 @@ class UpdateCommunityForm(FlaskForm):
     about=StringField(label='About', validators=[Length(min=7, max=10000)])
     comm_profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit=SubmitField('Update')
+
+class ReportForm(FlaskForm):
+    about=StringField(label='About', validators=[Length(min=80, max=1000)])
+    submit=SubmitField('Submit Report')
+
 
 
 #community profile pic
@@ -397,14 +419,39 @@ def user_details(id):
     return render_template('user_details.html', title='User Details', form=form)
 
 
-
-
-@app.route('/admin')
+@app.route('/report/<int:post_id>', methods=['GET', 'POST'])
 @login_required
-def admin():
-    id= current_user.id
-    if id==1 or id==6:
-        return render_template('admin.html', page_title="Admin Page")
+def report_post(post_id):
+    form=ReportForm()
+    post=Post.query.get_or_404(post_id)
+    if form.validate_on_submit():
+        report=Report(user_id=current_user.id, post_id=post.id, about=form.about.data)
+        db.session.add(report)
+        db.session.commit()
+        return redirect(url_for('show_post', post_id=post.id))
+    return render_template('report.html', form=form, post=post, page_title="Report Post")
+
+@app.route('/admin/reports', methods=['GET', 'POST'])
+@login_required
+def view_reports():
+    if current_user.id not in [1, 6]:
+        return redirect(url_for('index'))
+    
+    reports= Report.query.all()
+    return render_template('admin_reports.html', reports=reports, page_title="Admin Reports")
+
+@app.route('/admin/report/<int:post_id>/resolve', methods=['GET', 'POST'])
+@login_required
+def resolve_report(report_id):
+    if current_user.id not in [1,6]:
+        return redirect(url_for('index'))
+    report=Report.query.get_or_404(report_id)
+    report.status='Resolved'
+    db.session.commit()
+    return redirect(url_for('view_reports'))
+
+
+
     
 @app.route('/delete', methods=['POST'])
 @login_required

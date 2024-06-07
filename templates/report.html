@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Report Post</h1>
+<form method="POST">
+    <div>
+        {{ form.hidden_tag() }}
+    </div>
+    <div>
+        {{ form.about.label }}<br>
+        {{ form.about(size=80) }}<br>
+    </div>
+    <div>
+        {{form.submit()}}
+    </div>
+</form>
+{% endblock %}
