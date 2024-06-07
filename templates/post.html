@@ -18,6 +18,7 @@
                     {% else %}
                     <p>by: {{post.poster.username}}</p>
                 {% endif %}
+                <button><a href="{{url_for('report_post', post_id=post.id)}}">Report Post</a></button>
                 
             <!-- check if theres img -->
             {% if post.image_filename %} 

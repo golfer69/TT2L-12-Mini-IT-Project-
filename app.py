@@ -425,10 +425,10 @@ def report_post(post_id):
     form=ReportForm()
     post=Post.query.get_or_404(post_id)
     if form.validate_on_submit():
-        report=Report(user_id=current_user.id, post_id=post.id, about=form.about.data)
+        report=Report(report_user_id=current_user.id, report_post_id=post.id, about=form.about.data)
         db.session.add(report)
         db.session.commit()
-        return redirect(url_for('show_post', post_id=post.id))
+        return redirect(url_for('show_post', post_id=post_id))
     return render_template('report.html', form=form, post=post, page_title="Report Post")
 
 @app.route('/admin/reports', methods=['GET', 'POST'])
@@ -436,9 +436,8 @@ def report_post(post_id):
 def view_reports():
     if current_user.id not in [1, 6]:
         return redirect(url_for('index'))
-    
-    reports= Report.query.all()
-    return render_template('admin_reports.html', reports=reports, page_title="Admin Reports")
+    all_reports= Report.query.all()
+    return render_template('admin_reports.html', all_reports=all_reports, page_title="Admin Reports")
 
 @app.route('/admin/report/<int:post_id>/resolve', methods=['GET', 'POST'])
 @login_required
