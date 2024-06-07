@@ -66,6 +66,7 @@ class Comment(db.Model):
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
     comment_content = db.Column(db.Text)
+    votes = db.Column(db.Integer, default=0)
     anonymous  = db.Column(db.Integer)
 
 class Community(db.Model):
@@ -149,7 +150,18 @@ def index():
         update_user=Update.query.filter_by(user_id=current_user.id).first()
         if update_user and update_user.profile_pic:
             profile_pic=url_for('static', filename='profile_pics/' + update_user.profile_pic)
-    return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, page_title="MMU Reddit | Main Page")
+
+        # Get all votes for the current user (assuming `current_user` is available)
+        current_user_id = current_user.id
+        user_votes = Votes.query.filter_by(user_id=current_user_id).all()
+        
+        # Convert user votes to a dictionary for faster lookups by post ID
+        vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
+    else:
+        # Provide an empty dictionary as default for unauthenticated users
+        vote_dict = {}
+
+    return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, vote_dict=vote_dict ,page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
 @login_required
@@ -275,7 +287,13 @@ def logout():
 @login_required
 def user_posts():
     user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    return render_template('user_posts.html', posts=user_posts,  page_title="User Posts")
+        # Get all votes for the current user (assuming `current_user` is available)
+    current_user_id = current_user.id
+    user_votes = Votes.query.filter_by(user_id=current_user_id).all()
+    
+    # Convert user votes to a dictionary for faster lookups by post ID
+    vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
+    return render_template('user_posts.html', posts=user_posts, vote_dict=vote_dict,page_title="User Posts")
 
 @app.route('/account', methods=['GET'])
 @login_required
@@ -397,13 +415,21 @@ def edit_post(post_id):
 
 @app.route('/post/<int:post_id>', methods=['GET', 'POST'])
 def show_post(post_id):
+    current_user_id = None  # Initialize to None
     post = Post.query.get(post_id)
     comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
+        # Get all votes for the current user (assuming `current_user` is available)
+    if current_user.is_authenticated:
+        current_user_id = current_user.id
+    user_votes = Votes.query.filter_by(user_id=current_user_id).all()
+    
+    # Convert user votes to a dictionary for faster lookups by post ID
+    vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
 
     if not post:
         return redirect('/')  # Handle non-existent post
     
-    return render_template('post.html', post=post, comments=comments, page_title=post.title)
+    return render_template('post.html', post=post, comments=comments, page_title=post.title, vote_dict=vote_dict)
 
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
@@ -412,7 +438,15 @@ def show_community(community_name):
       community_id = community.id # Get the id of the community
     community = Community.query.get(community_id)
     community_posts = Post.query.filter_by(community_id=community_id)
-    return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
+    # Get all votes for the current user (assuming `current_user` is available)
+    current_user_id = None  # Initialize to None
+    if current_user.is_authenticated:
+        current_user_id = current_user.id
+    user_votes = Votes.query.filter_by(user_id=current_user_id).all()
+    
+    # Convert user votes to a dictionary for faster lookups by post ID
+    vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
+    return render_template('community.html', posts=community_posts, community=community, page_title=community_name, vote_dict=vote_dict)
 
 # def calculate_time_difference(posted_time):
 #     # Your time difference calculation function here

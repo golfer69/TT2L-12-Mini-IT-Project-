@@ -6,7 +6,7 @@
   <link rel="icon" href="https://www.mmu.edu.my/wp-content/themes/mmu2018/assets/images/cropped-mmulogo-only-192x192.png" sizes="192x192">
   <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <script>
+  <script src="{% block scriptsrc %}{% endblock %}">
     {% block scripts %}
     {% endblock %}
   </script>

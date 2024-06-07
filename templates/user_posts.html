@@ -18,10 +18,21 @@
                   <p>{{ post.content }}</p>
               {% endif %}
           </a>
+          <div class="clear"></div>
+          <button class="vote-btn {{'voted' if vote_dict.get(post.id) == 'upvote'}}" data-vote-type="upvote" type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>
+          <p><span class="vote-btn" id="vote-count-{{ post.id }}">{{ post.votes }}</span></p>
+          <button class="vote-btn {{ 'voted' if vote_dict.get(post.id) == 'downvote' }} " data-vote-type="downvote" type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
+
         </div>
           {% endfor %}
         </div>
     </div>
   </div>
   </div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}
+{% block scriptsrc %}
+  {{url_for('static', filename='voting_logic.js')}}
 {% endblock %}

@@ -3,9 +3,6 @@
   {% block content %}
     <div class="app">
         <div class="posts-section">
-            <!-- button to go back -->
-            <a href="javascript:history.back()" class="previous-btn round"> &laquo; Previous </a>
-    
             <!-- display content -->
             <div class="post">
                 <a href="{{ url_for('show_community', community_name=post.community.name) }}" class="community-label"> 
@@ -17,13 +14,18 @@
                     <p>by: Anonymous</p>
                     {% else %}
                     <p>by: {{post.poster.username}}</p>
-                {% endif %}
-                
+                {% endif %}    
             <!-- check if theres img -->
             {% if post.image_filename %} 
                 <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
             </div>
             {% endif %}
+            <div class="clear"></div>  
+            <div class="vote-section">
+                <button class="vote-btn {{'voted' if vote_dict.get(post.id) == 'upvote'}}" data-vote-type="upvote" type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>
+                <p><span class="vote-btn" id="vote-count-{{ post.id }}">{{ post.votes }}</span></p>
+                <button class="vote-btn {{ 'voted' if vote_dict.get(post.id) == 'downvote' }} " data-vote-type="downvote" type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
+            </div> 
 
             <!-- delete button -->
             {% if current_user.is_authenticated %}
@@ -91,4 +93,10 @@
 
         </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}
+{% block scriptsrc %}
+    {{url_for('static', filename='voting_logic.js')}}
 {% endblock %}
