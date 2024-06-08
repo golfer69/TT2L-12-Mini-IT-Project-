@@ -470,6 +470,19 @@ def show_community(community_name):
       community_id = community.id # Get the id of the community
     community = Community.query.get(community_id)
     community_posts = Post.query.filter_by(community_id=community_id)
+    filter_option = request.args.get('filter_option')
+    if filter_option:
+        print(filter_option)
+        if filter_option == 'hot':
+            posts = Post.get_hot_filter(community_posts) # Example for hot filter
+            print('HOTTTT')
+        elif filter_option == 'new':
+            posts = Post.get_new_filter(community_posts)  # Using defined method
+            print('NEWWWWW')
+        else:
+            posts = Post.get_top_filter(community_posts) 
+    else:
+        posts = Post.get_top_filter(Post)
     # Get all votes for the current user (assuming `current_user` is available)
     current_user_id = None  # Initialize to None
     if current_user.is_authenticated:
@@ -478,7 +491,7 @@ def show_community(community_name):
     
     # Convert user votes to a dictionary for faster lookups by post ID
     vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
-    return render_template('community.html', posts=community_posts, community=community, page_title=community_name, vote_dict=vote_dict)
+    return render_template('community.html', posts=posts, community=community, page_title=community_name, vote_dict=vote_dict)
 
 # def calculate_time_difference(posted_time):
 #     # Your time difference calculation function here
@@ -572,21 +585,12 @@ from flask import render_template, request
 def filter_posts():
   filter_option = request.form.get('filter_option')
   redirect_to = request.form.get('redirect_to')
-
-  if filter_option == 'hot':
-    filtered_posts = Post.get_hot_filter(Post) # Example for hot filter
-    print('HOTTTT')
-  elif filter_option == 'new':
-    filtered_posts = Post.get_new_filter(Post)  # Using defined method
-  elif filter_option == 'top':
-    filtered_posts = Post.get_top_filter(Post)  # Using defined method
-  else:
-    filtered_posts = []  # Handle invalid options
+  community_name = request.form.get('community_name')
 
   if redirect_to == 'index':
     return redirect(url_for('index', filter_option=filter_option))
   if redirect_to == 'community':
-    return redirect(url_for('community', filter_option=filter_option))
+    return redirect(url_for('show_community', filter_option=filter_option, community_name=community_name))
 
 # def calculate_time_difference(posted_time):
 #     current_time = datetime.now()
