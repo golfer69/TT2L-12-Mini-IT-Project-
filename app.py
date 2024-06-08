@@ -49,7 +49,7 @@ class User(db.Model, UserMixin):
     comments= db.relationship('Comment', backref='poster', lazy=True)
     updates= db.relationship('Update', backref='poster', lazy=True)
     date_joined= db.Column(db.DateTime, default=datetime.now)
-    reports= db.relationship('Report', backref='reporter', foreign_keys='Report.report_user_id', lazy=True)
+    reports= db.relationship('Report', backref='reporter', lazy=True)
 
 
     
@@ -66,7 +66,7 @@ class Post(db.Model):
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
-    report_post = db.relationship('Report', backref='report', lazy=True)
+    reports = db.relationship('Report', backref='post', lazy=True)
     
 class Comment(db.Model):
     __tablename__ = 'comment'
@@ -108,12 +108,12 @@ class Update(db.Model):
 class Report(db.Model):
     __tablename__='report'
     id = db.Column(db.Integer, primary_key=True)
-    report_username=db.Column(db.Integer, db.ForeignKey('user.username'))
     report_user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
     report_post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
     about= db.Column(db.String(400), nullable=False)
     date_reported=db.Column(db.DateTime, default=datetime.now)
     status= db.Column(db.String(100), default='Pending')
+
 
 
 # create database
@@ -160,7 +160,7 @@ class UpdateCommunityForm(FlaskForm):
     submit=SubmitField('Update')
 
 class ReportForm(FlaskForm):
-    about=StringField(label='About', validators=[Length(min=80, max=1000)])
+    about=StringField(label='About', validators=[InputRequired(), Length(min=10, max=1000)])
     submit=SubmitField('Submit Report')
 
 
@@ -428,7 +428,7 @@ def report_post(post_id):
         report=Report(report_user_id=current_user.id, report_post_id=post.id, about=form.about.data)
         db.session.add(report)
         db.session.commit()
-        return redirect(url_for('show_post', post_id=post_id))
+        return redirect(url_for('show_post', post_id=post.id))
     return render_template('report.html', form=form, post=post, page_title="Report Post")
 
 @app.route('/admin/reports', methods=['GET', 'POST'])
@@ -436,18 +436,39 @@ def report_post(post_id):
 def view_reports():
     if current_user.id not in [1, 6]:
         return redirect(url_for('index'))
-    all_reports= Report.query.all()
-    return render_template('admin_reports.html', all_reports=all_reports, page_title="Admin Reports")
+    reports= Report.query.all()
+    return render_template('admin_reports.html', reports=reports, page_title="Admin Reports")
 
-@app.route('/admin/report/<int:post_id>/resolve', methods=['GET', 'POST'])
+@app.route('/admin/report/<int:report_id>/resolve', methods=['POST'])
 @login_required
 def resolve_report(report_id):
-    if current_user.id not in [1,6]:
+    if current_user.id not in [1, 6]:
         return redirect(url_for('index'))
-    report=Report.query.get_or_404(report_id)
-    report.status='Resolved'
+    report = Report.query.get_or_404(report_id)
+    report.status = 'Resolved'
     db.session.commit()
     return redirect(url_for('view_reports'))
+
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    if current_user.id not in [1, 6]:
+        return redirect(url_for('index'))
+    post = Post.query.get_or_404(post_id)
+    db.session.delete(post)
+    db.session.commit()
+    return redirect(url_for('view_reports'))
+
+# @app.route('/suspend_post/<int:user_id>', methods=['POST'])
+# @login_required
+# def delete_post(post_id):
+#     if current_user.id not in [1, 6]:
+#         return redirect(url_for('index'))
+#     post = Post.query.get_or_404(post_id)
+#     db.session.delete(post)
+#     db.session.commit()
+#     return redirect(url_for('view_reports'))
+
 
 
 

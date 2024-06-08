@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Report</h1>
+<h1>Admin Reports</h1>
 <table class="table">
     <tr>
         <th>Report ID</th>
@@ -12,22 +12,40 @@
         <th>Status</th>
         <th>Actions</th>
     </tr>
-    {%for report in reports%}
+    {% for report in reports %}
         <tr>
-            <td>{{report.id}}</td>
-            <td>{{report.reporter.username}}</td>
-            <td><a href="{{url_for('show_post', post_id=report.post.id)}}">{{report.id}}</a></td>
-            <td>{{report.about}}</td>
-            <td>{{report.date_reported}}</td>
-            <td>{{report.status}}</td>
+            <td>{{ report.id }}</td>
+            <td>{{ report.reporter.username }}</td>
             <td>
-                {%if report.status=='Pending'%}
-                    <form action="{{url_for('resolve_report', report_id=report.id)}}" method="POST">
+                {% if report.post %}
+                    <a href="{{url_for('show_post', post_id=report.post.id)}}">{{report.post.title}}</a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+            <td>{{ report.about }}</td>
+            <td>{{ report.date_reported }}</td>
+            <td>{{ report.status }}</td>
+            <td>
+                {% if report.status == 'Pending' %}
+                    <form action="{{ url_for('resolve_report', report_id=report.id) }}" method="POST">
                         <button type="submit">Resolve</button>
                     </form>
-                {%endif%}
+                {% endif %}
+            </td>
+            <td>
+                <ul>
+                    {% if report.post %}
+                        <li>
+                            <form action="{{url_for('delete_post', post_id=report.post.id)}}" method="POST">
+                                <button class="dropdown-item" type="submit">Delete Post</button>
+                            </form>
+                        </li>
+                    {% endif %}
+                </ul>
+                </div>
             </td>
         </tr>
-    {%endfor%}
+    {% endfor %}
 </table>
 {% endblock %}
