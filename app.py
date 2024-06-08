@@ -11,7 +11,8 @@ from wtforms.validators import InputRequired, Length, ValidationError
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 import uuid as uuid
-
+from flask_migrate import Migrate
+from sqlalchemy import desc
 
 def create_app():
     app = Flask(__name__)
@@ -24,7 +25,7 @@ def create_app():
 app=create_app()
 db = SQLAlchemy(app)
 bcrypt=Bcrypt(app)
-
+migrate = Migrate(app,db)
 
 login_manager=LoginManager()
 login_manager.init_app(app)
@@ -59,13 +60,33 @@ class Post(db.Model):
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
-    
+
+    def get_hot_filter(self):
+        # """
+        # Returns a filter for posts ordered by hidden_votes (descending)
+        # """
+        return Post.query.order_by(desc(Post.hidden_votes))
+
+    def get_new_filter(self):
+        # """
+        # Returns a filter for posts ordered by date_added (descending)
+        # """
+        return Post.query.order_by(desc(Post.date_added))
+
+    def get_top_filter(self):
+        # """
+        # Returns a filter for posts ordered by votes (descending)
+        # """
+        return Post.query.order_by(desc(Post.votes))
+
+
 class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))  # Foreign key referencing Text.id
     comment_content = db.Column(db.Text)
+    votes = db.Column(db.Integer, default=0)
     anonymous  = db.Column(db.Integer)
 
 class Community(db.Model):
@@ -80,6 +101,7 @@ class Votes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'))
     vote_type = db.Column(db.Integer)
 
 class Update(db.Model):
@@ -142,14 +164,36 @@ def inject_user():
 @app.route('/', methods=['GET'])
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    posts = Post.query.all()
+    filter_option = request.args.get('filter_option')
+    if filter_option:
+        print(filter_option)
+        if filter_option == 'hot':
+            posts = Post.get_hot_filter(Post) # Example for hot filter
+            print('HOTTTT')
+        elif filter_option == 'new':
+            posts = Post.get_new_filter(Post)  # Using defined method
+            print('NEWWWWW')
+        else:
+            posts = Post.get_top_filter(Post) 
+    else:
+        posts = Post.get_top_filter(Post) 
     communities = Community.query.all()
     profile_pic= None
     if current_user.is_authenticated:
         update_user=Update.query.filter_by(user_id=current_user.id).first()
         if update_user and update_user.profile_pic:
             profile_pic=url_for('static', filename='profile_pics/' + update_user.profile_pic)
-    return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, page_title="MMU Reddit | Main Page")
+
+        # Get all votes for the current user (assuming `current_user` is available)
+        current_user_id = current_user.id
+        user_votes = Votes.query.filter_by(user_id=current_user_id).all()
+        
+        # Convert user votes to a dictionary for faster lookups by post ID
+        vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
+    else:
+        # Provide an empty dictionary as default for unauthenticated users
+        vote_dict = {}
+    return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, vote_dict=vote_dict,page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
 @login_required
@@ -275,7 +319,13 @@ def logout():
 @login_required
 def user_posts():
     user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-    return render_template('user_posts.html', posts=user_posts,  page_title="User Posts")
+        # Get all votes for the current user (assuming `current_user` is available)
+    current_user_id = current_user.id
+    user_votes = Votes.query.filter_by(user_id=current_user_id).all()
+    
+    # Convert user votes to a dictionary for faster lookups by post ID
+    vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
+    return render_template('user_posts.html', posts=user_posts, vote_dict=vote_dict,page_title="User Posts")
 
 @app.route('/account', methods=['GET'])
 @login_required
@@ -397,13 +447,22 @@ def edit_post(post_id):
 
 @app.route('/post/<int:post_id>', methods=['GET', 'POST'])
 def show_post(post_id):
+    current_user_id = None  # Initialize to None
     post = Post.query.get(post_id)
     comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
+        # Get all votes for the current user (assuming `current_user` is available)
+    if current_user.is_authenticated:
+        current_user_id = current_user.id
+    user_votes = Votes.query.filter_by(user_id=current_user_id).all()
+    
+    # Convert user votes to a dictionary for faster lookups by post ID
+    vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
+    vote_dict_comment = {vote.comment_id: vote.vote_type for vote in user_votes}
 
     if not post:
         return redirect('/')  # Handle non-existent post
     
-    return render_template('post.html', post=post, comments=comments, page_title=post.title)
+    return render_template('post.html', post=post, comments=comments, page_title=post.title, vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
 
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
@@ -412,7 +471,28 @@ def show_community(community_name):
       community_id = community.id # Get the id of the community
     community = Community.query.get(community_id)
     community_posts = Post.query.filter_by(community_id=community_id)
-    return render_template('community.html', posts=community_posts, community=community, page_title=community_name)
+    filter_option = request.args.get('filter_option')
+    if filter_option:
+        print(filter_option)
+        if filter_option == 'hot':
+            posts = Post.get_hot_filter(community_posts) # Example for hot filter
+            print('HOTTTT')
+        elif filter_option == 'new':
+            posts = Post.get_new_filter(community_posts)  # Using defined method
+            print('NEWWWWW')
+        else:
+            posts = Post.get_top_filter(community_posts) 
+    else:
+        posts = Post.get_top_filter(Post)
+    # Get all votes for the current user (assuming `current_user` is available)
+    current_user_id = None  # Initialize to None
+    if current_user.is_authenticated:
+        current_user_id = current_user.id
+    user_votes = Votes.query.filter_by(user_id=current_user_id).all()
+    
+    # Convert user votes to a dictionary for faster lookups by post ID
+    vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
+    return render_template('community.html', posts=posts, community=community, page_title=community_name, vote_dict=vote_dict)
 
 # def calculate_time_difference(posted_time):
 #     # Your time difference calculation function here
@@ -500,7 +580,89 @@ def check_vote(post_id, vote_type):
         vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
         return jsonify({'voted': vote_exists is not None})
 
+# Upvotes and downvotes FOR COMMENTS
+@app.route('/voteComment/<int:comment_id>', methods=['POST'])
+def voteComment(comment_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    user_id = current_user.id
+    vote_type = request.json.get('vote_type')
+    if not vote_type:
+        # Handle error if vote_type is missing
+        return jsonify({'error': 'Missing vote type'}), 400 
+    comment = Comment.query.get(comment_id)
+    if comment:
+        if vote_type == 'upvote':
+            existing_vote = Votes.query.filter_by(user_id=user_id, comment_id=comment_id).first()
+            if existing_vote and existing_vote.vote_type == "downvote": #check first
+                existing_vote.vote_type = "upvote"
+            else: # if not voted then add new vote
+                vote = Votes(user_id=user_id, comment_id=comment_id, vote_type="upvote")
+                db.session.add(vote)
+                
+            # Count upvotes and downvotes separately
+            upvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="upvote").count()
+            downvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="downvote").count()
 
+            comment.votes = upvote_count - downvote_count
+            db.session.commit()
+            return jsonify({'message': 'Upvoted successfully', 'votes': comment.votes})
+        if vote_type == "downvote":
+            existing_vote = Votes.query.filter_by(user_id=user_id, comment_id=comment_id).first()
+            if existing_vote and existing_vote.vote_type == "upvote":
+                existing_vote.vote_type = "downvote"
+            else:
+                vote = Votes(user_id=user_id, comment_id=comment_id, vote_type="downvote")
+                db.session.add(vote)
+            # Count upvotes and downvotes separately
+            upvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="upvote").count()
+            downvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="downvote").count()
+
+            comment.votes = upvote_count - downvote_count
+            db.session.commit()
+            return jsonify({'message': 'Downvoted successfully', 'votes': comment.votes})
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+
+@app.route('/unvoteComment/<int:comment_id>', methods=['POST'])
+def unvoteComment(comment_id):
+    user_id = current_user.id
+    comment = Comment.query.get(comment_id)
+    if comment:
+        existing_vote = Votes.query.filter_by(user_id=user_id, comment_id=comment_id).first()
+        if existing_vote:
+            db.session.delete(existing_vote)
+            # Count upvotes and downvotes separately
+            upvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="upvote").count()
+            downvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="downvote").count()
+
+            comment.votes = upvote_count - downvote_count
+            db.session.commit()
+            return jsonify({'message': 'Vote removed successfully', 'votes': comment.votes})
+        else:
+            return jsonify({'error': 'No vote found to remove'}), 404
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+    
+@app.route('/checkVoteComment/<int:comment_id>/<vote_type>', methods=['GET'])
+@login_required
+def checkVoteComment(comment_id, vote_type):
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        vote_exists = Votes.query.filter_by(user_id=user_id, comment_id=comment_id, vote_type=vote_type).first()
+        return jsonify({'voted': vote_exists is not None})
+
+
+@app.route('/filter_posts', methods=['POST'])
+def filter_posts():
+  filter_option = request.form.get('filter_option')
+  redirect_to = request.form.get('redirect_to')
+  community_name = request.form.get('community_name')
+
+  if redirect_to == 'index':
+    return redirect(url_for('index', filter_option=filter_option))
+  if redirect_to == 'community':
+    return redirect(url_for('show_community', filter_option=filter_option, community_name=community_name))
 
 # def calculate_time_difference(posted_time):
 #     current_time = datetime.now()
