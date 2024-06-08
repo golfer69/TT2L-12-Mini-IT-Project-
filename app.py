@@ -12,6 +12,7 @@ from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 import uuid as uuid
 from flask_migrate import Migrate
+from sqlalchemy import desc
 
 def create_app():
     app = Flask(__name__)
@@ -59,7 +60,26 @@ class Post(db.Model):
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
-    
+
+    def get_hot_filter(self):
+        # """
+        # Returns a filter for posts ordered by hidden_votes (descending)
+        # """
+        return Post.query.order_by(desc(Post.hidden_votes))
+
+    def get_new_filter(self):
+        # """
+        # Returns a filter for posts ordered by date_added (descending)
+        # """
+        return Post.query.order_by(desc(Post.date_added))
+
+    def get_top_filter(self):
+        # """
+        # Returns a filter for posts ordered by votes (descending)
+        # """
+        return Post.query.order_by(desc(Post.votes))
+
+
 class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
@@ -143,7 +163,19 @@ def inject_user():
 @app.route('/', methods=['GET'])
 def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
-    posts = Post.query.all()
+    filter_option = request.args.get('filter_option')
+    if filter_option:
+        print(filter_option)
+        if filter_option == 'hot':
+            posts = Post.get_hot_filter(Post) # Example for hot filter
+            print('HOTTTT')
+        elif filter_option == 'new':
+            posts = Post.get_new_filter(Post)  # Using defined method
+            print('NEWWWWW')
+        else:
+            posts = Post.get_top_filter(Post) 
+    else:
+        posts = Post.get_top_filter(Post) 
     communities = Community.query.all()
     profile_pic= None
     if current_user.is_authenticated:
@@ -534,7 +566,27 @@ def check_vote(post_id, vote_type):
         vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
         return jsonify({'voted': vote_exists is not None})
 
+from flask import render_template, request
 
+@app.route('/filter_posts', methods=['POST'])
+def filter_posts():
+  filter_option = request.form.get('filter_option')
+  redirect_to = request.form.get('redirect_to')
+
+  if filter_option == 'hot':
+    filtered_posts = Post.get_hot_filter(Post) # Example for hot filter
+    print('HOTTTT')
+  elif filter_option == 'new':
+    filtered_posts = Post.get_new_filter(Post)  # Using defined method
+  elif filter_option == 'top':
+    filtered_posts = Post.get_top_filter(Post)  # Using defined method
+  else:
+    filtered_posts = []  # Handle invalid options
+
+  if redirect_to == 'index':
+    return redirect(url_for('index', filter_option=filter_option))
+  if redirect_to == 'community':
+    return redirect(url_for('community', filter_option=filter_option))
 
 # def calculate_time_difference(posted_time):
 #     current_time = datetime.now()
