@@ -65,6 +65,11 @@
                 <div class="comments">
                     {% for comment in comments %}
                         <div class="comment">
+                            <div class="comment-vote-section">
+                                <button class="{{'voted' if vote_dict_comment.get(comment.id) == 'upvote'}}" data-vote-type="upvote" type="button" data-comment-id="{{ comment.id }}" onclick="upvoteComment(this)">Upvote</button>
+                                <p><span class="vote-btn" id="vote-count-comment-{{ comment.id }}">{{ comment.votes }}</span></p>
+                                <button class="{{ 'voted' if vote_dict_comment.get(comment.id) == 'downvote' }} " data-vote-type="downvote" type="button" data-comment-id="{{ comment.id }}" onclick="downvoteComment(this)">Downvote</button>
+                            </div>
                             {% if comment.anonymous == 1 %}
                                 <div class="username"><b>Anonymous</b></div>
                                 {% else %}
@@ -85,6 +90,7 @@
                                 {% endif %}
                             {% endif %}
                         </div>
+                        <hr>
                     {% endfor %}
                 </div>
             </div>

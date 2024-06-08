@@ -101,6 +101,7 @@ class Votes(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'))
     vote_type = db.Column(db.Integer)
 
 class Update(db.Model):
@@ -192,8 +193,7 @@ def index():
     else:
         # Provide an empty dictionary as default for unauthenticated users
         vote_dict = {}
-
-    return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, vote_dict=vote_dict ,page_title="MMU Reddit | Main Page")
+    return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, vote_dict=vote_dict,page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
 @login_required
@@ -457,11 +457,12 @@ def show_post(post_id):
     
     # Convert user votes to a dictionary for faster lookups by post ID
     vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
+    vote_dict_comment = {vote.comment_id: vote.vote_type for vote in user_votes}
 
     if not post:
         return redirect('/')  # Handle non-existent post
     
-    return render_template('post.html', post=post, comments=comments, page_title=post.title, vote_dict=vote_dict)
+    return render_template('post.html', post=post, comments=comments, page_title=post.title, vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
 
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
@@ -579,7 +580,78 @@ def check_vote(post_id, vote_type):
         vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
         return jsonify({'voted': vote_exists is not None})
 
-from flask import render_template, request
+# Upvotes and downvotes FOR COMMENTS
+@app.route('/voteComment/<int:comment_id>', methods=['POST'])
+def voteComment(comment_id):
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    user_id = current_user.id
+    vote_type = request.json.get('vote_type')
+    if not vote_type:
+        # Handle error if vote_type is missing
+        return jsonify({'error': 'Missing vote type'}), 400 
+    comment = Comment.query.get(comment_id)
+    if comment:
+        if vote_type == 'upvote':
+            existing_vote = Votes.query.filter_by(user_id=user_id, comment_id=comment_id).first()
+            if existing_vote and existing_vote.vote_type == "downvote": #check first
+                existing_vote.vote_type = "upvote"
+            else: # if not voted then add new vote
+                vote = Votes(user_id=user_id, comment_id=comment_id, vote_type="upvote")
+                db.session.add(vote)
+                
+            # Count upvotes and downvotes separately
+            upvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="upvote").count()
+            downvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="downvote").count()
+
+            comment.votes = upvote_count - downvote_count
+            db.session.commit()
+            return jsonify({'message': 'Upvoted successfully', 'votes': comment.votes})
+        if vote_type == "downvote":
+            existing_vote = Votes.query.filter_by(user_id=user_id, comment_id=comment_id).first()
+            if existing_vote and existing_vote.vote_type == "upvote":
+                existing_vote.vote_type = "downvote"
+            else:
+                vote = Votes(user_id=user_id, comment_id=comment_id, vote_type="downvote")
+                db.session.add(vote)
+            # Count upvotes and downvotes separately
+            upvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="upvote").count()
+            downvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="downvote").count()
+
+            comment.votes = upvote_count - downvote_count
+            db.session.commit()
+            return jsonify({'message': 'Downvoted successfully', 'votes': comment.votes})
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+
+@app.route('/unvoteComment/<int:comment_id>', methods=['POST'])
+def unvoteComment(comment_id):
+    user_id = current_user.id
+    comment = Comment.query.get(comment_id)
+    if comment:
+        existing_vote = Votes.query.filter_by(user_id=user_id, comment_id=comment_id).first()
+        if existing_vote:
+            db.session.delete(existing_vote)
+            # Count upvotes and downvotes separately
+            upvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="upvote").count()
+            downvote_count = Votes.query.filter_by(comment_id=comment_id, vote_type="downvote").count()
+
+            comment.votes = upvote_count - downvote_count
+            db.session.commit()
+            return jsonify({'message': 'Vote removed successfully', 'votes': comment.votes})
+        else:
+            return jsonify({'error': 'No vote found to remove'}), 404
+    else:
+        return jsonify({'error': 'Post not found'}), 404
+    
+@app.route('/checkVoteComment/<int:comment_id>/<vote_type>', methods=['GET'])
+@login_required
+def checkVoteComment(comment_id, vote_type):
+    if current_user.is_authenticated:
+        user_id = current_user.id
+        vote_exists = Votes.query.filter_by(user_id=user_id, comment_id=comment_id, vote_type=vote_type).first()
+        return jsonify({'voted': vote_exists is not None})
+
 
 @app.route('/filter_posts', methods=['POST'])
 def filter_posts():
