@@ -1,0 +1,32 @@
+<!-- resolved_reports.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Resolved Reports</h1>
+<table class="table">
+    <tr>
+        <th>Report ID</th>
+        <th>User</th>
+        <th>Post</th>
+        <th>About</th>
+        <th>Date Reported</th>
+        <th>Status</th>
+    </tr>
+    {% for report in reports %}
+        <tr>
+            <td>{{ report.id }}</td>
+            <td>{{ report.reporter.username }}</td>
+            <td>
+                {% if report.post %}
+                    <a class="report-link"  href="{{ url_for('show_post', post_id=report.post.id) }}">{{ report.post.title }}</a>
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+            <td>{{ report.about }}</td>
+            <td>{{ report.date_reported }}</td>
+            <td>{{ report.status }}</td>
+        </tr>
+    {% endfor %}
+</table>
+{% endblock %}

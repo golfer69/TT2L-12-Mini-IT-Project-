@@ -431,23 +431,37 @@ def report_post(post_id):
         return redirect(url_for('show_post', post_id=post.id))
     return render_template('report.html', form=form, post=post, page_title="Report Post")
 
-@app.route('/admin/reports', methods=['GET', 'POST'])
+@app.route('/admin/reports/new', methods=['GET', 'POST'])
 @login_required
-def view_reports():
+def new_reports():
     if current_user.id not in [1, 6]:
         return redirect(url_for('index'))
-    reports= Report.query.all()
-    return render_template('admin_reports.html', reports=reports, page_title="Admin Reports")
+    new_reports= Report.query.filter_by(status='Pending').all()
+    return render_template('new_reports.html', reports=new_reports, page_title="New Reports")
 
-@app.route('/admin/report/<int:report_id>/resolve', methods=['POST'])
+
+@app.route('/admin/reports/resolved', methods=['GET','POST'])
+@login_required
+def resolved_reports():
+    if current_user.id not in [1, 6]:
+        return redirect(url_for('index'))
+    resolved_reports = Report.query.filter_by(status='Resolved').all()
+    return render_template('resolved_reports.html', reports=resolved_reports, page_title='Resolved Reports')
+
+
+
+@app.route('/admin/report/<int:report_id>/resolve', methods=["POST"])
 @login_required
 def resolve_report(report_id):
-    if current_user.id not in [1, 6]:
+    if current_user.id not in [1,6]:
         return redirect(url_for('index'))
-    report = Report.query.get_or_404(report_id)
-    report.status = 'Resolved'
-    db.session.commit()
-    return redirect(url_for('view_reports'))
+    report=Report.query.get_or_404(report_id)
+    if report:
+        report.status='Resolved'
+        db.session.commit()
+        return redirect(url_for('new_reports'))
+
+
 
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 @login_required
@@ -457,7 +471,7 @@ def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
     db.session.delete(post)
     db.session.commit()
-    return redirect(url_for('view_reports'))
+    return redirect(url_for('new_reports'))
 
 # @app.route('/suspend_post/<int:user_id>', methods=['POST'])
 # @login_required
@@ -607,66 +621,7 @@ def check_vote(post_id, vote_type):
 
 
 
-# def calculate_time_difference(posted_time):
-#     current_time = datetime.now()
-#     time_difference = current_time - posted_time
 
-#     seconds = time_difference.total_seconds()
-#     minutes = seconds / 60
-#     hours = minutes / 60
-#     days = hours / 24
-#     weeks = days / 7
-#     months = days / 30
-#     years = days / 365
-
-    #     if seconds < 60:
-#         return f"{int(seconds)} seconds ago"
-#     elif minutes < 60:
-#         return f"{int(minutes)} minutes ago"
-#     elif hours < 24:
-#         return f"{int(hours)} hours ago"
-#     elif days < 7:
-#         return f"{int(days)} days ago"
-#     elif weeks < 4:
-#         return f"{int(weeks)} weeks ago"
-#     elif months < 12:
-#         return f"{int(months)} months ago"
-#     else:
-#         return f"{int(years)} years ago"
-    
-# #how far back was a post posted
-
-# def calculate_time_difference(posted_time):
-#     current_time = datetime.now()
-#     time_difference = current_time - posted_time
-
-#     seconds = time_difference.total_seconds()
-#     minutes = seconds / 60
-#     hours = minutes / 60
-#     days = hours / 24
-#     weeks = days / 7
-#     months = days / 30
-#     years = days / 365
-
-#     if seconds < 60:
-#         return f"{int(seconds)} seconds ago"
-#     elif minutes < 60:
-#         return f"{int(minutes)} minutes ago"
-#     elif hours < 24:
-#         return f"{int(hours)} hours ago"
-#     elif days < 7:
-#         return f"{int(days)} days ago"
-#     elif weeks < 4:
-#         return f"{int(weeks)} weeks ago"
-#     elif months < 12:
-#         return f"{int(months)} months ago"
-#     else:
-#         return f"{int(years)} years ago"
-
-# # Example usage
-# posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
-# time_since_posted = calculate_time_difference(posted_time)
-# print(time_since_posted)
 
 
 if  __name__ == '__main__':

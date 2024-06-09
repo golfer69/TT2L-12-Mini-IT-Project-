@@ -386,3 +386,9 @@ input[type=text] {
   margin-top: 100px;
   margin-right:auto;
 }
+
+.report-link{
+  text-decoration: underline;
+  text-decoration-color: blue;
+  color: blue;
+}

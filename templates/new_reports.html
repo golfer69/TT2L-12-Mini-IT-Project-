@@ -1,7 +1,8 @@
+<!-- new_reports.html -->
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>Admin Reports</h1>
+<h1>New Reports</h1>
 <table class="table">
     <tr>
         <th>Report ID</th>
@@ -18,7 +19,7 @@
             <td>{{ report.reporter.username }}</td>
             <td>
                 {% if report.post %}
-                    <a href="{{url_for('show_post', post_id=report.post.id)}}">{{report.post.title}}</a>
+                    <a class="report-link"  href="{{ url_for('show_post', post_id=report.post.id) }}">{{ report.post.title }}</a>
                 {% else %}
                     N/A
                 {% endif %}
@@ -32,18 +33,6 @@
                         <button type="submit">Resolve</button>
                     </form>
                 {% endif %}
-            </td>
-            <td>
-                <ul>
-                    {% if report.post %}
-                        <li>
-                            <form action="{{url_for('delete_post', post_id=report.post.id)}}" method="POST">
-                                <button class="dropdown-item" type="submit">Delete Post</button>
-                            </form>
-                        </li>
-                    {% endif %}
-                </ul>
-                </div>
             </td>
         </tr>
     {% endfor %}
