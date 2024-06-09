@@ -13,6 +13,8 @@ from werkzeug.utils import secure_filename
 import uuid as uuid
 from flask_migrate import Migrate
 from sqlalchemy import desc
+from apscheduler.schedulers.background import BackgroundScheduler
+
 
 def create_app():
     app = Flask(__name__)
@@ -166,17 +168,14 @@ def index():
     pics = os.listdir(app.config['UPLOAD_DIRECTORY'])
     filter_option = request.args.get('filter_option')
     if filter_option:
-        print(filter_option)
-        if filter_option == 'hot':
-            posts = Post.get_hot_filter(Post) # Example for hot filter
-            print('HOTTTT')
+        if filter_option == 'top':
+            posts = Post.get_top_filter(Post) 
         elif filter_option == 'new':
             posts = Post.get_new_filter(Post)  # Using defined method
-            print('NEWWWWW')
         else:
-            posts = Post.get_top_filter(Post) 
+            posts = Post.get_hot_filter(Post)  #hot for default
     else:
-        posts = Post.get_top_filter(Post) 
+        posts = Post.get_hot_filter(Post)
     communities = Community.query.all()
     profile_pic= None
     if current_user.is_authenticated:
@@ -473,17 +472,14 @@ def show_community(community_name):
     community_posts = Post.query.filter_by(community_id=community_id)
     filter_option = request.args.get('filter_option')
     if filter_option:
-        print(filter_option)
-        if filter_option == 'hot':
-            posts = Post.get_hot_filter(community_posts) # Example for hot filter
-            print('HOTTTT')
+        if filter_option == 'top':
+            posts = Post.get_top_filter(Post) 
         elif filter_option == 'new':
-            posts = Post.get_new_filter(community_posts)  # Using defined method
-            print('NEWWWWW')
+            posts = Post.get_new_filter(Post)  # Using defined method
         else:
-            posts = Post.get_top_filter(community_posts) 
+            posts = Post.get_hot_filter(Post)  # hot for default
     else:
-        posts = Post.get_top_filter(Post)
+        posts = Post.get_hot_filter(Post)
     # Get all votes for the current user (assuming `current_user` is available)
     current_user_id = None  # Initialize to None
     if current_user.is_authenticated:
@@ -664,6 +660,48 @@ def filter_posts():
   if redirect_to == 'community':
     return redirect(url_for('show_community', filter_option=filter_option, community_name=community_name))
 
+# decay function
+def decay_hidden_votes(post):
+    current_time = datetime.now()
+
+    if post.hidden_votes is None:
+        post.hidden_votes = post.votes 
+    else:
+        post.hidden_votes
+
+    post_age_days = (current_time - post.date_added).days
+    post_title = post.title
+    decay_factor = 0.99  # Votes decay by 1% each day
+    decayed_hidden_votes = post.hidden_votes * (decay_factor ** post_age_days) #decay more and more by days go by
+
+    # Ensure the decayed value doesn't go below 0
+    decayed_hidden_votes = max(decayed_hidden_votes, 0)
+
+    return int(decayed_hidden_votes)
+
+# to decay
+def decay_all_hidden_votes():
+    posts = Post.query.all()
+
+    for post in posts:
+        decayed_votes = decay_hidden_votes(post)
+        post.hidden_votes = decayed_votes
+
+    db.session.commit()
+
+#decaying the votes
+def schedule_decay():
+    with app.app_context():
+        decay_all_hidden_votes()
+
+# Create a scheduler instance
+scheduler = BackgroundScheduler()
+scheduler.add_job(schedule_decay, 'interval', days=1)
+scheduler.start()
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
 # def calculate_time_difference(posted_time):
 #     current_time = datetime.now()
 #     time_difference = current_time - posted_time
@@ -724,7 +762,3 @@ def filter_posts():
 # posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
 # time_since_posted = calculate_time_difference(posted_time)
 # print(time_since_posted)
-
-
-if  __name__ == '__main__':
-    app.run(debug=True)
