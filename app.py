@@ -477,7 +477,7 @@ def delete_post(post_id):
     post = Post.query.get_or_404(post_id)
     db.session.delete(post)
     db.session.commit()
-    return redirect(url_for('new_reports'))
+    return redirect(url_for('reports'))
 
 # @app.route('/suspend_post/<int:user_id>', methods=['POST'])
 # @login_required
