@@ -572,7 +572,8 @@ def calculate_hidden_votes(posted_time, decay_rate=0.001):
     hidden_votes = round(time_difference * decay_rate)
     return hidden_votes
 
-def main():
+@app.route('/hidden_votes')
+def hidden_votes():
     # Example: Posted time (2 hours ago from now)
     posted_time = datetime.now() - timedelta(hours=2)
 
