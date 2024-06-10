@@ -183,7 +183,7 @@ class UpdateCommunityForm(FlaskForm):
     submit=SubmitField('Update')
 
 class ReportForm(FlaskForm):
-    about=StringField(label='About', validators=[InputRequired(), Length(min=10, max=1000)])
+    about=StringField(label='About', validators=[InputRequired(), Length(max=1000)])
     submit=SubmitField('Submit Report')
 
 
