@@ -32,7 +32,6 @@
             {% else %}
               <p>{{ post.content }}</p>
           {% endif %}
-          
         </a>
         <div class="clear"></div>
         <button class="vote-btn {{'voted' if vote_dict.get(post.id) == 'upvote'}}" data-vote-type="upvote" type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>

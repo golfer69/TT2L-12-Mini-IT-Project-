@@ -4,6 +4,7 @@ import os
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
 from datetime import datetime
+from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField, FileField
 from flask_wtf.file import FileAllowed
@@ -20,10 +21,14 @@ def create_app():
     app.config['UPLOAD_DIRECTORY'] = 'uploads/'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    uploads_dir = app.config['UPLOAD_DIRECTORY']
+    os.makedirs(uploads_dir, exist_ok=True)
     return app
 
 app=create_app()
 db = SQLAlchemy(app)
+migrate=Migrate(app, db)
 bcrypt=Bcrypt(app)
 migrate = Migrate(app,db)
 
@@ -45,6 +50,8 @@ class User(db.Model, UserMixin):
     comments= db.relationship('Comment', backref='poster', lazy=True)
     updates= db.relationship('Update', backref='poster', lazy=True)
     date_joined= db.Column(db.DateTime, default=datetime.now)
+    reports= db.relationship('Report', backref='reporter', lazy=True)
+
 
     
 class Post(db.Model):
@@ -60,6 +67,8 @@ class Post(db.Model):
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
+    reports = db.relationship('Report', backref='post', lazy=True)
+    
 
     def get_hot_filter(self):
         # """
@@ -95,6 +104,8 @@ class Community(db.Model):
     name = db.Column(db.String(50))
     about = db.Column(db.String(255))
     community = db.relationship('Post', backref='community', lazy=True)
+    comm_profile_pic= db.Column(db.String(10000), nullable=True)
+
 
 class Votes(db.Model):
     __tablename__ = 'votes'
@@ -115,6 +126,18 @@ class Update(db.Model):
     faculty = db.Column(db.String(1000), nullable=True)
     profile_pic= db.Column(db.String(10000), nullable=True)
     user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+
+
+class Report(db.Model):
+    __tablename__='report'
+    id = db.Column(db.Integer, primary_key=True)
+    report_user_id= db.Column(db.Integer, db.ForeignKey('user.id'))
+    report_post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    about= db.Column(db.String(400), nullable=False)
+    date_reported=db.Column(db.DateTime, default=datetime.now)
+    status= db.Column(db.String(100), default='Pending')
+
+
 
 # create database
 with app.app_context():
@@ -153,6 +176,44 @@ class EntryForm(FlaskForm):
     faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
     profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
+
+class UpdateCommunityForm(FlaskForm):
+    about=StringField(label='About', validators=[Length(min=7, max=10000)])
+    comm_profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
+    submit=SubmitField('Update')
+
+class ReportForm(FlaskForm):
+    about=StringField(label='About', validators=[InputRequired(), Length(max=1000)])
+    submit=SubmitField('Submit Report')
+
+
+
+#community profile pic
+def save_comm_profile_pic(comm_profile_pic_file):
+    if comm_profile_pic_file:
+        filename=secure_filename(comm_profile_pic_file.filename)
+        unique_id_filename=str(uuid.uuid1()) + '_' + filename
+        upload_dir='static/comm_profile_pics'
+        os.makedirs(upload_dir, exist_ok=True)
+        profile_pic_path=os.path.join(upload_dir, unique_id_filename)
+        comm_profile_pic_file.save(profile_pic_path)
+        return unique_id_filename
+    else:
+        return None
+
+#user profile pic
+def save_user_profile_pic(profile_pic_file):
+    if profile_pic_file:
+        filename=secure_filename(profile_pic_file.filename)
+        unique_id_filename=str(uuid.uuid1()) + '_' + filename
+        upload_dir='static/profile_pics'
+        os.makedirs(upload_dir, exist_ok=True)
+        profile_pic_path=os.path.join(upload_dir, unique_id_filename)
+        profile_pic_file.save(profile_pic_path)
+        return unique_id_filename
+    else:
+        return None
+
 
 @app.context_processor
 def inject_user():
@@ -210,7 +271,25 @@ def create():
 def createcomm():
     return render_template('createcomm.html', page_title="Create community")
 
-@app.route('/upload', methods=['POST'])
+@app.route('/updatecommunity/<int:id>', methods=['GET', 'POST'])
+@login_required
+def updatecomm(id):
+    form=UpdateCommunityForm()
+    community=Community.query.get(id)
+    if form.validate_on_submit():
+        community.about=form.about.data
+
+        if form.comm_profile_pic:
+            comm_profile_pic_filename=save_comm_profile_pic(form.comm_profile_pic.data)
+            community.comm_profile_pic=comm_profile_pic_filename
+
+        db.session.commit()
+        return redirect(url_for('show_community', community_name=community.name))
+    elif request.method=='GET':
+        form.about.data=community.about
+    return render_template('updatecomm.html', form=form, community=community, page_title="Update community")
+
+@app.route('/upload', methods=['GET','POST'])
 @login_required
 def upload():
     item = request.form.get('item')
@@ -242,7 +321,9 @@ def upload():
             if item == "community":
                 name = request.form.get('name')
                 about = request.form.get('about')
-                community = Community(name=name, about=about)
+                comm_profile_pic=request.files.get('comm_profile_pic')
+                comm_profile_pic_filename=save_comm_profile_pic(comm_profile_pic)
+                community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename)
                 db.session.add(community)
                 db.session.commit()
 
@@ -335,17 +416,6 @@ def account():
     return render_template('account.html', user=user, update_user=update_user, page_title="User")
 
 
-def save_profile_pic(profile_pic_file):
-    if profile_pic_file:
-        filename=secure_filename(profile_pic_file.filename)
-        unique_id_filename=str(uuid.uuid1()) + '_' + filename
-        upload_dir='static/profile_pics'
-        os.makedirs(upload_dir, exist_ok=True)
-        profile_pic_path=os.path.join(upload_dir, unique_id_filename)
-        profile_pic_file.save(profile_pic_path)
-        return unique_id_filename
-    else:
-        return None
 
 
 @app.route('/user_details/<int:id>', methods=['GET', 'POST'])
@@ -355,7 +425,7 @@ def user_details(id):
     update_user = Update.query.filter_by(user_id=id).first()
 
     if form.validate_on_submit():
-        profile_pic_filename=save_profile_pic(form.profile_pic.data)
+        profile_pic_filename=save_user_profile_pic(form.profile_pic.data)
         if update_user:
             # Update existing user details
             update_user.name = form.name.data
@@ -402,12 +472,77 @@ def user_details(id):
 
 
 
-@app.route('/admin')
+@app.route('/report/<int:post_id>', methods=['GET', 'POST'])
 @login_required
-def admin():
-    id= current_user.id
-    if id==1 or id==6:
-        return render_template('admin.html', page_title="Admin Page")
+def report_post(post_id):
+    form=ReportForm()
+    post=Post.query.get_or_404(post_id)
+    if form.validate_on_submit():
+        report=Report(report_user_id=current_user.id, report_post_id=post.id, about=form.about.data)
+        db.session.add(report)
+        db.session.commit()
+        return redirect(url_for('show_post', post_id=post.id))
+    return render_template('report.html', form=form, post=post, page_title="Report Post")
+
+@app.route('/admin/reports', methods=['GET', 'POST'])
+@login_required
+def reports():
+    if current_user.id not in [1, 6]:  # Adjust this condition based on your admin user IDs
+        return redirect(url_for('index'))
+
+    new_reports = Report.query.filter_by(status='Pending').all()
+    resolved_reports = Report.query.filter_by(status='Resolved').all()
+
+    return render_template('admin_reports.html', new_reports=new_reports, resolved_reports=resolved_reports, page_title="Reports")
+
+
+# @app.route('/admin/reports/resolved', methods=['GET','POST'])
+# @login_required
+# def resolved_reports():
+#     if current_user.id not in [1, 6]:
+#         return redirect(url_for('index'))
+#     resolved_reports = Report.query.filter_by(status='Resolved').all()
+#     return render_template('admin_reports.html', reports=resolved_reports, page_title='Resolved Reports')
+
+
+
+@app.route('/admin/reports/resolve/<int:report_id>', methods=['POST'])
+@login_required
+def resolve_report(report_id):
+    if current_user.id not in [1, 6]:  # Adjust this condition based on your admin user IDs
+        return redirect(url_for('index'))
+
+    report = Report.query.get_or_404(report_id)
+    report.status = 'Resolved'
+    db.session.commit()
+
+    return redirect(url_for('reports'))
+
+
+
+@app.route('/delete_post/<int:post_id>', methods=['POST'])
+@login_required
+def delete_post(post_id):
+    if current_user.id not in [1, 6]:
+        return redirect(url_for('index'))
+    post = Post.query.get_or_404(post_id)
+    db.session.delete(post)
+    db.session.commit()
+    return redirect(url_for('reports'))
+
+# @app.route('/suspend_post/<int:user_id>', methods=['POST'])
+# @login_required
+# def delete_post(post_id):
+#     if current_user.id not in [1, 6]:
+#         return redirect(url_for('index'))
+#     post = Post.query.get_or_404(post_id)
+#     db.session.delete(post)
+#     db.session.commit()
+#     return redirect(url_for('view_reports'))
+
+
+
+
     
 @app.route('/delete', methods=['POST'])
 @login_required
@@ -467,6 +602,9 @@ def show_post(post_id):
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
     community = Community.query.filter_by(name=community_name).first()
+    if not community:
+      return render_template('404.html'), 404
+    community_posts = Post.query.filter_by(community_id=community.id).all()
     if community:
       community_id = community.id # Get the id of the community
     community = Community.query.get(community_id)
@@ -494,14 +632,6 @@ def show_community(community_name):
     vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
     return render_template('community.html', posts=posts, community=community, page_title=community_name, vote_dict=vote_dict)
 
-# def calculate_time_difference(posted_time):
-#     # Your time difference calculation function here
-
-#  @app.route('/post')
-#  def post():
-#     posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
-#     time_since_posted = calculate_time_difference(posted_time)
-#     return render_template('post.html', time_since_posted=time_since_posted)
 
 # Upvotes and downvotes
 @app.route('/upvote/<int:post_id>', methods=['POST'])
@@ -664,66 +794,7 @@ def filter_posts():
   if redirect_to == 'community':
     return redirect(url_for('show_community', filter_option=filter_option, community_name=community_name))
 
-# def calculate_time_difference(posted_time):
-#     current_time = datetime.now()
-#     time_difference = current_time - posted_time
 
-#     seconds = time_difference.total_seconds()
-#     minutes = seconds / 60
-#     hours = minutes / 60
-#     days = hours / 24
-#     weeks = days / 7
-#     months = days / 30
-#     years = days / 365
-
-    #     if seconds < 60:
-#         return f"{int(seconds)} seconds ago"
-#     elif minutes < 60:
-#         return f"{int(minutes)} minutes ago"
-#     elif hours < 24:
-#         return f"{int(hours)} hours ago"
-#     elif days < 7:
-#         return f"{int(days)} days ago"
-#     elif weeks < 4:
-#         return f"{int(weeks)} weeks ago"
-#     elif months < 12:
-#         return f"{int(months)} months ago"
-#     else:
-#         return f"{int(years)} years ago"
-    
-# #how far back was a post posted
-
-# def calculate_time_difference(posted_time):
-#     current_time = datetime.now()
-#     time_difference = current_time - posted_time
-
-#     seconds = time_difference.total_seconds()
-#     minutes = seconds / 60
-#     hours = minutes / 60
-#     days = hours / 24
-#     weeks = days / 7
-#     months = days / 30
-#     years = days / 365
-
-#     if seconds < 60:
-#         return f"{int(seconds)} seconds ago"
-#     elif minutes < 60:
-#         return f"{int(minutes)} minutes ago"
-#     elif hours < 24:
-#         return f"{int(hours)} hours ago"
-#     elif days < 7:
-#         return f"{int(days)} days ago"
-#     elif weeks < 4:
-#         return f"{int(weeks)} weeks ago"
-#     elif months < 12:
-#         return f"{int(months)} months ago"
-#     else:
-#         return f"{int(years)} years ago"
-
-# # Example usage
-# posted_time = datetime(2022, 1, 1, 12, 0, 0)  # Replace this with the actual posted time
-# time_since_posted = calculate_time_difference(posted_time)
-# print(time_since_posted)
 
 
 if  __name__ == '__main__':

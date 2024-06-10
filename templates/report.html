@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Report Post</h1>
+<form method="POST" class="report-form" action="{{url_for('report_post', post_id=post.id)}}">
+    <div>
+        {{ form.hidden_tag() }}
+    </div>
+    <div>
+        {{ form.about.label }}<br>
+        {{ form.about(size=80) }}<br>
+    </div>
+    <div>
+        <button type='submit' class="btn btn-primary">Report</button>
+    </div>
+</form>
+{% endblock %}

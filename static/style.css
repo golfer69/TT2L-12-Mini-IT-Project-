@@ -291,8 +291,8 @@ input[type=text] {
  display: flex;
  margin: 10px 0;
 }
-.comments {
- }
+/* .comments {
+ } */
 .comment-delete {
   display: flex;
   margin-left: 30px;
@@ -367,6 +367,47 @@ input[type=text] {
   width: 150px;
 }
 
+
+.comm-profile-pic{
+  max-width:400px;
+  max-height: 600px;
+  border-radius: 50%;
+  border-color: white;
+  margin: auto;
+  border: 1px solid #ddd;
+  display: block;
+  object-fit: cover;
+  /* padding: 5px; */
+  /* width: 150px; */
+}
+
+.table{
+  margin-top: 100px;
+  margin-right:auto;
+}
+
+.report-form{
+  margin-top: 100px;
+  margin-right:auto;
+}
+
+.report-link{
+  text-decoration: underline;
+  text-decoration-color: blue;
+  color: blue;
+}
+
+.resolved-reports{
+  margin-top: 100px;
+  color: navy;
+  text-decoration: underline;
+}
+
+.new-reports{
+  margin-top: 50px;
+  color: purple;
+  text-decoration: underline;
+}
 .vote-section {
   margin: 3px;
   display: block;
@@ -380,6 +421,7 @@ input[type=text] {
   width: 90%;
   text-align: center;
 }
+
 .comment-vote-section {
   margin: 0 13px;
 }
