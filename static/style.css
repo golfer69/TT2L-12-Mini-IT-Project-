@@ -407,6 +407,7 @@ input[type=text] {
   margin-top: 50px;
   color: purple;
   text-decoration: underline;
+}
 .vote-section {
   margin: 3px;
   display: block;
@@ -420,6 +421,7 @@ input[type=text] {
   width: 90%;
   text-align: center;
 }
+
 .comment-vote-section {
   margin: 0 13px;
 }
