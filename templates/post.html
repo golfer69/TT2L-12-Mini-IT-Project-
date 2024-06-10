@@ -3,9 +3,6 @@
   {% block content %}
     <div class="app">
         <div class="posts-section">
-            <!-- button to go back -->
-            <a href="javascript:history.back()" class="previous-btn round"> &laquo; Previous </a>
-    
             <!-- display content -->
             <div class="post">
                 <a href="{{ url_for('show_community', community_name=post.community.name) }}" class="community-label"> 
@@ -20,11 +17,18 @@
                 {% endif %}
                 <button><a href="{{url_for('report_post', post_id=post.id)}}">Report Post</a></button>
                 
+                {% endif %}    
             <!-- check if theres img -->
             {% if post.image_filename %} 
                 <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
             </div>
             {% endif %}
+            <div class="clear"></div>  
+            <div class="vote-section">
+                <button class="vote-btn {{'voted' if vote_dict.get(post.id) == 'upvote'}}" data-vote-type="upvote" type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>
+                <p><span class="vote-btn" id="vote-count-{{ post.id }}">{{ post.votes }}</span></p>
+                <button class="vote-btn {{ 'voted' if vote_dict.get(post.id) == 'downvote' }} " data-vote-type="downvote" type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
+            </div> 
 
             <!-- delete button -->
             {% if current_user.is_authenticated %}
@@ -64,6 +68,11 @@
                 <div class="comments">
                     {% for comment in comments %}
                         <div class="comment">
+                            <div class="comment-vote-section">
+                                <button class="{{'voted' if vote_dict_comment.get(comment.id) == 'upvote'}}" data-vote-type="upvote" type="button" data-comment-id="{{ comment.id }}" onclick="upvoteComment(this)">Upvote</button>
+                                <p><span class="vote-btn" id="vote-count-comment-{{ comment.id }}">{{ comment.votes }}</span></p>
+                                <button class="{{ 'voted' if vote_dict_comment.get(comment.id) == 'downvote' }} " data-vote-type="downvote" type="button" data-comment-id="{{ comment.id }}" onclick="downvoteComment(this)">Downvote</button>
+                            </div>
                             {% if comment.anonymous == 1 %}
                                 <div class="username"><b>Anonymous</b></div>
                                 {% else %}
@@ -84,6 +93,7 @@
                                 {% endif %}
                             {% endif %}
                         </div>
+                        <hr>
                     {% endfor %}
                 </div>
             </div>
@@ -92,4 +102,10 @@
 
         </div>
     </div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}
+{% block scriptsrc %}
+    {{url_for('static', filename='voting_logic.js')}}
 {% endblock %}

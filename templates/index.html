@@ -2,7 +2,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <div class="app">
+  <div class="app" >
     <div class="sidebar">
       <a class="btn" href="/createcommunity"> + Create community </a>
       {% for community in communities %}
@@ -10,12 +10,20 @@
       {% endfor %}
     </div>
     <div class="posts-section">
+      <form action="{{ url_for('filter_posts') }}" id="filter-form" method="POST">
+        <input type="hidden" name="redirect_to" value="index">
+        <select name="filter_option">
+          <option value="hot" {% if request.args.get('filter_option') == 'hot' %}selected{% endif %}>Hot</option>
+          <option value="new" {% if request.args.get('filter_option') == 'new' %}selected{% endif %}>New</option>
+          <option value="top" {% if request.args.get('filter_option') == 'top' %}selected{% endif %}>Top</option>
+        </select>
+        <button type="submit">Filter</button>
+      </form>
       {% for post in posts %}
       <div class="posts">
         <a href="{{ url_for('show_community', community_name=post.community.name) }}" class="community-label"> 
           r/{{ post.community.name}}
         </a>
-        <p>Votes: <span id="vote-count-{{ post.id }}">{{ post.votes }}</span></p>
         <a href="{{ url_for('show_post', post_id=post.id) }}">  
           <h3 >{{post.title}}</h3> 
           <!-- if got img show img else the desc -->
@@ -26,8 +34,9 @@
           {% endif %}
         </a>
         <div class="clear"></div>
-        <button class="vote-btn" data-vote-type="upvote" type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>
-        <button class="vote-btn" data-vote-type="downvote" type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
+        <button class="vote-btn {{'voted' if vote_dict.get(post.id) == 'upvote'}}" data-vote-type="upvote" type="button" data-post-id="{{ post.id }}" onclick="upvotePost(this)">Upvote</button>
+        <p><span class="vote-btn" id="vote-count-{{ post.id }}">{{ post.votes }}</span></p>
+        <button class="vote-btn {{ 'voted' if vote_dict.get(post.id) == 'downvote' }} " data-vote-type="downvote" type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
       </div>
       <hr>
       {% endfor %}
@@ -36,100 +45,7 @@
 {% endblock %}
 
 {% block scripts %}
-
-function upvotePost(button) {
-  const postId = button.dataset.postId;
-
-  // Check if user has already upvoted
-  fetch(`/check_vote/${postId}/upvote`, { method: 'GET' })
-    .then(response => response.json())
-    .then(data => {
-      if (data.voted === true) {
-        // User already upvoted, so send unvote request
-        fetch(`/unvote/${postId}`, { method: 'POST' })
-          .then(response => response.json())
-          .then(data => {
-            if (data.message === 'Vote removed successfully') {
-              // Update vote count in the DOM
-              const voteCountElement = document.getElementById(`vote-count-${postId}`);
-              voteCountElement.textContent = data.votes;
-              button.classList.remove('voted');
-            } else {
-              console.error('Unvote failed:', data.error);
-            }
-          })
-          .catch(error => console.error('Error:', error));
-      } else {
-        // Send upvote request as before
-        fetch(`/upvote/${postId}`, { method: 'POST' })
-          .then(response => response.json())
-          .then(data => {
-            if (data.message === 'Upvoted successfully') {
-              // Update vote count in the DOM
-              const voteCountElement = document.getElementById(`vote-count-${postId}`);
-              voteCountElement.textContent = data.votes;
-              // Get the other button element
-              const otherButton = document.querySelector(`[data-vote-type="downvote"]`);
-            
-              // Remove the "voted" class from the other button
-              otherButton.classList.remove('voted');
-              button.classList.add('voted');
-            } else {
-              console.error('Upvote failed:', data.error);
-            }
-          })
-          .catch(error => console.error('Error:', error));
-      }
-    })
-    .catch(error => console.error('Error:', error));
-}
-
-
-function downvotePost(button) {
-  const postId = button.dataset.postId;
-
-  // Check if user has already downvoted
-  fetch(`/check_vote/${postId}/downvote`, { method: 'GET' })
-      .then(response => response.json())
-      .then(data => {
-          if (data.voted === true) {
-              // User already downvoted, so send unvote request
-              fetch(`/unvote/${postId}`, { method: 'POST' })
-                  .then(response => response.json())
-                  .then(data => {
-                      if (data.message === 'Vote removed successfully') {
-                          // Update vote count in the DOM
-                          const voteCountElement = document.getElementById(`vote-count-${postId}`);
-                          voteCountElement.textContent = data.votes;
-                          button.classList.remove('voted');
-                      } else {
-                          console.error('Unvote failed:', data.error);
-                      }
-                  })
-                  .catch(error => console.error('Error:', error));
-          } else {
-            // Send downvote request as before
-            fetch(`/downvote/${postId}`, { method: 'POST' })
-              .then(response => response.json())
-              .then(data => {
-                if (data.message === 'Downvoted successfully') {
-                  // Update vote count in the DOM
-                  const voteCountElement = document.getElementById(`vote-count-${postId}`);
-                  voteCountElement.textContent = data.votes;
-                  const otherButton = document.querySelector(`[data-vote-type="upvote"]`);
-            
-                  // Remove the "voted" class from the other button
-                  otherButton.classList.remove('voted');
-                  button.classList.add('voted');
-                } else {
-                  console.error('Downvote failed:', data.error);
-                }
-              })
-              .catch(error => console.error('Error:', error));
-          }
-      })
-      .catch(error => console.error('Error:', error));
-}
-
-
+{% endblock %}
+{% block scriptsrc %}
+  {{url_for('static', filename='voting_logic.js')}}
 {% endblock %}

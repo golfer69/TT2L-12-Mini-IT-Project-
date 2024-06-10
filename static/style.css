@@ -278,6 +278,8 @@ input[type=text] {
 }
 .comment-section {
   padding-bottom: 50px;
+  margin-top: 30px;
+  display: block;
 }
 .username,
 .comment-content{
@@ -285,13 +287,15 @@ input[type=text] {
 }
 .comment {
  text-align: left;
- justify-content: center;
+ justify-content: left;
  display: flex;
- margin: 5px 0;
+ margin: 10px 0;
 }
+/* .comments {
+ } */
 .comment-delete {
   display: flex;
-  margin: 0 30px;
+  margin-left: 30px;
 }
 .vote-btn {
   float: left !important;
@@ -403,4 +407,19 @@ input[type=text] {
   margin-top: 50px;
   color: purple;
   text-decoration: underline;
+.vote-section {
+  margin: 3px;
+  display: block;
+}
+.comment-vote-section button{
+  all: unset;
+  display: block;
+  border: 1px solid black ;
+  border-radius: 5px;
+  padding: 3px;
+  width: 90%;
+  text-align: center;
+}
+.comment-vote-section {
+  margin: 0 13px;
 }
