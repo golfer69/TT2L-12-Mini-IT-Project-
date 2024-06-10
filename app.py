@@ -55,7 +55,7 @@ class Post(db.Model):
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     community_id = db.Column(db.Integer, db.ForeignKey('community.id'))
     votes = db.Column(db.Integer, default=0)
-    hidden_votes = db.Column(db.Integer, default=0) # for algorithms
+    hidden_votes = db.Column(db.Integer, nullable=False, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     
 class Comment(db.Model):
@@ -564,16 +564,12 @@ def check_vote(post_id, vote_type):
 
 def calculate_hidden_votes(posted_time, decay_rate=0.001):
     current_time = datetime.now()
-    
-    # Calculate the time difference in seconds
-    time_difference = (current_time - posted_time).total_seconds()
-    
-    # Calculate hidden votes and round to the nearest whole number
-    hidden_votes = round(time_difference * decay_rate)
+    time_difference = (current_time - posted_time).total_seconds() # Calculate the time difference in seconds
+    hidden_votes = round(time_difference * decay_rate) # Calculate hidden votes and round to the nearest whole number
     return hidden_votes
 
-@app.route('/hidden_votes')
-def hidden_votes():
+#@app.route('/hidden_votes')
+#def hidden_votes():
     # Example: Posted time (2 hours ago from now)
     posted_time = datetime.now() - timedelta(hours=2)
 
@@ -586,6 +582,29 @@ def hidden_votes():
     print(f"Decay Rate: {decay_rate} votes/second")
     print(f"Hidden Votes: {hidden_votes}")
     
+@app.route('/add_post')
+def add_post():
+    # Example: Add a new post with current time
+    posted_time = datetime.now() - timedelta(hours=2)  # Example: Posted 2 hours ago
+    new_post = Post(posted_time=posted_time)
+    db.session.add(new_post)
+    db.session.commit()
+    return jsonify({"message": "Post added", "posted_time": posted_time})
+
+@app.route('/calculate_votes')
+def calculate_votes():
+    posts = Post.query.all()
+    results = []
+    for post in posts:
+        hidden_votes = calculate_hidden_votes(post.posted_time)
+        post.hidden_votes = hidden_votes
+        db.session.commit()  # Save the updated hidden votes to the database
+        results.append({
+            "post_id": post.id,
+            "posted_time": post.posted_time,
+            "hidden_votes": post.hidden_votes
+        })
+    return jsonify(results)
 
 if __name__ == "__main__":
     with app.app_context():
