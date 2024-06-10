@@ -419,6 +419,8 @@ def user_details(id):
     return render_template('user_details.html', title='User Details', form=form)
 
 
+
+
 @app.route('/report/<int:post_id>', methods=['GET', 'POST'])
 @login_required
 def report_post(post_id):
@@ -431,35 +433,39 @@ def report_post(post_id):
         return redirect(url_for('show_post', post_id=post.id))
     return render_template('report.html', form=form, post=post, page_title="Report Post")
 
-@app.route('/admin/reports/new', methods=['GET', 'POST'])
+@app.route('/admin/reports', methods=['GET', 'POST'])
 @login_required
-def new_reports():
-    if current_user.id not in [1, 6]:
+def reports():
+    if current_user.id not in [1, 6]:  # Adjust this condition based on your admin user IDs
         return redirect(url_for('index'))
-    new_reports= Report.query.filter_by(status='Pending').all()
-    return render_template('new_reports.html', reports=new_reports, page_title="New Reports")
 
-
-@app.route('/admin/reports/resolved', methods=['GET','POST'])
-@login_required
-def resolved_reports():
-    if current_user.id not in [1, 6]:
-        return redirect(url_for('index'))
+    new_reports = Report.query.filter_by(status='Pending').all()
     resolved_reports = Report.query.filter_by(status='Resolved').all()
-    return render_template('resolved_reports.html', reports=resolved_reports, page_title='Resolved Reports')
+
+    return render_template('admin_reports.html', new_reports=new_reports, resolved_reports=resolved_reports, page_title="Reports")
+
+
+# @app.route('/admin/reports/resolved', methods=['GET','POST'])
+# @login_required
+# def resolved_reports():
+#     if current_user.id not in [1, 6]:
+#         return redirect(url_for('index'))
+#     resolved_reports = Report.query.filter_by(status='Resolved').all()
+#     return render_template('admin_reports.html', reports=resolved_reports, page_title='Resolved Reports')
 
 
 
-@app.route('/admin/report/<int:report_id>/resolve', methods=["POST"])
+@app.route('/admin/reports/resolve/<int:report_id>', methods=['POST'])
 @login_required
 def resolve_report(report_id):
-    if current_user.id not in [1,6]:
+    if current_user.id not in [1, 6]:  # Adjust this condition based on your admin user IDs
         return redirect(url_for('index'))
-    report=Report.query.get_or_404(report_id)
-    if report:
-        report.status='Resolved'
-        db.session.commit()
-        return redirect(url_for('new_reports'))
+
+    report = Report.query.get_or_404(report_id)
+    report.status = 'Resolved'
+    db.session.commit()
+
+    return redirect(url_for('reports'))
 
 
 

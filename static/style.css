@@ -392,3 +392,15 @@ input[type=text] {
   text-decoration-color: blue;
   color: blue;
 }
+
+.resolved-reports{
+  margin-top: 100px;
+  color: navy;
+  text-decoration: underline;
+}
+
+.new-reports{
+  margin-top: 50px;
+  color: purple;
+  text-decoration: underline;
+}
