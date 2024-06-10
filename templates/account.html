@@ -21,7 +21,7 @@
               {%endif%}
               <strong>Username: </strong> {{ user.username }}<br>
               <strong>Email: </strong> {{ user.email }}<br>
-              <strong>Date Joined: </strong> {{ user.date_joined }}<br>
+              <strong>Date Joined: </strong> {{ user.date_joined.strftime('%Y-%m-%d %H:%M') }}<br>
               <strong>Name: </strong> {{ update_user.name }}<br>
               <strong>Age: </strong> {{ update_user.age }}<br>
               <strong>About: </strong> {{ update_user.about }}<br>
@@ -32,7 +32,7 @@
               <img src="{{url_for('static', filename='profile_pics/blank_profile_photo.png')}}" alt="Profile Picture" class="img-thumbnail"><br>
               <strong>Username: </strong> {{ user.username }}<br>
               <strong>Email: </strong> {{ user.email }}<br>
-              <strong>Date Joined: </strong> {{ user.date_joined }}<br>
+              <strong>Date Joined: </strong> {{ user.date_joined.strftime('%Y-%m-%d %H:%M') }}<br>
               <p>No additional details provided</p>
             {%endif%}
         </p>

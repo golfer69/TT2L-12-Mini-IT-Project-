@@ -14,7 +14,9 @@
                     <p>by: Anonymous</p>
                     {% else %}
                     <p>by: {{post.poster.username}}</p>
-                {% endif %}    
+                {% endif %}
+                <button><a href="{{url_for('report_post', post_id=post.id)}}">Report Post</a></button>
+                
             <!-- check if theres img -->
             {% if post.image_filename %} 
                 <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
