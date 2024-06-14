@@ -396,15 +396,43 @@ input[type=text] {
 
 .resolved-reports{
   margin-top: 100px;
-  color: navy;
+  color: rgb(44,47,88);
   text-decoration: underline;
+  font-size:larger;
 }
 
 .new-reports{
   margin-top: 50px;
-  color: purple;
+  color: rgb(44, 47, 88);
   text-decoration: underline;
+  font-size:larger;
 }
+
+.report-table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+.report-table th {
+  background-color:#f2f2f2;
+  border: 1px solid #ddd;
+  padding:8px;
+  text-align:left;
+}
+
+.report-table td {
+  border:1px solid #ddd;
+  padding:8px;
+}
+
+.report-table tr:hover {
+  background-color:#f2f2f2;
+}
+
+.report-table tr:nth-child(even){
+  background-color:#f9f9f9;
+}
+
 .vote-section {
   margin: 3px;
   display: block;

@@ -20,6 +20,7 @@ from win10toast import ToastNotifier
 
 
 
+
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY']='chickenstuffe'
