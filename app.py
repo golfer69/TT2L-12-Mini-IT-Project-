@@ -13,8 +13,8 @@ from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 import uuid as uuid
 from flask_migrate import Migrate
-from sqlalchemy import desc
-
+from sqlalchemy import desc, UniqueConstraint
+from sqlalchemy.exc import IntegrityError
 
 def create_app():
     app = Flask(__name__)
@@ -103,10 +103,12 @@ class Comment(db.Model):
 class Community(db.Model):
     __tablename__ = 'community'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
+    name = db.Column(db.String(50), nullable=False, unique=True)
     about = db.Column(db.String(255))
     community = db.relationship('Post', backref='community', lazy=True, cascade="all, delete-orphan")
     comm_profile_pic= db.Column(db.String(10000), nullable=True)
+    __table_args__ = (UniqueConstraint('name', name='unique_community_name'),)
+
 
 
 class Votes(db.Model):
@@ -327,9 +329,14 @@ def upload():
                 comm_profile_pic=request.files.get('comm_profile_pic')
                 comm_profile_pic_filename=save_comm_profile_pic(comm_profile_pic)
                 community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename)
-                db.session.add(community)
-                db.session.commit()
-
+                try:
+                    db.session.add(community)
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
+                    # Handle unique constraint violation (e.g., flash error message)
+                    return render_template('createcomm.html', error=1)
+                    
             if item == "comment":
                 poster_id= current_user.id
                 comment_content = request.form["comment-content"]
