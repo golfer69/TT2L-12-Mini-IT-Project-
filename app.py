@@ -512,7 +512,6 @@ def reports():
 
 
 
-
 @app.route('/admin/reports/resolve/<int:report_id>', methods=['POST'])
 @login_required
 def resolve_report(report_id):
@@ -536,8 +535,6 @@ def delete_post(post_id):
     db.session.delete(post)
     db.session.commit()
     return redirect(url_for('reports'))
-
-
 
 
 @app.route('/delete', methods=['POST'])
