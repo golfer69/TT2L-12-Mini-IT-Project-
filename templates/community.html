@@ -28,6 +28,7 @@
       <div class="posts">      
         <a href="{{ url_for('show_post', post_id=post.id) }}">  
             <h3>{{post.title}}</h3>
+            {{ post.date_added.strftime('%d-%m-%Y %H:%M') }}  <!--display date posted-->
             <!-- if got img show img else the desc -->
             {% if post.image_filename %} 
                 <img src="{{ url_for('serve_files', filename=post.image_filename) }}">

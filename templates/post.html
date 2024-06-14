@@ -9,7 +9,6 @@
                     r/{{ post.community.name}}
                 </a>
                 <h2>{{post.title}}</h2> <br>
-             
                 <p>{{ post.content }}</p> <br>
                 {% if post.anonymous == 1 %}
                     <p>by: Anonymous</p>
@@ -81,6 +80,7 @@
                             {% endif %}
                             <div>{{comment.date_added}}</div>
                             <div class="comment-content">{{comment.comment_content}}</div><br>
+                            {{ post.date_added.strftime('%d-%m-%Y %H:%M') }}  <!--display date posted comment -->
                             {% if current_user.is_authenticated %}
                                 {% if current_user.id==comment.poster_id  %}
                                     <div class="comment-delete">
