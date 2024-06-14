@@ -5,11 +5,13 @@
 
   <div class="user-posts">
     <div class="app">
+      
       <div class="posts-section">
           {% for post in posts %}
         <div class="posts">      
           <a href="{{ url_for('show_post', post_id=post.id) }}">  
-              <h3>{{post.title}}</h3> <br>
+            {{ post.date_added.strftime('%d-%m-%Y %H:%M') }}  
+            <h3>{{post.title}}</h3> <br>
               {% if post.image_filename %}
                 <!-- <div style="display: flex; flex-direction: column;"> -->
                   <img src="{{ url_for('serve_files', filename=post.image_filename) }}">

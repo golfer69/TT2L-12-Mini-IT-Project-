@@ -75,6 +75,7 @@ class Post(db.Model):
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     reports = db.relationship('Report', backref='post', lazy=True)
+     
     
 
     def get_hot_filter(self):
