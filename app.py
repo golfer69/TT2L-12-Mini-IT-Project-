@@ -53,6 +53,8 @@ class User(db.Model, UserMixin):
     updates= db.relationship('Update', backref='poster', lazy=True)
     date_joined= db.Column(db.DateTime, default=datetime.now)
     reports= db.relationship('Report', backref='reporter', lazy=True)
+    comm_creator_id=db.relationship('Community', backref='comm', lazy=True)
+
 
 
     
@@ -107,6 +109,7 @@ class Community(db.Model):
     about = db.Column(db.String(255))
     community = db.relationship('Post', backref='community', lazy=True)
     comm_profile_pic= db.Column(db.String(10000), nullable=True)
+    user_id=db.Column(db.Integer, db.ForeignKey('user.id'))
 
 
 class Votes(db.Model):
@@ -265,28 +268,6 @@ def create():
         profile_pic=url_for('static', filename='profile_pics/' + update_user.profile_pic)
     return render_template('create.html', communities=communities, profile_pic=profile_pic, page_title="Create a post")
 
-@app.route('/createcommunity', methods=['GET'])
-@login_required
-def createcomm():
-    return render_template('createcomm.html', page_title="Create community")
-
-@app.route('/updatecommunity/<int:id>', methods=['GET', 'POST'])
-@login_required
-def updatecomm(id):
-    form=UpdateCommunityForm()
-    community=Community.query.get(id)
-    if form.validate_on_submit():
-        community.about=form.about.data
-
-        if form.comm_profile_pic:
-            comm_profile_pic_filename=save_comm_profile_pic(form.comm_profile_pic.data)
-            community.comm_profile_pic=comm_profile_pic_filename
-
-        db.session.commit()
-        return redirect(url_for('show_community', community_name=community.name))
-    elif request.method=='GET':
-        form.about.data=community.about
-    return render_template('updatecomm.html', form=form, community=community, page_title="Update community")
 
 @app.route('/upload', methods=['GET','POST'])
 @login_required
@@ -322,7 +303,7 @@ def upload():
                 about = request.form.get('about')
                 comm_profile_pic=request.files.get('comm_profile_pic')
                 comm_profile_pic_filename=save_comm_profile_pic(comm_profile_pic)
-                community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename)
+                community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename, user_id=current_user.id)
                 db.session.add(community)
                 db.session.commit()
 
@@ -339,6 +320,30 @@ def upload():
                 return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
             
     return redirect('/')
+
+
+@app.route('/createcommunity', methods=['GET', 'POST'])
+@login_required
+def createcomm():
+    return render_template('createcomm.html', page_title="Create community")
+
+@app.route('/updatecommunity/<int:id>', methods=['GET', 'POST'])
+@login_required
+def updatecomm(id):
+    form=UpdateCommunityForm()
+    community=Community.query.get(id)
+    if form.validate_on_submit():
+        community.about=form.about.data
+
+        if form.comm_profile_pic:
+            comm_profile_pic_filename=save_comm_profile_pic(form.comm_profile_pic.data)
+            community.comm_profile_pic=comm_profile_pic_filename
+
+        db.session.commit()
+        return redirect(url_for('show_community', community_name=community.name))
+    elif request.method=='GET':
+        form.about.data=community.about
+    return render_template('updatecomm.html', form=form, community=community, page_title="Update community")
 
 @app.route('/update', methods=['GET','POST'])
 def update():
