@@ -13,13 +13,9 @@ from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 import uuid as uuid
 from flask_migrate import Migrate
-from sqlalchemy import desc
-from apscheduler.schedulers.background import BackgroundScheduler
+from sqlalchemy import desc, UniqueConstraint
+from sqlalchemy.exc import IntegrityError
 from win10toast import ToastNotifier
-
-
-
-
 
 def create_app():
     app = Flask(__name__)
@@ -37,6 +33,7 @@ db = SQLAlchemy(app)
 migrate=Migrate(app, db)
 bcrypt=Bcrypt(app)
 migrate = Migrate(app,db)
+my_notification = ToastNotifier()
 
 login_manager=LoginManager()
 login_manager.init_app(app)
@@ -53,11 +50,12 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
     email= db.Column(db.String(80), nullable=False, unique=True)
-    posts= db.relationship('Post', backref='poster', lazy=True)
-    comments= db.relationship('Comment', backref='poster', lazy=True)
-    updates= db.relationship('Update', backref='poster', lazy=True)
+    posts= db.relationship('Post', backref='poster', lazy=True,cascade="all, delete-orphan")
+    comments= db.relationship('Comment', backref='poster', lazy=True,cascade="all, delete-orphan")
+    updates= db.relationship('Update', backref='poster', lazy=True,cascade="all, delete-orphan")
     date_joined= db.Column(db.DateTime, default=datetime.now)
-    reports= db.relationship('Report', backref='reporter', lazy=True)
+    reports= db.relationship('Report', backref='reporter', lazy=True,cascade="all, delete-orphan")
+    admin = db.Column(db.Integer, default=0)
 
 
     
@@ -73,7 +71,7 @@ class Post(db.Model):
     anonymous  = db.Column(db.Integer)
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
-    id_for_comments = db.relationship('Comment', backref='text', lazy=True)
+    id_for_comments = db.relationship('Comment', backref='text', lazy=True, cascade="all, delete-orphan")
     reports = db.relationship('Report', backref='post', lazy=True)
      
     
@@ -109,10 +107,12 @@ class Comment(db.Model):
 class Community(db.Model):
     __tablename__ = 'community'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50))
+    name = db.Column(db.String(50), nullable=False, unique=True)
     about = db.Column(db.String(255))
-    community = db.relationship('Post', backref='community', lazy=True)
+    community = db.relationship('Post', backref='community', lazy=True, cascade="all, delete-orphan")
     comm_profile_pic= db.Column(db.String(10000), nullable=True)
+    __table_args__ = (UniqueConstraint('name', name='unique_community_name'),)
+
 
 
 class Votes(db.Model):
@@ -145,6 +145,10 @@ class Report(db.Model):
     date_reported=db.Column(db.DateTime, default=datetime.now)
     status= db.Column(db.String(100), default='Pending')
 
+class LastDecay(db.Model):
+    _tablename = 'last_decay'
+    id = db.Column(db.Integer, primary_key=True)
+    last_update_date = db.Column(db.DateTime)
 
 
 # create database
@@ -310,11 +314,8 @@ def upload():
                 post = Post(title=title, content=content, poster_id=poster, community_id=community_id, anonymous=anonymous)
                 db.session.add(post)
                 db.session.commit()
-                my_notification = ToastNotifier()
-                my_notification.show_toast("MMU Reddit","New post uploaded!")
                 
                 
-            
                 if file:
 
                     filename = secure_filename(file.filename)
@@ -327,20 +328,25 @@ def upload():
                     db.session.add(post)
                     db.session.commit()
 
+                # my_notification.show_toast("MMU Reddit","New post uploaded!")
+                return redirect('/')
+
+
             if item == "community":
                 name = request.form.get('name')
                 about = request.form.get('about')
                 comm_profile_pic=request.files.get('comm_profile_pic')
                 comm_profile_pic_filename=save_comm_profile_pic(comm_profile_pic)
                 community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename)
-                db.session.add(community)
-                db.session.commit()
+                try:
+                    db.session.add(community)
+                    db.session.commit()
+                except IntegrityError:
+                    db.session.rollback()
+                    # Handle unique constraint violation (e.g., flash error message)
+                    return render_template('createcomm.html', error=1)
                 #notification
-                my_notification = ToastNotifier()
-                my_notification.show_toast("New community created")
                 my_notification.show_toast("MMU Reddit","New community created!")
-
-                
 
             if item == "comment":
                 poster_id= current_user.id
@@ -355,7 +361,7 @@ def upload():
                 # Redirect back to the updated post page using the correct post ID
                 return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
 
-    return redirect('/')
+        return redirect('/')
 
 @app.route('/update', methods=['GET','POST'])
 def update():
@@ -503,7 +509,7 @@ def report_post(post_id):
 @app.route('/admin/reports', methods=['GET', 'POST'])
 @login_required
 def reports():
-    if current_user.id not in [1, 6]:  # Adjust this condition based on your admin user IDs
+    if current_user.admin == 0:  # Adjust this condition based on your admin user IDs
         return redirect(url_for('index'))
 
     new_reports = Report.query.filter_by(status='Pending').all()
@@ -516,7 +522,7 @@ def reports():
 @app.route('/admin/reports/resolve/<int:report_id>', methods=['POST'])
 @login_required
 def resolve_report(report_id):
-    if current_user.id not in [1, 6]:  # Adjust this condition based on your admin user IDs
+    if current_user.admin == 0:  # Adjust this condition based on your admin user IDs
         return redirect(url_for('index'))
 
     report = Report.query.get_or_404(report_id)
@@ -530,7 +536,7 @@ def resolve_report(report_id):
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 @login_required
 def delete_post(post_id):
-    if current_user.id not in [1, 6]:
+    if current_user.admin == 0:
         return redirect(url_for('index'))
     post = Post.query.get_or_404(post_id)
     db.session.delete(post)
@@ -546,7 +552,7 @@ def delete():
         if item == "post":
             post_id = request.form.get('post_id')
             post = Post.query.get(post_id)
-            if post.poster_id == current_user.id:
+            if post.poster_id == current_user.id or current_user.admin == 1:
                 db.session.delete(post)
                 db.session.commit()
                 # Delete the image file if it exists
@@ -563,7 +569,7 @@ def delete():
             comment_id = request.form.get('comment_id')
             post_id = request.form.get('post_id')
             comment = Comment.query.get(comment_id)
-            if comment.poster_id == current_user.id:
+            if comment.poster_id == current_user.id or current_user.admin == 1:
                 db.session.delete(comment)
                 db.session.commit()
             return redirect(url_for('show_post', post_id=post_id))
@@ -608,7 +614,7 @@ def show_community(community_name):
     if community:
       community_id = community.id # Get the id of the community
     community = Community.query.get(community_id)
-    community_posts = Post.query.filter_by(community_id=community_id)
+    posts = Post.query.filter_by(community_id=community_id)
     filter_option = request.args.get('filter_option')
     if filter_option:
         if filter_option == 'top':
@@ -629,6 +635,21 @@ def show_community(community_name):
     vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
     return render_template('community.html', posts=posts, community=community, page_title=community_name, vote_dict=vote_dict)
 
+@app.route('/community/<string:community_name>/delete', methods=['POST'])
+@login_required
+def delete_community(community_name):
+    if not current_user.admin:
+        return jsonify({'error': 'Unauthorized: Only admins can delete communities'}), 403
+    if current_user.admin == 1:
+        # Fetch the community to delete
+        community = Community.query.filter_by(name=community_name).first()
+        if community is None:
+            return jsonify({'error': 'Community not found'}), 404
+        # Delete the community (assuming you have a delete method in your ORM)
+        db.session.delete(community)
+        db.session.commit()
+
+        return redirect(url_for('index'))
 
 # Upvotes and downvotes
 @app.route('/upvote/<int:post_id>', methods=['POST'])
@@ -814,27 +835,32 @@ def decay_hidden_votes(post):
 
 # to decay
 def decay_all_hidden_votes():
-    posts = Post.query.all()
+    last_decay = LastDecay.query.first()
+    # Calculate the difference in days
+    if last_decay:
+        time_delta = (datetime.now() - last_decay.last_update_date).days
+        # if over 1 day
+        if time_delta > 1:
+            posts = Post.query.all()
 
-    for post in posts:
-        decayed_votes = decay_hidden_votes(post)
-        post.hidden_votes = decayed_votes
+            for post in posts:
+                decayed_votes = decay_hidden_votes(post)
+                post.hidden_votes = decayed_votes
+            
+            # Update the existing entry
+            last_decay.last_update_date = datetime.now()
 
-    db.session.commit()
+            db.session.commit()
 
-#decaying the votes
-def schedule_decay():
-    with app.app_context():
-        decay_all_hidden_votes()
+    if last_decay is None:
+        # Create a new entry if none exists
+        last_decay = LastDecay(last_update_date=datetime.now())
+        db.session.add(last_decay)
+        db.session.commit()
 
-# Create a scheduler instance
-scheduler = BackgroundScheduler()
-scheduler.add_job(schedule_decay, 'interval', days=1)
-scheduler.start()
-
-#calculate decayed time
-
-
+# run the function
+with app.app_context():
+    decay_all_hidden_votes()
 
 if __name__ == '__main__':
     app.run(debug=True)

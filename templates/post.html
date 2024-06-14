@@ -82,7 +82,7 @@
                             <div>{{comment.date_added}}</div>
                             <div class="comment-content">{{comment.comment_content}}</div><br>
                             {% if current_user.is_authenticated %}
-                                {% if current_user.id==comment.poster_id  %}
+                                {% if current_user.id==comment.poster_id or current_user.admin == 1 %}
                                     <div class="comment-delete">
                                         <form action="{{ url_for('delete')}}" method="POST" class="float-right">
                                             <input type="hidden" name="item" value="comment" >

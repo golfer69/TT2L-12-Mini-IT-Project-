@@ -11,8 +11,9 @@
     {%endif%}
     <p>{{community.about}}</p>
     <div class="update-user-button">
-      <button><a href="{{url_for('updatecomm', id=community.id)}}" class="btn btn-primary">Update Community</button>
+      <button><a href="{{url_for('updatecomm', id=community.id)}}" class="btn btn-primary">Update Community</button></a>
     
+    </div>
     <div class="posts-section">
       <form action="{{ url_for('filter_posts') }}" id="filter-form" method="POST">
         <input type="hidden" name="redirect_to" value="community">
@@ -22,7 +23,7 @@
           <option value="new" {% if request.args.get('filter_option') == 'new' %}selected{% endif %}>New</option>
           <option value="top" {% if request.args.get('filter_option') == 'top' %}selected{% endif %}>Top</option>
         </select>
-        <button type="submit">Filter</button>
+        <button type="submit">Sort</button>
       </form>
       {% for post in posts %}
       <div class="posts">      

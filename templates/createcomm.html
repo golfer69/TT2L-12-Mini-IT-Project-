@@ -4,7 +4,7 @@
     <!--  create form  -->
     <div class="form-section">
 
-      {% if current_user.id == 5 or current_user.id == 6 %}
+      {% if current_user.admin == 1: %}
         <h2>Administrator</h2>
       {% endif %}
     
@@ -17,6 +17,17 @@
         <textarea type="text" name="about"  class="form-content" placeholder="About (you can change this later)"></textarea><br>
         <input type="submit" value="Upload">
       </form>
-
+      
   </div>
+  {% if error == 1 %}
+    <script>
+      error();
+    </script>
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+function error() {
+  alert("Community name already exists");
+}
 {% endblock %}
