@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField, FileField
@@ -310,7 +310,7 @@ def upload():
                 db.session.add(post)
                 db.session.commit()
                 my_notification = ToastNotifier()
-                my_notification.show_toast("New Post Uploaded")
+                my_notification.show_toast("MMU Reddit","New post uploaded!")
 
 
 
@@ -591,7 +591,13 @@ def show_post(post_id):
     if not post:
         return redirect('/')  # Handle non-existent post
     
-    return render_template('post.html', post=post, comments=comments, page_title=post.title, vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
+#calculate the time posted
+    current_time=datetime.now()
+    post_age_days=(current_time-post.date_added).days
+    decay_factor=0.99 #decay by 1% per day
+    decayed_time=post.date_added + timedelta(days=post_age_days)
+
+    return render_template('post.html', post=post, comments=comments, page_title=post.title, decayed_time=decayed_time,vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
 
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
@@ -825,6 +831,8 @@ def schedule_decay():
 scheduler = BackgroundScheduler()
 scheduler.add_job(schedule_decay, 'interval', days=1)
 scheduler.start()
+
+#calculate decayed time
 
 
 
