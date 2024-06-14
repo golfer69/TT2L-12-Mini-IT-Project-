@@ -311,11 +311,8 @@ def upload():
                 db.session.commit()
                 my_notification = ToastNotifier()
                 my_notification.show_toast("MMU Reddit","New post uploaded!")
-
-
-
-
-
+                
+                
             
                 if file:
 
@@ -340,6 +337,8 @@ def upload():
                 #notification
                 my_notification = ToastNotifier()
                 my_notification.show_toast("New community created")
+                my_notification.show_toast("MMU Reddit","New community created!")
+
                 
 
             if item == "comment":
