@@ -34,6 +34,12 @@
             <a class="float-right" href="{{ url_for('account') }}"><img class="profile-pic" src="{{ url_for('static', filename='profile_pics/blank_profile_photo.png') }}" alt="Profile Picture"></a>
           {%endif%}
         </div>
+        <ul>
+          {%for notification in notifications %}
+          <li>{{notification}}</li>
+          <a href="{{url_for('notifications')}}">Notification</a>
+          {% endfor %}
+      </ul>
         <a class="btn" href="/create"> + Create</a>
 
     </div>

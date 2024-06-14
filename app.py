@@ -17,6 +17,7 @@ from sqlalchemy import desc
 from apscheduler.schedulers.background import BackgroundScheduler
 
 
+
 def create_app():
     app = Flask(__name__)
     app.config['SECRET_KEY']='chickenstuffe'
@@ -37,6 +38,7 @@ migrate = Migrate(app,db)
 login_manager=LoginManager()
 login_manager.init_app(app)
 login_manager.login_view='login'
+notifications=[]
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -304,6 +306,8 @@ def upload():
                 post = Post(title=title, content=content, poster_id=poster, community_id=community_id, anonymous=anonymous)
                 db.session.add(post)
                 db.session.commit()
+                #add trigger notification
+                notify_post(post)
             
                 if file:
 
@@ -325,6 +329,8 @@ def upload():
                 community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename)
                 db.session.add(community)
                 db.session.commit()
+                #notification
+                notify_community(community)
 
             if item == "comment":
                 poster_id= current_user.id
@@ -335,9 +341,10 @@ def upload():
                 db.session.add(comment)
                 db.session.commit()
 
+
                 # Redirect back to the updated post page using the correct post ID
                 return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
-            
+
     return redirect('/')
 
 @app.route('/update', methods=['GET','POST'])
@@ -771,6 +778,11 @@ def filter_posts():
   if redirect_to == 'community':
     return redirect(url_for('show_community', filter_option=filter_option, community_name=community_name))
 
+@app.route('/notifications',methods=['GET'])
+def notifications ():
+    return render_template('notifications.html',notifications=notifications)
+
+
 # decay function
 def decay_hidden_votes(post):
     current_time = datetime.now()
@@ -809,6 +821,20 @@ def schedule_decay():
 scheduler = BackgroundScheduler()
 scheduler.add_job(schedule_decay, 'interval', days=1)
 scheduler.start()
+
+#create a notification system
+
+def send_notifications(message):
+    notifications.append(message)
+
+#notification for post
+def notify_post(post):
+    message=f"New post'{post.title} uploaded'"
+    send_notifications(message)
+
+#notification for community
+def notify_community(community):
+    message=f"New community'{community.name} created'"
 
 if __name__ == '__main__':
     app.run(debug=True)
