@@ -54,7 +54,7 @@ class User(db.Model, UserMixin):
     comments= db.relationship('Comment', backref='poster', lazy=True,cascade="all, delete-orphan")
     updates= db.relationship('Update', backref='poster', lazy=True,cascade="all, delete-orphan")
     date_joined= db.Column(db.DateTime, default=datetime.now)
-    comm_creator_id=db.relationship('Community', backref='comm', lazy=True
+    comm_creator_id=db.relationship('Community', backref='comm', lazy=True)
     reports= db.relationship('Report', backref='reporter', lazy=True,cascade="all, delete-orphan")
     admin = db.Column(db.Integer, default=0)
 
