@@ -355,30 +355,27 @@ input[type=text] {
 }
 
 .profile-pic{
-  max-width:22px;
-  max-height: 22px;
+  width:22px;
+  height: 22px;
   border-radius: 10px;
   border-color: white;
   float: right;
   align-items: flex-end;
   margin: auto;
   border: 1px solid #ddd;
-  /* padding: 5px; */
-  width: 150px;
 }
 
 
 .comm-profile-pic{
-  max-width:400px;
-  max-height: 600px;
+  width:150px;
+  height: 150px;
   border-radius: 50%;
   border-color: white;
   margin: auto;
   border: 1px solid #ddd;
   display: block;
   object-fit: cover;
-  /* padding: 5px; */
-  /* width: 150px; */
+  padding: 5px; 
 }
 
 .table{

@@ -498,15 +498,6 @@ def reports():
     return render_template('admin_reports.html', new_reports=new_reports, resolved_reports=resolved_reports, page_title="Reports")
 
 
-# @app.route('/admin/reports/resolved', methods=['GET','POST'])
-# @login_required
-# def resolved_reports():
-#     if current_user.id not in [1, 6]:
-#         return redirect(url_for('index'))
-#     resolved_reports = Report.query.filter_by(status='Resolved').all()
-#     return render_template('admin_reports.html', reports=resolved_reports, page_title='Resolved Reports')
-
-
 
 @app.route('/admin/reports/resolve/<int:report_id>', methods=['POST'])
 @login_required
@@ -532,20 +523,7 @@ def delete_post(post_id):
     db.session.commit()
     return redirect(url_for('reports'))
 
-# @app.route('/suspend_post/<int:user_id>', methods=['POST'])
-# @login_required
-# def delete_post(post_id):
-#     if current_user.id not in [1, 6]:
-#         return redirect(url_for('index'))
-#     post = Post.query.get_or_404(post_id)
-#     db.session.delete(post)
-#     db.session.commit()
-#     return redirect(url_for('view_reports'))
 
-
-
-
-    
 @app.route('/delete', methods=['POST'])
 @login_required
 def delete():
