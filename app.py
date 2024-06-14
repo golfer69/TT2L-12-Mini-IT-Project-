@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField, FileField
@@ -15,6 +15,10 @@ import uuid as uuid
 from flask_migrate import Migrate
 from sqlalchemy import desc
 from apscheduler.schedulers.background import BackgroundScheduler
+from win10toast import ToastNotifier
+
+
+
 
 
 def create_app():
@@ -37,6 +41,7 @@ migrate = Migrate(app,db)
 login_manager=LoginManager()
 login_manager.init_app(app)
 login_manager.login_view='login'
+notifications=[]
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -70,6 +75,7 @@ class Post(db.Model):
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True)
     reports = db.relationship('Report', backref='post', lazy=True)
+     
     
 
     def get_hot_filter(self):
@@ -304,6 +310,10 @@ def upload():
                 post = Post(title=title, content=content, poster_id=poster, community_id=community_id, anonymous=anonymous)
                 db.session.add(post)
                 db.session.commit()
+                my_notification = ToastNotifier()
+                my_notification.show_toast("MMU Reddit","New post uploaded!")
+                
+                
             
                 if file:
 
@@ -325,6 +335,12 @@ def upload():
                 community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename)
                 db.session.add(community)
                 db.session.commit()
+                #notification
+                my_notification = ToastNotifier()
+                my_notification.show_toast("New community created")
+                my_notification.show_toast("MMU Reddit","New community created!")
+
+                
 
             if item == "comment":
                 poster_id= current_user.id
@@ -335,9 +351,10 @@ def upload():
                 db.session.add(comment)
                 db.session.commit()
 
+
                 # Redirect back to the updated post page using the correct post ID
                 return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
-            
+
     return redirect('/')
 
 @app.route('/update', methods=['GET','POST'])
@@ -574,7 +591,13 @@ def show_post(post_id):
     if not post:
         return redirect('/')  # Handle non-existent post
     
-    return render_template('post.html', post=post, comments=comments, page_title=post.title, vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
+#calculate the time posted
+    current_time=datetime.now()
+    post_age_days=(current_time-post.date_added).days
+    decay_factor=0.99 #decay by 1% per day
+    decayed_time=post.date_added + timedelta(days=post_age_days)
+
+    return render_template('post.html', post=post, comments=comments, page_title=post.title, decayed_time=decayed_time,vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
 
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
@@ -768,6 +791,8 @@ def filter_posts():
   if redirect_to == 'community':
     return redirect(url_for('show_community', filter_option=filter_option, community_name=community_name))
 
+
+
 # decay function
 def decay_hidden_votes(post):
     current_time = datetime.now()
@@ -806,6 +831,10 @@ def schedule_decay():
 scheduler = BackgroundScheduler()
 scheduler.add_job(schedule_decay, 'interval', days=1)
 scheduler.start()
+
+#calculate decayed time
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
