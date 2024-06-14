@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 import os 
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required, current_user
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_migrate import Migrate
 from flask_wtf import FlaskForm
 from wtforms import SubmitField, StringField, PasswordField, EmailField, FileField
@@ -15,6 +15,7 @@ import uuid as uuid
 from flask_migrate import Migrate
 from sqlalchemy import desc, UniqueConstraint
 from sqlalchemy.exc import IntegrityError
+from win10toast import ToastNotifier
 
 def create_app():
     app = Flask(__name__)
@@ -32,10 +33,12 @@ db = SQLAlchemy(app)
 migrate=Migrate(app, db)
 bcrypt=Bcrypt(app)
 migrate = Migrate(app,db)
+my_notification = ToastNotifier()
 
 login_manager=LoginManager()
 login_manager.init_app(app)
 login_manager.login_view='login'
+notifications=[]
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -70,6 +73,7 @@ class Post(db.Model):
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True, cascade="all, delete-orphan")
     reports = db.relationship('Report', backref='post', lazy=True)
+     
     
 
     def get_hot_filter(self):
@@ -310,7 +314,8 @@ def upload():
                 post = Post(title=title, content=content, poster_id=poster, community_id=community_id, anonymous=anonymous)
                 db.session.add(post)
                 db.session.commit()
-            
+                
+                
                 if file:
 
                     filename = secure_filename(file.filename)
@@ -322,6 +327,10 @@ def upload():
                     post.image_filename = filename
                     db.session.add(post)
                     db.session.commit()
+
+                # my_notification.show_toast("MMU Reddit","New post uploaded!")
+                return redirect('/')
+
 
             if item == "community":
                 name = request.form.get('name')
@@ -336,7 +345,9 @@ def upload():
                     db.session.rollback()
                     # Handle unique constraint violation (e.g., flash error message)
                     return render_template('createcomm.html', error=1)
-                    
+                #notification
+                my_notification.show_toast("MMU Reddit","New community created!")
+
             if item == "comment":
                 poster_id= current_user.id
                 comment_content = request.form["comment-content"]
@@ -346,10 +357,11 @@ def upload():
                 db.session.add(comment)
                 db.session.commit()
 
+
                 # Redirect back to the updated post page using the correct post ID
                 return redirect(url_for('show_post', post_id=post_id))  # Include post_id in redirect
-            
-    return redirect('/')
+
+        return redirect('/')
 
 @app.route('/update', methods=['GET','POST'])
 def update():
@@ -585,7 +597,13 @@ def show_post(post_id):
     if not post:
         return redirect('/')  # Handle non-existent post
     
-    return render_template('post.html', post=post, comments=comments, page_title=post.title, vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
+#calculate the time posted
+    current_time=datetime.now()
+    post_age_days=(current_time-post.date_added).days
+    decay_factor=0.99 #decay by 1% per day
+    decayed_time=post.date_added + timedelta(days=post_age_days)
+
+    return render_template('post.html', post=post, comments=comments, page_title=post.title, decayed_time=decayed_time,vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
 
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
@@ -793,6 +811,8 @@ def filter_posts():
     return redirect(url_for('index', filter_option=filter_option))
   if redirect_to == 'community':
     return redirect(url_for('show_community', filter_option=filter_option, community_name=community_name))
+
+
 
 # decay function
 def decay_hidden_votes(post):

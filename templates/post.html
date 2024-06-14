@@ -9,6 +9,7 @@
                     r/{{ post.community.name}}
                 </a>
                 <h2>{{post.title}}</h2> <br>
+             
                 <p>{{ post.content }}</p> <br>
                 {% if post.anonymous == 1 %}
                     <p>by: Anonymous</p>
@@ -20,6 +21,7 @@
             <!-- check if theres img -->
             {% if post.image_filename %} 
                 <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
+                
             </div>
             {% endif %}
             <div class="clear"></div>  
