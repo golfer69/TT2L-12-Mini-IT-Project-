@@ -14,7 +14,8 @@
                 {% if post.anonymous == 1 %}
                     <p>by: Anonymous</p>
                     {% else %}
-                    <p>by: {{post.poster.username}}</p>
+                    <!-- <p>by: <a href="{{url_for('account', username=post.poster.username)}}" class="link-to-user-profile" >{{post.poster.username}}</a> </p> -->
+                    <p>by:{{post.poster.username}} </p>
                 {% endif %}
                 <button><a href="{{url_for('report_post', post_id=post.id)}}">Report Post</a></button>
                 

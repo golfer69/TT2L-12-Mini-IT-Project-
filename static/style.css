@@ -177,13 +177,13 @@ button[type='button']:hover {
 }
 
 input[type=text] {
-  width: 40vw;
   padding: 12px 20px;
   margin: 8px 0;
   box-sizing: border-box;
   border: 1px solid black;
   background-color:beige;
   border-radius: 10px;
+  margin-top: 10px;
 }
 
 .form-content {
@@ -208,15 +208,11 @@ input[type=text] {
 }
 
 
-.card-text {
-  padding-top: 10px;
-  height: auto;
-  text-align: justify;
-  padding-left: 45%;
-  margin-top: 50%;
-  align-content: center;
-  margin-right: 50%;
-}
+
+
+
+
+
 
 .app-user {
   padding-bottom: 100px;
@@ -253,16 +249,151 @@ input[type=text] {
   
 }
 
-.card-body {
+-------------------------------------------------------------------/* user details (account) */--------------------------------------------------------------
+
+.bio {
   display: flex;
+  justify-content: center;
   align-items: center;
-  width: 100%;
-  
+  min-height: 100vh;
+  padding: 20px; /* Added top padding for spacing */
+  background-color: #f8f9fa;
 }
 
-.card-title {
+.card {
+  width: 100%;
+  max-width: 600px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  background-color: #fff;
+  margin: 20px;
+  margin-top: 60px;
+  margin-left: 480px;
+}
+
+.card-body {
+  padding: 20px;
+  align-items: center;
+}
+
+.profile_pic {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.img-thumbnail {
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  padding: 5px;
+  width: 150px;
+  height: 150px;
+}
+
+.card-text {
+  margin-bottom: 20px;
+  font-family: 'Verdana', 'Tahoma', sans-serif;
+  font-size: large;
+  text-align: left;
+}
+
+strong {
+  color: #333;
+  display: inline-block;
+  width: 120px;
+}
+
+.update-user-button {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.update-user-button a {
+  text-decoration: none;
+  color: white;
+}
+
+.update-user-button .btn {
+  background-color: #007bff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.update-user-button .btn:hover {
+  background-color: #0056b3;
+}
+
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+-------------------------------------------------------------------/* form (user-details) */-----------------------------------------------------------------
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  margin-top: 30px;
+  padding: 0;
+}
+
+.update-user {
+  max-width: 600px;
+  margin: 50px auto;
+  padding: 40px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  font-weight: bold;
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 8px rgba(0, 123, 255, 0.25);
+}
+
+.btn-primary {
+  background-color: #007bff;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  color: #fff;
   text-align: center;
 }
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.error {
+  list-style-type: none;
+  padding: 0;
+  margin: 10px 0;
+  color: red;
+}
+-------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 .card-img-top {
   max-width: 600px;
@@ -270,9 +401,12 @@ input[type=text] {
   
 }
 
-.btn {
-  align-items: center;
+.profile_pic{
+  text-align: center;
 }
+
+
+
 .inline-block{
   display: inline-block;
 }
@@ -336,13 +470,9 @@ input[type=text] {
   background-color: var(--almost-grey);
 }
 
-.update-user{
-  margin-top: 50px
-}
-/* .update-user-button{
-  margin-top: 450px;
-  padding-right: 100px;
-} */
+
+
+
 .voted {
   /* Customize the appearance for downvoted buttons */
   background: #ff9999 !important; /* Reddish color */
@@ -455,4 +585,10 @@ input[type=text] {
 
 .comment-vote-section {
   margin: 0 13px;
+}
+
+.link-to-user-profile{
+  text-decoration: underline;
+  text-decoration-color: blue;
+  color: blue;
 }
