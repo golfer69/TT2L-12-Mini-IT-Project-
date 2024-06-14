@@ -14,7 +14,6 @@ from werkzeug.utils import secure_filename
 import uuid as uuid
 from flask_migrate import Migrate
 from sqlalchemy import desc
-from apscheduler.schedulers.background import BackgroundScheduler
 
 
 def create_app():
@@ -139,6 +138,10 @@ class Report(db.Model):
     date_reported=db.Column(db.DateTime, default=datetime.now)
     status= db.Column(db.String(100), default='Pending')
 
+class LastDecay(db.Model):
+    _tablename = 'last_decay'
+    id = db.Column(db.Integer, primary_key=True)
+    last_update_date = db.Column(db.DateTime)
 
 
 # create database
@@ -811,23 +814,32 @@ def decay_hidden_votes(post):
 
 # to decay
 def decay_all_hidden_votes():
-    posts = Post.query.all()
+    last_decay = LastDecay.query.first()
+    # Calculate the difference in days
+    if last_decay:
+        time_delta = (datetime.now() - last_decay.last_update_date).days
+        # if over 1 day
+        if time_delta > 1:
+            posts = Post.query.all()
 
-    for post in posts:
-        decayed_votes = decay_hidden_votes(post)
-        post.hidden_votes = decayed_votes
+            for post in posts:
+                decayed_votes = decay_hidden_votes(post)
+                post.hidden_votes = decayed_votes
+            
+            # Update the existing entry
+            last_decay.last_update_date = datetime.now()
 
-    db.session.commit()
+            db.session.commit()
 
-#decaying the votes
-def schedule_decay():
-    with app.app_context():
-        decay_all_hidden_votes()
+    if last_decay is None:
+        # Create a new entry if none exists
+        last_decay = LastDecay(last_update_date=datetime.now())
+        db.session.add(last_decay)
+        db.session.commit()
 
-# Create a scheduler instance
-scheduler = BackgroundScheduler()
-scheduler.add_job(schedule_decay, 'interval', days=1)
-scheduler.start()
+# run the function
+with app.app_context():
+    decay_all_hidden_votes()
 
 if __name__ == '__main__':
     app.run(debug=True)
