@@ -15,6 +15,8 @@ import uuid as uuid
 from flask_migrate import Migrate
 from sqlalchemy import desc
 from apscheduler.schedulers.background import BackgroundScheduler
+from win10toast import ToastNotifier
+
 
 
 
@@ -306,8 +308,13 @@ def upload():
                 post = Post(title=title, content=content, poster_id=poster, community_id=community_id, anonymous=anonymous)
                 db.session.add(post)
                 db.session.commit()
-                #add trigger notification
-                notify_post(post)
+                my_notification = ToastNotifier()
+                my_notification.show_toast("New Post Uploaded")
+
+
+
+
+
             
                 if file:
 
@@ -330,7 +337,9 @@ def upload():
                 db.session.add(community)
                 db.session.commit()
                 #notification
-                notify_community(community)
+                my_notification = ToastNotifier()
+                my_notification.show_toast("New community created")
+                
 
             if item == "comment":
                 poster_id= current_user.id
@@ -778,9 +787,6 @@ def filter_posts():
   if redirect_to == 'community':
     return redirect(url_for('show_community', filter_option=filter_option, community_name=community_name))
 
-@app.route('/notifications',methods=['GET'])
-def notifications ():
-    return render_template('notifications.html',notifications=notifications)
 
 
 # decay function
@@ -822,19 +828,7 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(schedule_decay, 'interval', days=1)
 scheduler.start()
 
-#create a notification system
 
-def send_notifications(message):
-    notifications.append(message)
-
-#notification for post
-def notify_post(post):
-    message=f"New post'{post.title} uploaded'"
-    send_notifications(message)
-
-#notification for community
-def notify_community(community):
-    message=f"New community'{community.name} created'"
 
 if __name__ == '__main__':
     app.run(debug=True)
