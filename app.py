@@ -47,11 +47,12 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(150), nullable=False, unique=True)
     password= db.Column(db.String(40), nullable=False)
     email= db.Column(db.String(80), nullable=False, unique=True)
-    posts= db.relationship('Post', backref='poster', lazy=True)
-    comments= db.relationship('Comment', backref='poster', lazy=True)
-    updates= db.relationship('Update', backref='poster', lazy=True)
+    posts= db.relationship('Post', backref='poster', lazy=True,cascade="all, delete-orphan")
+    comments= db.relationship('Comment', backref='poster', lazy=True,cascade="all, delete-orphan")
+    updates= db.relationship('Update', backref='poster', lazy=True,cascade="all, delete-orphan")
     date_joined= db.Column(db.DateTime, default=datetime.now)
-    reports= db.relationship('Report', backref='reporter', lazy=True)
+    reports= db.relationship('Report', backref='reporter', lazy=True,cascade="all, delete-orphan")
+    admin = db.Column(db.Integer, default=0)
 
 
     
@@ -67,7 +68,7 @@ class Post(db.Model):
     anonymous  = db.Column(db.Integer)
     votes = db.Column(db.Integer, default=0)
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
-    id_for_comments = db.relationship('Comment', backref='text', lazy=True)
+    id_for_comments = db.relationship('Comment', backref='text', lazy=True, cascade="all, delete-orphan")
     reports = db.relationship('Report', backref='post', lazy=True)
     
 
@@ -104,7 +105,7 @@ class Community(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50))
     about = db.Column(db.String(255))
-    community = db.relationship('Post', backref='community', lazy=True)
+    community = db.relationship('Post', backref='community', lazy=True, cascade="all, delete-orphan")
     comm_profile_pic= db.Column(db.String(10000), nullable=True)
 
 
@@ -489,7 +490,7 @@ def report_post(post_id):
 @app.route('/admin/reports', methods=['GET', 'POST'])
 @login_required
 def reports():
-    if current_user.id not in [1, 6]:  # Adjust this condition based on your admin user IDs
+    if current_user.admin == 0:  # Adjust this condition based on your admin user IDs
         return redirect(url_for('index'))
 
     new_reports = Report.query.filter_by(status='Pending').all()
@@ -502,7 +503,7 @@ def reports():
 @app.route('/admin/reports/resolve/<int:report_id>', methods=['POST'])
 @login_required
 def resolve_report(report_id):
-    if current_user.id not in [1, 6]:  # Adjust this condition based on your admin user IDs
+    if current_user.admin == 0:  # Adjust this condition based on your admin user IDs
         return redirect(url_for('index'))
 
     report = Report.query.get_or_404(report_id)
@@ -516,7 +517,7 @@ def resolve_report(report_id):
 @app.route('/delete_post/<int:post_id>', methods=['POST'])
 @login_required
 def delete_post(post_id):
-    if current_user.id not in [1, 6]:
+    if current_user.admin == 0:
         return redirect(url_for('index'))
     post = Post.query.get_or_404(post_id)
     db.session.delete(post)
@@ -532,7 +533,7 @@ def delete():
         if item == "post":
             post_id = request.form.get('post_id')
             post = Post.query.get(post_id)
-            if post.poster_id == current_user.id:
+            if post.poster_id == current_user.id or current_user.admin == 1:
                 db.session.delete(post)
                 db.session.commit()
                 # Delete the image file if it exists
@@ -549,7 +550,7 @@ def delete():
             comment_id = request.form.get('comment_id')
             post_id = request.form.get('post_id')
             comment = Comment.query.get(comment_id)
-            if comment.poster_id == current_user.id:
+            if comment.poster_id == current_user.id or current_user.admin == 1:
                 db.session.delete(comment)
                 db.session.commit()
             return redirect(url_for('show_post', post_id=post_id))
@@ -588,7 +589,7 @@ def show_community(community_name):
     if community:
       community_id = community.id # Get the id of the community
     community = Community.query.get(community_id)
-    community_posts = Post.query.filter_by(community_id=community_id)
+    posts = Post.query.filter_by(community_id=community_id)
     filter_option = request.args.get('filter_option')
     if filter_option:
         if filter_option == 'top':
@@ -609,6 +610,21 @@ def show_community(community_name):
     vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
     return render_template('community.html', posts=posts, community=community, page_title=community_name, vote_dict=vote_dict)
 
+@app.route('/community/<string:community_name>/delete', methods=['POST'])
+@login_required
+def delete_community(community_name):
+    if not current_user.admin:
+        return jsonify({'error': 'Unauthorized: Only admins can delete communities'}), 403
+    if current_user.admin == 1:
+        # Fetch the community to delete
+        community = Community.query.filter_by(name=community_name).first()
+        if community is None:
+            return jsonify({'error': 'Community not found'}), 404
+        # Delete the community (assuming you have a delete method in your ORM)
+        db.session.delete(community)
+        db.session.commit()
+
+        return redirect(url_for('index'))
 
 # Upvotes and downvotes
 @app.route('/upvote/<int:post_id>', methods=['POST'])
