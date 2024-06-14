@@ -9,6 +9,7 @@
                     r/{{ post.community.name}}
                 </a>
                 <h2>{{post.title}}</h2> <br>
+             
                 <p>{{ post.content }}</p> <br>
                 {% if post.anonymous == 1 %}
                     <p>by: Anonymous</p>
@@ -21,6 +22,7 @@
             <!-- check if theres img -->
             {% if post.image_filename %} 
                 <img src="{{ url_for('serve_files', filename=post.image_filename) }}">
+                
             </div>
             {% endif %}
             <div class="clear"></div>  
@@ -81,7 +83,7 @@
                             <div>{{comment.date_added}}</div>
                             <div class="comment-content">{{comment.comment_content}}</div><br>
                             {% if current_user.is_authenticated %}
-                                {% if current_user.id==comment.poster_id  %}
+                                {% if current_user.id==comment.poster_id or current_user.admin == 1 %}
                                     <div class="comment-delete">
                                         <form action="{{ url_for('delete')}}" method="POST" class="float-right">
                                             <input type="hidden" name="item" value="comment" >
