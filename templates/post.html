@@ -2,6 +2,7 @@
 
   {% block content %}
     <div class="app">
+        <div class="post-container">]
         <div class="posts-section">
             <!-- display content -->
             <div class="post">
@@ -9,6 +10,7 @@
                     r/{{ post.community.name}}
                 </a>
                 <h2>{{post.title}}</h2> <br>
+                {{ post.date_added.strftime('%d-%m-%Y %H:%M') }}  <!--display date posted-->
                 <p>{{ post.content }}</p> <br>
                 {% if post.anonymous == 1 %}
                     <p>by: Anonymous</p>
@@ -29,7 +31,8 @@
                 <p><span class="vote-btn" id="vote-count-{{ post.id }}">{{ post.votes }}</span></p>
                 <button class="vote-btn {{ 'voted' if vote_dict.get(post.id) == 'downvote' }} " data-vote-type="downvote" type="button" data-post-id="{{ post.id }}" onclick="downvotePost(this)">Downvote</button>
             </div> 
-
+        </div>
+    </div>
             <!-- delete button -->
             {% if current_user.is_authenticated %}
             {% if current_user.id == 1 or current_user.id==post.poster_id  %}
@@ -80,7 +83,7 @@
                             {% endif %}
                             <div>{{comment.date_added}}</div>
                             <div class="comment-content">{{comment.comment_content}}</div><br>
-                            {{ post.date_added.strftime('%d-%m-%Y %H:%M') }}  <!--display date posted comment -->
+                           <span class="date"></span> {{ post.date_added.strftime('%d-%m-%Y %H:%M') }}   <!--display date posted comment -->
                             {% if current_user.is_authenticated %}
                                 {% if current_user.id==comment.poster_id  %}
                                     <div class="comment-delete">

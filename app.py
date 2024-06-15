@@ -832,7 +832,7 @@ scheduler = BackgroundScheduler()
 scheduler.add_job(schedule_decay, 'interval', days=1)
 scheduler.start()
 
-#calculate decayed time
+
 
 
 

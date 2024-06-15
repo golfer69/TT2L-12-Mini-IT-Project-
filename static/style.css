@@ -46,15 +46,15 @@ button[type='button'] {
   outline: none;
   box-shadow: none;
   cursor: pointer;
-  border:2px solid rgb(139, 205, 139);
-  background-color:rgb(175, 240, 175);
+  border:2px solid rgb(0, 0, 0);
+  background-color:rgb(228, 180, 91);
   border-radius:8px;
   transition: box-shadow .2s ease;
 }
 
 input[type='submit']:hover,
 button[type='button']:hover {
-  background-color:rgb(196, 226, 206);
+  background-color:rgb(230, 199, 141);
 }
 
 /* nav bar css */
@@ -64,10 +64,12 @@ button[type='button']:hover {
   top: 0;
   width: 100%;
   font-size: 120%;
-  box-shadow: 0px 1.5px rgb(6, 51, 81);
+  box-shadow: 0px 1.5px rgb(228, 135, 42);
   z-index:  2;
-  background-color:white
+  background-color:white;
+  border:2px gray;
 }
+
 
 .navigation a,
 .navigation p{
@@ -83,7 +85,7 @@ button[type='button']:hover {
 }
 
 .navigation a:hover {
-  background-color:rgb(164, 211, 246);
+  background-color:rgb(235, 167, 141);
   color: var(--almost-black);
 }
 
@@ -125,18 +127,63 @@ button[type='button']:hover {
  margin-top: 0;
 }
 
+.filter-form{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  margin-top:20px;
+}
 
+.form-group{
+  display:flex;
+  align-items:center;
+}
+
+.filter{
+  padding:8px;
+  font-size:16px;
+  border:1px solid black;
+  border-radius: 4px 0 0 4px;
+  margin-right: -1px;
+  background-color:beige;
+}
+
+
+button[type="submit"]{
+  padding:8px 16px;
+  font-size:16px;
+  background-color:#eaa030;
+  color:#fff;
+  border:1px solid black;
+  border-radius: 0 4px 4px 0 ;
+  cursor:pointer;
+  transition:background-color 0.3s ease;
+}
+
+button[type="submit"]:hover{
+  background-color:#e6c57b;
+}
+
+.date{
+  font-family:Arial ,sans-serif;
+  font-size:14px;
+  text-align: right;
+  }
 
 .posts-section li:hover {
   background-color: var(--almost-grey);
 } 
 
 /* individual post on the main page */
+
 .posts {
   padding: 15px 0px;
   margin: 10px 0px;
-  border-radius: 20px;
+  border-radius:20px;
   text-align: left;
+  overflow:hidden;
+  position:relative;
+  background-color: white;
 }
 
 .posts:after {
@@ -170,6 +217,14 @@ button[type='button']:hover {
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
 }
 /* individual post page */
+
+.post{
+  background-color:white;
+  padding:10px;
+  border-radius:8px;
+  overflow:hidden;
+
+}
 .post img {
   width: 50vw;  /* Set a maximum width for images */
   height: 60vh; /* Set a maximum height for images */
@@ -273,6 +328,11 @@ input[type=text] {
 .btn {
   align-items: center;
 }
+
+.create-btn{
+  background-color: gray;
+}
+
 .inline-block{
   display: inline-block;
 }
@@ -313,24 +373,29 @@ input[type=text] {
 }
 
 .sidebar {
-  margin: 0;
-  padding: 0;
-  width: 19vw;
-  background-color:rgb(41, 80, 111);
+  top:0;
+  margin:30;
+  padding:0;
+  width:50;
+  background-color:rgb(0, 0, 0);
+  color:white;
   position: fixed;
   height: 100%;
   overflow: auto;
   float: left;
 }
 .sidebar a {
+
   display: block;
-  color: black;
+  color: white;
   padding: 16px;
   text-decoration: none;
   border-radius: 5px;
-  background-color:rgb(41, 80, 111);
+  background-color:black;
  
 } 
+
+
 
 .sidebar a:hover:not(.active) {
   background-color: var(--almost-grey);
@@ -455,4 +520,8 @@ input[type=text] {
 
 .comment-vote-section {
   margin: 0 13px;
+}
+
+.update-user{
+margin-left:100px;
 }
