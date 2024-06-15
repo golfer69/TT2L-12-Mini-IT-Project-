@@ -310,7 +310,7 @@ def upload():
                     db.session.add(post)
                     db.session.commit()
 
-                # my_notification.show_toast("MMU Reddit","New post uploaded!")
+                my_notification.show_toast("MMU Reddit","New post uploaded!")
                 return redirect('/')
 
 
