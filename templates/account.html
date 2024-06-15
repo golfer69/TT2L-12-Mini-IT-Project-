@@ -5,8 +5,10 @@
       <div class="card-body">
         <div class="profile_pic">
           {% if update_user and update_user.profile_pic %}
-            <img class="img-thumbnail" src="{{ url_for('static', filename='profile_pics/' + update_user.profile_pic) }}" alt="Profile Picture">
+            <!-- displays the user's profile pic if exists -->
+            <img class="img-thumbnail" src="{{ url_for('static', filename='profile_pics/' + update_user.profile_pic) }}" alt="Profile Picture">  
           {% else %}
+            <!-- displays a standard blank profile pic if user does not have profile pic -->
             <img src="{{ url_for('static', filename='profile_pics/blank_profile_photo.png') }}" alt="Profile Picture" class="img-thumbnail">
           {% endif %}
         </div>

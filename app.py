@@ -152,10 +152,12 @@ class LastDecay(db.Model):
 
 # create database
 with app.app_context():
-    # Create Text table first
     db.create_all()
 
-class RegisterForm(FlaskForm):
+
+# All the forms for the website
+# form when registering new account
+class RegisterForm(FlaskForm): 
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     email= EmailField(validators=[InputRequired(), Length(min=10, max=100)], render_kw={'placeholder':'Email'})
@@ -172,12 +174,14 @@ class RegisterForm(FlaskForm):
             raise ValidationError('That email already exists. Please choose another one')
 
 
+# login form after registeration
 class LoginForm(FlaskForm):
     username= StringField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Username'})
     password= PasswordField(validators=[InputRequired(), Length(min=6, max=25)], render_kw={'placeholder':'Password'})
     submit= SubmitField('Login')
 
 
+# form for user details 
 class EntryForm(FlaskForm):
     name= StringField(label='Name')
     age= StringField(label='Age', validators=[Length(max=3)])
@@ -188,11 +192,13 @@ class EntryForm(FlaskForm):
     profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
 
+# form for updating community details
 class UpdateCommunityForm(FlaskForm):
     about=StringField(label='About', validators=[Length(max=10000)])
     comm_profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit=SubmitField('Update')
 
+# form for reporting a post
 class ReportForm(FlaskForm):
     about=StringField(label='About', validators=[InputRequired(), Length(max=1000)])
     submit=SubmitField('Submit Report')
@@ -203,8 +209,8 @@ class ReportForm(FlaskForm):
 def save_comm_profile_pic(comm_profile_pic_file):
     if comm_profile_pic_file:
         filename=secure_filename(comm_profile_pic_file.filename)
-        unique_id_filename=str(uuid.uuid1()) + '_' + filename
-        upload_dir='static/comm_profile_pics'
+        unique_id_filename=str(uuid.uuid1()) + '_' + filename #puts a unique id to each profile pic filename
+        upload_dir='static/comm_profile_pics' #stores the pics to comm_profile_pics
         os.makedirs(upload_dir, exist_ok=True)
         profile_pic_path=os.path.join(upload_dir, unique_id_filename)
         comm_profile_pic_file.save(profile_pic_path)
@@ -216,8 +222,8 @@ def save_comm_profile_pic(comm_profile_pic_file):
 def save_user_profile_pic(profile_pic_file):
     if profile_pic_file:
         filename=secure_filename(profile_pic_file.filename)
-        unique_id_filename=str(uuid.uuid1()) + '_' + filename
-        upload_dir='static/profile_pics'
+        unique_id_filename=str(uuid.uuid1()) + '_' + filename #puts a unique id to each profile pic filename
+        upload_dir='static/profile_pics' #stores the pics to profile_pics
         os.makedirs(upload_dir, exist_ok=True)
         profile_pic_path=os.path.join(upload_dir, unique_id_filename)
         profile_pic_file.save(profile_pic_path)
@@ -316,7 +322,7 @@ def upload():
                 about = request.form.get('about')
                 comm_profile_pic=request.files.get('comm_profile_pic')
                 comm_profile_pic_filename=save_comm_profile_pic(comm_profile_pic)
-                community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename, user_id=current_user.id)
+                community = Community(name=name, about=about, comm_profile_pic=comm_profile_pic_filename, user_id=current_user.id) #linking the community to which user_id made it
                 try:
                     db.session.add(community)
                     db.session.commit()
@@ -348,10 +354,10 @@ def upload():
 def createcomm():
     return render_template('createcomm.html', page_title="Create community")
 
-@app.route('/updatecommunity/<int:id>', methods=['GET', 'POST'])
+@app.route('/updatecommunity/<int:id>', methods=['GET', 'POST']) #only admins and creators of community can update 
 @login_required
-def updatecomm(id):
-    form=UpdateCommunityForm()
+def updatecomm(id): #updating community details based on the id from community database
+    form=UpdateCommunityForm() 
     community=Community.query.get(id)
     if form.validate_on_submit():
         community.about=form.about.data
@@ -366,11 +372,11 @@ def updatecomm(id):
         form.about.data=community.about
     return render_template('updatecomm.html', form=form, community=community, page_title="Update community")
 
-@app.route('/update', methods=['GET','POST'])
+@app.route('/update', methods=['GET','POST']) # editing posts
 def update():
     post_id = request.form['post_id'] 
     post = Post.query.get(post_id)
-    if request.method == 'POST' and post.poster_id == current_user.id:
+    if request.method == 'POST' and post.poster_id == current_user.id: #POST: Send data to the server to create or update a resource.
         
         new_title = request.form['title']
         new_content = request.form['content']
@@ -381,9 +387,12 @@ def update():
         db.session.commit()
     return redirect(url_for('show_post', post_id=post_id))
 
+
 @app.route('/uploads/<path:filename>')
 def serve_files(filename):
     return send_from_directory(app.config['UPLOAD_DIRECTORY'], filename)
+
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -391,12 +400,14 @@ def register():
         return redirect(url_for('user_posts'))
     form = RegisterForm()
     if form.validate_on_submit():
-        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')        
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8') # hashing password       
         new_user= User(email=form.email.data, username=form.username.data, password=hashed_password)
         db.session.add(new_user)
         db.session.commit()
         return redirect(url_for('login'))
     return render_template('register.html', form=form)
+
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -424,20 +435,18 @@ def logout():
 @app.route('/user_posts', methods=['GET', 'POST'])
 @login_required
 def user_posts():
-    user_posts= Post.query.filter_by(poster_id=current_user.id).all()
-        # Get all votes for the current user (assuming `current_user` is available)
+    user_posts= Post.query.filter_by(poster_id=current_user.id).all() # only returning the current user's posts in user post page
     current_user_id = current_user.id
-    user_votes = Votes.query.filter_by(user_id=current_user_id).all()
-    
-    # Convert user votes to a dictionary for faster lookups by post ID
-    vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
+    user_votes = Votes.query.filter_by(user_id=current_user_id).all() # Get all votes for the current user (assuming `current_user` is available)
+    vote_dict = {vote.post_id: vote.vote_type for vote in user_votes} # Convert user votes to a dictionary for faster lookups by post ID
     return render_template('user_posts.html', posts=user_posts, vote_dict=vote_dict,page_title="User Posts")
+
 
 @app.route('/account', methods=['GET'])
 @login_required
 def account():
     user=current_user
-    update_user = Update.query.filter_by(user_id=current_user.id).first()
+    update_user = Update.query.filter_by(user_id=current_user.id).first() # querying table for user details if exists
     return render_template('account.html', user=user, update_user=update_user, page_title="User")
 
 
@@ -501,7 +510,7 @@ def user_details(id):
 @login_required
 def report_post(post_id):
     form=ReportForm()
-    post=Post.query.get_or_404(post_id)
+    post=Post.query.get_or_404(post_id) # getting the post from databaase based on post_id
     if form.validate_on_submit():
         report=Report(report_user_id=current_user.id, report_post_id=post.id, about=form.about.data)
         db.session.add(report)
@@ -517,6 +526,7 @@ def reports():
 
     new_reports = Report.query.filter_by(status='Pending').all()
     resolved_reports = Report.query.filter_by(status='Resolved').all()
+    
 
     return render_template('admin_reports.html', new_reports=new_reports, resolved_reports=resolved_reports, page_title="Reports")
 
@@ -536,7 +546,7 @@ def resolve_report(report_id):
 
 
 
-@app.route('/delete_post/<int:post_id>', methods=['POST'])
+@app.route('/delete_post/<int:post_id>', methods=['POST']) # admins can delete the posts on the reports page
 @login_required
 def delete_post(post_id):
     if current_user.admin == 0:

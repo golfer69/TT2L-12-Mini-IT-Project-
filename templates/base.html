@@ -29,8 +29,10 @@
         {% endif %}
         <div class="account-button">
           {%if current_user.is_authenticated and update_user and update_user.profile_pic%}
+            <!-- displays the user's profile pic if exists -->
             <a class="float-right" href="{{url_for('account')}}"><img class="profile-pic" src="{{url_for('static', filename='profile_pics/' + update_user.profile_pic)}}" alt="Profile Picture"></a>
           {%else%}
+            <!-- displays a standard blank profile pic if user does not have profile pic -->
             <a class="float-right" href="{{ url_for('account') }}"><img class="profile-pic" src="{{ url_for('static', filename='profile_pics/blank_profile_photo.png') }}" alt="Profile Picture"></a>
           {%endif%}
         </div>
