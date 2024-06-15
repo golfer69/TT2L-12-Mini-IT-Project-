@@ -22,7 +22,7 @@
       {%endif%}
       <div class="community-name">r/{{community.name}}</div>
       <p>{{community.about}}</p>
-      {%if current_user.id == community.user_id or current_user.id==1 or current_user.id==6 %}
+      {%if current_user.id == community.user_id or current_user.admin == 1 %}
       <div class="update-user-button">
         <a href="{{url_for('updatecomm', id=community.id)}}" class="btn">Update Community</a>
       </div>
