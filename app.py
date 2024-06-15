@@ -15,7 +15,6 @@ import uuid as uuid
 from flask_migrate import Migrate
 from sqlalchemy import desc, UniqueConstraint
 from sqlalchemy.exc import IntegrityError
-from win10toast import ToastNotifier
 
 def create_app():
     app = Flask(__name__)
@@ -33,12 +32,10 @@ db = SQLAlchemy(app)
 migrate=Migrate(app, db)
 bcrypt=Bcrypt(app)
 migrate = Migrate(app,db)
-my_notification = ToastNotifier()
 
 login_manager=LoginManager()
 login_manager.init_app(app)
 login_manager.login_view='login'
-notifications=[]
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -267,6 +264,9 @@ def index():
     else:
         # Provide an empty dictionary as default for unauthenticated users
         vote_dict = {}
+
+    with app.app_context():
+        decay_all_hidden_votes()
     return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, vote_dict=vote_dict,page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
@@ -310,7 +310,6 @@ def upload():
                     db.session.add(post)
                     db.session.commit()
 
-                my_notification.show_toast("MMU Reddit","New post uploaded!")
                 return redirect('/')
 
 
@@ -327,8 +326,7 @@ def upload():
                     db.session.rollback()
                     # Handle unique constraint violation (e.g., flash error message)
                     return render_template('createcomm.html', error=1)
-                #notification
-                my_notification.show_toast("MMU Reddit","New community created!")
+                
 
 
             if item == "comment":
@@ -860,10 +858,6 @@ def decay_all_hidden_votes():
         last_decay = LastDecay(last_update_date=datetime.now())
         db.session.add(last_decay)
         db.session.commit()
-
-# run the function
-with app.app_context():
-    decay_all_hidden_votes()
 
 if __name__ == '__main__':
     app.run(debug=True)
