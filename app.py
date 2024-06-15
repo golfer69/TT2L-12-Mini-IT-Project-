@@ -591,7 +591,8 @@ def edit_post(post_id):
 def show_post(post_id):
     current_user_id = None  # Initialize to None
     post = Post.query.get(post_id)
-    comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
+    comments = Comment.query.filter_by(post_id=post_id).order_by(desc(Comment.votes)).all()
+    
         # Get all votes for the current user (assuming `current_user` is available)
     if current_user.is_authenticated:
         current_user_id = current_user.id
@@ -603,14 +604,8 @@ def show_post(post_id):
 
     if not post:
         return redirect('/')  # Handle non-existent post
-    
-#calculate the time posted
-    current_time=datetime.now()
-    post_age_days=(current_time-post.date_added).days
-    decay_factor=0.99 #decay by 1% per day
-    decayed_time=post.date_added + timedelta(days=post_age_days)
 
-    return render_template('post.html', post=post, comments=comments, page_title=post.title, decayed_time=decayed_time,vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
+    return render_template('post.html', post=post, comments=comments, page_title=post.title,vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
 
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
