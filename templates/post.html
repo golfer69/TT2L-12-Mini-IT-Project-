@@ -19,7 +19,7 @@
                 {% endif %}
                 <p>{{ post.date_added.strftime('%d-%m-%Y %H:%M') }}</p>  <!--display date posted--> <br>
                 
-                <button><a href="{{url_for('report_post', post_id=post.id)}}">Report Post</a></button>
+                <button><a href="{{url_for('report_post', post_id=post.id)}}">Report Post</a></button><br>
                 
             <!-- check if theres img -->
             {% if post.image_filename %} 

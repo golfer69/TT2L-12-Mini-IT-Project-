@@ -217,8 +217,8 @@ button[type="submit"]:hover{
   display: inline;
   padding-left: 20px;
   text-decoration: underline;
-  text-decoration-color: rgb(62, 41, 203);
-  color: rgb(62, 41, 203);
+  text-decoration-color: rgb(228, 135, 42);
+  color: rgb(228, 135, 42);
   width: auto;
   justify-content: center;
 }
@@ -246,6 +246,7 @@ button[type="submit"]:hover{
   width: 50vw;  /* Set a maximum width for images */
   height: 60vh; /* Set a maximum height for images */
   object-fit: contain;  /* Maintain aspect ratio and resize to fit within max dimensions */
+  margin: 5px 0;
 }
 
 .comment-part{
