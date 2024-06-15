@@ -292,17 +292,19 @@ def upload():
                 
                 
                 if file:
-
-                    filename = secure_filename(file.filename)
+                    # Generate a unique filename using UUID
+                    unique_filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
                     file.save(os.path.join(
                         app.config['UPLOAD_DIRECTORY'],
-                        secure_filename(file.filename)
+                        unique_filename
                     ))
-
-                    post.image_filename = filename
-                    db.session.add(post)
-                    db.session.commit()
-
+    
+                    post.image_filename = unique_filename
+                    try:
+                        db.session.add(post)
+                        db.session.commit()
+                    except Exception as e:
+                        print(f"Error saving model: {e}")  # Log or handle error appropriately
                 return redirect('/')
 
 
