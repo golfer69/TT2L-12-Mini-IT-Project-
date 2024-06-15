@@ -3,25 +3,35 @@
 
 {% block content %}
   <div class="app">
-    <h1>Community</h1>
-    r/{{community.name}}
+    <div class="sidebar">
+      <a class="btn" href="/createcommunity"> + Create community </a>
+      {% for community in communities %}
+        <a class="btn" href="{{ url_for('show_community', community_name=community.name) }}">{{community.name}}</a>
+        {% if current_user.admin == 1 %}
+        <form method="POST" action="{{ url_for('delete_community', community_name=community.name) }}">
+          <button type="submit">Delete Community</button>
+        </form>    
+        {% endif %}  
+        {% endfor %}
 
-    {%if community.comm_profile_pic%}
-      <img class="comm-profile-pic"  src="{{url_for('static', filename='comm_profile_pics/' + community.comm_profile_pic) }}" alt="Community Profile Picture">
-    {%endif%}
-    <p>{{community.about}}</p>
-    {%if current_user.id == community.user_id or current_user.id==1 or current_user.id==6 %}
-      <div class="update-user-button">
-        <button><a href="{{url_for('updatecomm', id=community.id)}}" class="btn btn-primary">Update Community</button>
-    {%endif%}
-
-    
     </div>
     <div class="posts-section">
+      <h1>Community</h1>
+      {%if community.comm_profile_pic%}
+      <img class="comm-profile-pic"  src="{{url_for('static', filename='comm_profile_pics/' + community.comm_profile_pic) }}" alt="Community Profile Picture">
+      {%endif%}
+      <div class="community-name">r/{{community.name}}</div>
+      <p>{{community.about}}</p>
+      {%if current_user.id == community.user_id or current_user.id==1 or current_user.id==6 %}
+      <div class="update-user-button">
+        <a href="{{url_for('updatecomm', id=community.id)}}" class="btn">Update Community</a>
+      </div>
+      {%endif%}
+      
       <form action="{{ url_for('filter_posts') }}" id="filter-form" method="POST">
         <input type="hidden" name="redirect_to" value="community">
         <input type="hidden" name="community_name" value="{{community.name}}">
-        <select name="filter_option">
+        <select name="filter_option" class="filter">
           <option value="hot" {% if request.args.get('filter_option') == 'hot' %}selected{% endif %}>Hot</option>
           <option value="new" {% if request.args.get('filter_option') == 'new' %}selected{% endif %}>New</option>
           <option value="top" {% if request.args.get('filter_option') == 'top' %}selected{% endif %}>Top</option>

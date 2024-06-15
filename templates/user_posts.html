@@ -2,15 +2,12 @@
 {% block content %}
   <div class="app">
     <h1>User Posts</h1><br>
-
-  <div class="user-posts">
-    <div class="app">
-      
+    <div class="user-posts">
       <div class="posts-section">
           {% for post in posts %}
         <div class="posts">      
           <a href="{{ url_for('show_post', post_id=post.id) }}">  
-            {{ post.date_added.strftime('%d-%m-%Y %H:%M') }}  
+            <span class='date'>{{ post.date_added.strftime('%d-%m-%Y %H:%M') }}</span>  <!--display date posted--> 
             <h3>{{post.title}}</h3> <br>
               {% if post.image_filename %}
                 <!-- <div style="display: flex; flex-direction: column;"> -->
@@ -28,8 +25,6 @@
         </div>
           {% endfor %}
         </div>
-    </div>
-  </div>
   </div>
 {% endblock %}
 

@@ -15,7 +15,6 @@ import uuid as uuid
 from flask_migrate import Migrate
 from sqlalchemy import desc, UniqueConstraint
 from sqlalchemy.exc import IntegrityError
-from win10toast import ToastNotifier
 
 def create_app():
     app = Flask(__name__)
@@ -33,12 +32,10 @@ db = SQLAlchemy(app)
 migrate=Migrate(app, db)
 bcrypt=Bcrypt(app)
 migrate = Migrate(app,db)
-my_notification = ToastNotifier()
 
 login_manager=LoginManager()
 login_manager.init_app(app)
 login_manager.login_view='login'
-notifications=[]
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -54,7 +51,7 @@ class User(db.Model, UserMixin):
     comments= db.relationship('Comment', backref='poster', lazy=True,cascade="all, delete-orphan")
     updates= db.relationship('Update', backref='poster', lazy=True,cascade="all, delete-orphan")
     date_joined= db.Column(db.DateTime, default=datetime.now)
-    comm_creator_id=db.relationship('Community', backref='comm', lazy=True
+    comm_creator_id=db.relationship('Community', backref='comm', lazy=True)
     reports= db.relationship('Report', backref='reporter', lazy=True,cascade="all, delete-orphan")
     admin = db.Column(db.Integer, default=0)
 
@@ -186,15 +183,15 @@ class LoginForm(FlaskForm):
 class EntryForm(FlaskForm):
     name= StringField(label='Name')
     age= StringField(label='Age', validators=[Length(max=3)])
-    about= StringField(label='About', validators=[Length(min=7, max=1000)])
-    location= StringField(label='Location', validators=[Length(min=1, max=100)])
-    interests= StringField(label='Interests', validators=[Length(min=1, max=1000)])    
-    faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
+    about= StringField(label='About', validators=[Length(max=1000)])
+    location= StringField(label='Location', validators=[Length(max=100)])
+    interests= StringField(label='Interests', validators=[Length(max=1000)])    
+    faculty= StringField(label='Faculty', validators=[Length(max=100)])
     profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
 
 class UpdateCommunityForm(FlaskForm):
-    about=StringField(label='About', validators=[Length(min=7, max=10000)])
+    about=StringField(label='About', validators=[Length(max=10000)])
     comm_profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit=SubmitField('Update')
 
@@ -267,6 +264,9 @@ def index():
     else:
         # Provide an empty dictionary as default for unauthenticated users
         vote_dict = {}
+
+    with app.app_context():
+        decay_all_hidden_votes()
     return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, vote_dict=vote_dict,page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
@@ -310,7 +310,6 @@ def upload():
                     db.session.add(post)
                     db.session.commit()
 
-                # my_notification.show_toast("MMU Reddit","New post uploaded!")
                 return redirect('/')
 
 
@@ -327,8 +326,7 @@ def upload():
                     db.session.rollback()
                     # Handle unique constraint violation (e.g., flash error message)
                     return render_template('createcomm.html', error=1)
-                #notification
-                my_notification.show_toast("MMU Reddit","New community created!")
+                
 
 
             if item == "comment":
@@ -591,7 +589,8 @@ def edit_post(post_id):
 def show_post(post_id):
     current_user_id = None  # Initialize to None
     post = Post.query.get(post_id)
-    comments = Comment.query.filter_by(post_id=post_id).all()  # Filter comments by post ID
+    comments = Comment.query.filter_by(post_id=post_id).order_by(desc(Comment.votes)).all()
+    
         # Get all votes for the current user (assuming `current_user` is available)
     if current_user.is_authenticated:
         current_user_id = current_user.id
@@ -603,17 +602,12 @@ def show_post(post_id):
 
     if not post:
         return redirect('/')  # Handle non-existent post
-    
-#calculate the time posted
-    current_time=datetime.now()
-    post_age_days=(current_time-post.date_added).days
-    decay_factor=0.99 #decay by 1% per day
-    decayed_time=post.date_added + timedelta(days=post_age_days)
 
-    return render_template('post.html', post=post, comments=comments, page_title=post.title, decayed_time=decayed_time,vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
+    return render_template('post.html', post=post, comments=comments, page_title=post.title,vote_dict=vote_dict, vote_dict_comment=vote_dict_comment)
 
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
+    communities = Community.query.all()
     community = Community.query.filter_by(name=community_name).first()
     if not community:
       return render_template('404.html'), 404
@@ -621,17 +615,16 @@ def show_community(community_name):
     if community:
       community_id = community.id # Get the id of the community
     community = Community.query.get(community_id)
-    posts = Post.query.filter_by(community_id=community_id)
     filter_option = request.args.get('filter_option')
     if filter_option:
         if filter_option == 'top':
-            posts = Post.get_top_filter(Post) 
+            posts = Post.query.filter_by(community_id=community_id).order_by(desc(Post.votes)).all()
         elif filter_option == 'new':
-            posts = Post.get_new_filter(Post)  # Using defined method
+            posts = Post.query.filter_by(community_id=community_id).order_by(desc(Post.date_added)).all()
         else:
-            posts = Post.get_hot_filter(Post)  # hot for default
+            posts = Post.query.filter_by(community_id=community_id).order_by(desc(Post.hidden_votes)).all()
     else:
-        posts = Post.get_hot_filter(Post)
+        posts = Post.query.filter_by(community_id=community_id).order_by(desc(Post.hidden_votes)).all()
     # Get all votes for the current user (assuming `current_user` is available)
     current_user_id = None  # Initialize to None
     if current_user.is_authenticated:
@@ -640,7 +633,7 @@ def show_community(community_name):
     
     # Convert user votes to a dictionary for faster lookups by post ID
     vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
-    return render_template('community.html', posts=posts, community=community, page_title=community_name, vote_dict=vote_dict)
+    return render_template('community.html', posts=posts, community=community, communities=communities ,page_title=community_name, vote_dict=vote_dict)
 
 @app.route('/community/<string:community_name>/delete', methods=['POST'])
 @login_required
@@ -864,10 +857,6 @@ def decay_all_hidden_votes():
         last_decay = LastDecay(last_update_date=datetime.now())
         db.session.add(last_decay)
         db.session.commit()
-
-# run the function
-with app.app_context():
-    decay_all_hidden_votes()
 
 if __name__ == '__main__':
     app.run(debug=True)
