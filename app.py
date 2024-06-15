@@ -615,17 +615,16 @@ def show_community(community_name):
     if community:
       community_id = community.id # Get the id of the community
     community = Community.query.get(community_id)
-    posts = Post.query.filter_by(community_id=community_id)
     filter_option = request.args.get('filter_option')
     if filter_option:
         if filter_option == 'top':
-            posts = Post.get_top_filter(Post) 
+            posts = Post.query.filter_by(community_id=community_id).order_by(desc(Post.votes)).all()
         elif filter_option == 'new':
-            posts = Post.get_new_filter(Post)  # Using defined method
+            posts = Post.query.filter_by(community_id=community_id).order_by(desc(Post.date_added)).all()
         else:
-            posts = Post.get_hot_filter(Post)  # hot for default
+            posts = Post.query.filter_by(community_id=community_id).order_by(desc(Post.hidden_votes)).all()
     else:
-        posts = Post.get_hot_filter(Post)
+        posts = Post.query.filter_by(community_id=community_id).order_by(desc(Post.hidden_votes)).all()
     # Get all votes for the current user (assuming `current_user` is available)
     current_user_id = None  # Initialize to None
     if current_user.is_authenticated:
