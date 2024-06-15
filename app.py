@@ -55,24 +55,9 @@ class User(db.Model, UserMixin):
     reports= db.relationship('Report', backref='reporter', lazy=True,cascade="all, delete-orphan")
     admin = db.Column(db.Integer, default=0)
 
-class Community(db.Model):
-    __tablename__ = 'community'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True)
-    about = db.Column(db.String(255))
-    community = db.relationship('Post', backref='community', lazy=True, cascade="all, delete-orphan")
-    comm_profile_pic= db.Column(db.String(10000), nullable=True)
-    user_id=db.Column(db.Integer, db.ForeignKey('user.id'))
-    __table_args__ = (UniqueConstraint('name', name='unique_community_name'),)
 
-class Votes(db.Model):
-    __tablename__ = 'votes'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'))
-    vote_type = db.Column(db.Integer)
 
+    
 class Post(db.Model):
     __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key=True)
@@ -87,8 +72,7 @@ class Post(db.Model):
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True, cascade="all, delete-orphan")
     reports = db.relationship('Report', backref='post', lazy=True)
-    post_votes = db.relationship(Votes, backref='post', cascade="all, delete-orphan")
-  
+
     def get_hot_filter(self):
         # """
         # Returns a filter for posts ordered by hidden_votes (descending)
@@ -107,6 +91,7 @@ class Post(db.Model):
         # """
         return Post.query.order_by(desc(Post.votes))
 
+
 class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
@@ -115,7 +100,27 @@ class Comment(db.Model):
     comment_content = db.Column(db.Text)
     votes = db.Column(db.Integer, default=0)
     anonymous  = db.Column(db.Integer)
-    comment_votes = db.relationship(Votes, backref='comment', cascade="all, delete-orphan")
+
+class Community(db.Model):
+    __tablename__ = 'community'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    about = db.Column(db.String(255))
+    community = db.relationship('Post', backref='community', lazy=True, cascade="all, delete-orphan")
+    comm_profile_pic= db.Column(db.String(10000), nullable=True)
+    user_id=db.Column(db.Integer, db.ForeignKey('user.id'))
+    __table_args__ = (UniqueConstraint('name', name='unique_community_name'),)
+
+
+
+
+class Votes(db.Model):
+    __tablename__ = 'votes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'))
+    vote_type = db.Column(db.Integer)
 
 class Update(db.Model):
     __tablename__ = 'update'
@@ -298,19 +303,17 @@ def upload():
                 
                 
                 if file:
-                    # Generate a unique filename using UUID
-                    unique_filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[1]
+
+                    filename = secure_filename(file.filename)
                     file.save(os.path.join(
                         app.config['UPLOAD_DIRECTORY'],
-                        unique_filename
+                        secure_filename(file.filename)
                     ))
-    
-                    post.image_filename = unique_filename
-                    try:
-                        db.session.add(post)
-                        db.session.commit()
-                    except Exception as e:
-                        print(f"Error saving model: {e}")  # Log or handle error appropriately
+
+                    post.image_filename = filename
+                    db.session.add(post)
+                    db.session.commit()
+
                 return redirect('/')
 
 
@@ -731,6 +734,7 @@ def check_vote(post_id, vote_type):
     if current_user.is_authenticated:
         user_id = current_user.id
         vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
+        #return True if vote_exists
         return jsonify({'voted': vote_exists is not None})
 
 # Upvotes and downvotes FOR COMMENTS
@@ -811,7 +815,7 @@ def filter_posts():
   filter_option = request.form.get('filter_option')
   redirect_to = request.form.get('redirect_to')
   community_name = request.form.get('community_name')
-
+  # return to where they were 
   if redirect_to == 'index':
     return redirect(url_for('index', filter_option=filter_option))
   if redirect_to == 'community':
