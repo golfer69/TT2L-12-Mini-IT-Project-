@@ -4,9 +4,6 @@
 {% block content %}
   <div class="app" >
     <div class="sidebar">
-      <br>
-      <br>
-      <br>
       <a class="btn" href="/createcommunity"> + Create community </a>
       {% for community in communities %}
         <a class="btn" href="{{ url_for('show_community', community_name=community.name) }}">{{community.name}}</a>
