@@ -18,7 +18,7 @@
     <div class="posts-section">
       <form action="{{ url_for('filter_posts') }}" id="filter-form" method="POST">
         <input type="hidden" name="redirect_to" value="index">
-        <select name="filter_option">
+        <select name="filter_option" class="filter">
           <option value="hot" {% if request.args.get('filter_option') == 'hot' %}selected{% endif %}>Hot</option>
           <option value="new" {% if request.args.get('filter_option') == 'new' %}selected{% endif %}>New</option>
           <option value="top" {% if request.args.get('filter_option') == 'top' %}selected{% endif %}>Top</option>

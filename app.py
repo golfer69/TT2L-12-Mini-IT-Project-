@@ -614,6 +614,7 @@ def show_post(post_id):
 
 @app.route('/community/<string:community_name>', methods=['GET'])
 def show_community(community_name):
+    communities = Community.query.all()
     community = Community.query.filter_by(name=community_name).first()
     if not community:
       return render_template('404.html'), 404
@@ -640,7 +641,7 @@ def show_community(community_name):
     
     # Convert user votes to a dictionary for faster lookups by post ID
     vote_dict = {vote.post_id: vote.vote_type for vote in user_votes}
-    return render_template('community.html', posts=posts, community=community, page_title=community_name, vote_dict=vote_dict)
+    return render_template('community.html', posts=posts, community=community, communities=communities ,page_title=community_name, vote_dict=vote_dict)
 
 @app.route('/community/<string:community_name>/delete', methods=['POST'])
 @login_required
