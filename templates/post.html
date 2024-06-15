@@ -2,7 +2,7 @@
 
   {% block content %}
     <div class="app">
-        <div class="post-container">]
+        <div class="post-container">
         <div class="posts-section">
             <!-- display content -->
             <div class="post">
@@ -52,10 +52,10 @@
                 </form>
             {% endif %}
             
-            <div class="comment-section">
+            <div class="comment-section">   
+               <div class="word-comment"><b>Comment section</b></div> 
                 <br>
-                <b>Comment section</b>
-
+                <br>
                 <form action="/upload" method="POST">
                     <input type="hidden" name="item" value="comment">
                     <input type="hidden" name="post_id" value="{{ post.id }}">  
@@ -76,6 +76,7 @@
                                 <p><span class="vote-btn" id="vote-count-comment-{{ comment.id }}">{{ comment.votes }}</span></p>
                                 <button class="{{ 'voted' if vote_dict_comment.get(comment.id) == 'downvote' }} " data-vote-type="downvote" type="button" data-comment-id="{{ comment.id }}" onclick="downvoteComment(this)">Downvote</button>
                             </div>
+                            <div class="comment-part">
                             {% if comment.anonymous == 1 %}
                                 <div class="username"><b>Anonymous</b></div>
                                 {% else %}
@@ -83,7 +84,8 @@
                             {% endif %}
                             <div>{{comment.date_added}}</div>
                             <div class="comment-content">{{comment.comment_content}}</div><br>
-                           <span class="date"></span> {{ post.date_added.strftime('%d-%m-%Y %H:%M') }}   <!--display date posted comment -->
+                        </div
+                           <span class="date">{{ post.date_added.strftime('%d-%m-%Y    %H:%M') }}</span>    <!--display date posted comment -->
                             {% if current_user.is_authenticated %}
                                 {% if current_user.id==comment.poster_id  %}
                                     <div class="comment-delete">

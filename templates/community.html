@@ -4,7 +4,8 @@
 {% block content %}
   <div class="app">
     <h1>Community</h1>
-    r/{{community.name}}
+    
+    <div class="community-name">r/{{community.name}}</div>
 
     {%if community.comm_profile_pic%}
       <img class="comm-profile-pic"  src="{{url_for('static', filename='comm_profile_pics/' + community.comm_profile_pic) }}" alt="Community Profile Picture">
