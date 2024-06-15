@@ -216,7 +216,13 @@ button[type="submit"]:hover{
   width:auto;
   display: inline;
   padding-left: 20px;
+  text-decoration: underline;
+  text-decoration-color: rgb(62, 41, 203);
+  color: rgb(62, 41, 203);
+  width: auto;
+  justify-content: center;
 }
+
 .community-name {
   width: auto;
   justify-content: center;
