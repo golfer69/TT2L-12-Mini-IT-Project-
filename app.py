@@ -183,15 +183,15 @@ class LoginForm(FlaskForm):
 class EntryForm(FlaskForm):
     name= StringField(label='Name')
     age= StringField(label='Age', validators=[Length(max=3)])
-    about= StringField(label='About', validators=[Length(min=7, max=1000)])
-    location= StringField(label='Location', validators=[Length(min=1, max=100)])
-    interests= StringField(label='Interests', validators=[Length(min=1, max=1000)])    
-    faculty= StringField(label='Faculty', validators=[Length(min=1, max=100)])
+    about= StringField(label='About', validators=[Length(max=1000)])
+    location= StringField(label='Location', validators=[Length(max=100)])
+    interests= StringField(label='Interests', validators=[Length(max=1000)])    
+    faculty= StringField(label='Faculty', validators=[Length(max=100)])
     profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit= SubmitField('Submit')
 
 class UpdateCommunityForm(FlaskForm):
-    about=StringField(label='About', validators=[Length(min=7, max=10000)])
+    about=StringField(label='About', validators=[Length(max=10000)])
     comm_profile_pic=FileField(label='Profile Picture', validators=[FileAllowed(['jpg', 'png'])])
     submit=SubmitField('Update')
 
