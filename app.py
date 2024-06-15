@@ -280,7 +280,7 @@ def create():
     update_user=Update.query.filter_by(user_id=current_user.id).first()
     if update_user and update_user.profile_pic:
         profile_pic=url_for('static', filename='profile_pics/' + update_user.profile_pic)
-    return render_template('create.html', communities=communities, profile_pic=profile_pic, page_title="Create a post")
+    return render_template('create.html', communities=communities, page_title="Create a post")
 
 
 @app.route('/upload', methods=['GET','POST'])
