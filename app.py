@@ -267,6 +267,9 @@ def index():
     else:
         # Provide an empty dictionary as default for unauthenticated users
         vote_dict = {}
+        
+    with app.app_context():
+        decay_all_hidden_votes()
     return render_template('index.html', posts=posts, pics=pics, communities=communities , profile_pic=profile_pic, vote_dict=vote_dict,page_title="MMU Reddit | Main Page")
 
 @app.route('/create', methods=['GET'])
@@ -860,10 +863,6 @@ def decay_all_hidden_votes():
         last_decay = LastDecay(last_update_date=datetime.now())
         db.session.add(last_decay)
         db.session.commit()
-
-# run the function
-with app.app_context():
-    decay_all_hidden_votes()
 
 if __name__ == '__main__':
     app.run(debug=True)
