@@ -55,9 +55,24 @@ class User(db.Model, UserMixin):
     reports= db.relationship('Report', backref='reporter', lazy=True,cascade="all, delete-orphan")
     admin = db.Column(db.Integer, default=0)
 
+class Community(db.Model):
+    __tablename__ = 'community'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False, unique=True)
+    about = db.Column(db.String(255))
+    community = db.relationship('Post', backref='community', lazy=True, cascade="all, delete-orphan")
+    comm_profile_pic= db.Column(db.String(10000), nullable=True)
+    user_id=db.Column(db.Integer, db.ForeignKey('user.id'))
+    __table_args__ = (UniqueConstraint('name', name='unique_community_name'),)
 
+class Votes(db.Model):
+    __tablename__ = 'votes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
+    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'))
+    vote_type = db.Column(db.Integer)
 
-    
 class Post(db.Model):
     __tablename__ = 'post'
     id = db.Column(db.Integer, primary_key=True)
@@ -72,9 +87,8 @@ class Post(db.Model):
     hidden_votes = db.Column(db.Integer, default=0) # for algorithms
     id_for_comments = db.relationship('Comment', backref='text', lazy=True, cascade="all, delete-orphan")
     reports = db.relationship('Report', backref='post', lazy=True)
-     
-    
-
+    post_votes = db.relationship(Votes, backref='post', cascade="all, delete-orphan")
+  
     def get_hot_filter(self):
         # """
         # Returns a filter for posts ordered by hidden_votes (descending)
@@ -93,7 +107,6 @@ class Post(db.Model):
         # """
         return Post.query.order_by(desc(Post.votes))
 
-
 class Comment(db.Model):
     __tablename__ = 'comment'
     id = db.Column(db.Integer, primary_key=True)
@@ -102,27 +115,7 @@ class Comment(db.Model):
     comment_content = db.Column(db.Text)
     votes = db.Column(db.Integer, default=0)
     anonymous  = db.Column(db.Integer)
-
-class Community(db.Model):
-    __tablename__ = 'community'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False, unique=True)
-    about = db.Column(db.String(255))
-    community = db.relationship('Post', backref='community', lazy=True, cascade="all, delete-orphan")
-    comm_profile_pic= db.Column(db.String(10000), nullable=True)
-    user_id=db.Column(db.Integer, db.ForeignKey('user.id'))
-    __table_args__ = (UniqueConstraint('name', name='unique_community_name'),)
-
-
-
-
-class Votes(db.Model):
-    __tablename__ = 'votes'
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    post_id = db.Column(db.Integer, db.ForeignKey('post.id'))
-    comment_id = db.Column(db.Integer, db.ForeignKey('comment.id'))
-    vote_type = db.Column(db.Integer)
+    comment_votes = db.relationship(Votes, backref='comment', cascade="all, delete-orphan")
 
 class Update(db.Model):
     __tablename__ = 'update'
