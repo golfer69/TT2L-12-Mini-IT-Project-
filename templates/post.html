@@ -15,7 +15,8 @@
                 {% if post.anonymous == 1 %}
                     <p>by: Anonymous</p>
                     {% else %}
-                    <p>by: {{post.poster.username}}</p>
+                    <!-- <p>by: <a href="{{url_for('account', username=post.poster.username)}}" class="link-to-user-profile" >{{post.poster.username}}</a> </p> -->
+                    <p>by:{{post.poster.username}} </p>
                 {% endif %}
                 <button><a href="{{url_for('report_post', post_id=post.id)}}">Report Post</a></button>
                 
@@ -87,7 +88,7 @@
                         </div
                            <span class="date">{{ post.date_added.strftime('%d-%m-%Y    %H:%M') }}</span>    <!--display date posted comment -->
                             {% if current_user.is_authenticated %}
-                                {% if current_user.id==comment.poster_id  %}
+                                {% if current_user.id==comment.poster_id or current_user.admin == 1 %}
                                     <div class="comment-delete">
                                         <form action="{{ url_for('delete')}}" method="POST" class="float-right">
                                             <input type="hidden" name="item" value="comment" >

@@ -18,7 +18,7 @@
     <div class="navigation">
         <a href="/" >Home</a>
         {% if current_user.is_authenticated %}
-          {% if current_user.id == 1 or current_user.id == 6 %}
+          {% if current_user.admin == 1: %}
             <a href="{{url_for('reports')}}">Reports</a>
           {% endif %}
         <a href="{{url_for('user_posts')}}">Posts</a>

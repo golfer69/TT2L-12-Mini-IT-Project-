@@ -1,49 +1,34 @@
 {% extends 'base.html' %}
 {% block content %}
   <div class="bio">
-    <div class="card" style="width: 18rem;">
+    <div class="card">
       <div class="card-body">
-        <style>
-          .img-thumbnail {
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            /* padding: 5px; */
-            width: 150px;
-          }
-        </style>
-        <p>
-          <div class="card-text">
-            {%if update_user%}
-              {%if update_user.profile_pic%}
-              <div class="profile_pic">
-                <img src="{{url_for('static', filename='profile_pics/' + update_user.profile_pic)}}" alt="Profile Picture" class="img-thumbnail"><br>
-              </div>
-              {%endif%}
-              <strong>Username: </strong> {{ user.username }}<br>
-              <strong>Email: </strong> {{ user.email }}<br>
-              <strong>Date Joined: </strong> {{ user.date_joined.strftime('%Y-%m-%d %H:%M') }}<br>
-              <strong>Name: </strong> {{ update_user.name }}<br>
-              <strong>Age: </strong> {{ update_user.age }}<br>
-              <strong>About: </strong> {{ update_user.about }}<br>
-              <strong>Location: </strong> {{ update_user.location }}<br>
-              <strong>Interests: </strong> {{ update_user.interests }}<br>
-              <strong>Faculty: </strong> {{ update_user.faculty }}<br>
-            {%else%}
-              <img src="{{url_for('static', filename='profile_pics/blank_profile_photo.png')}}" alt="Profile Picture" class="img-thumbnail"><br>
-              <strong>Username: </strong> {{ user.username }}<br>
-              <strong>Email: </strong> {{ user.email }}<br>
-              <strong>Date Joined: </strong> {{ user.date_joined.strftime('%Y-%m-%d %H:%M') }}<br>
-              <p>No additional details provided</p>
-            {%endif%}
-        </p>
-          </div>
+        <div class="profile_pic">
+          {% if update_user and update_user.profile_pic %}
+            <img class="img-thumbnail" src="{{ url_for('static', filename='profile_pics/' + update_user.profile_pic) }}" alt="Profile Picture">
+          {% else %}
+            <img src="{{ url_for('static', filename='profile_pics/blank_profile_photo.png') }}" alt="Profile Picture" class="img-thumbnail">
+          {% endif %}
+        </div>
+        <div class="card-text">
+          <strong>Username: </strong> {{ user.username }}<br>
+          <strong>Email: </strong> {{ user.email }}<br>
+          <strong>Date Joined: </strong> {{ user.date_joined.strftime('%Y-%m-%d') }}<br>
+          {% if update_user %}
+            <strong>Name: </strong> {{ update_user.name }}<br>
+            <strong>Age: </strong> {{ update_user.age }}<br>
+            <strong>About: </strong> {{ update_user.about }}<br>
+            <strong>Location: </strong> {{ update_user.location }}<br>
+            <strong>Interests: </strong> {{ update_user.interests }}<br>
+            <strong>Faculty: </strong> {{ update_user.faculty }}<br>
+          {% else %}
+            <p>No additional details provided</p>
+          {% endif %}
+        </div>
         <div class="update-user-button">
-          <button><a href="{{url_for('user_details', id=user.id)}}" class="btn btn-primary">Update User</button>
+          <a href="{{ url_for('user_details', id=user.id) }}" class="btn btn-primary">Update User</a>
         </div>
       </div>
     </div>
   </div>
-{%endblock%}
-
-
-
+{% endblock %}
