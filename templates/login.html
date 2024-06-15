@@ -3,11 +3,6 @@
 <head>
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='loginreg.css')}}">
     <title>Login Page</title>
-    <style>
-        .error {
-            color: red;
-        }
-    </style>
 </head>
 <body>
     <div class="app">
@@ -16,17 +11,26 @@
         <h1>Login Page</h1><br>
         <form method="POST" action="">
             {{ form.hidden_tag() }}
-            <div>
-            {{ form.username.label }}
-            {{ form.username }} 
+            <div class="register-login-form">
+                {{ form.username.label }}
+                {{ form.username }} 
+                {%for error in form.username.errors%}
+                    <span class="error">{{error}}</span>
+                {%endfor%}
+            </div>
         <br>
-            {{ form.password.label }}
-            {{ form.password }}
-
+            <div class="register-login-form">
+                {{ form.password.label }}
+                {{ form.password }}
+                {%for error in form.password.errors%}
+                    <span class="error">{{error}}</span>
+                {%endfor%}
+            </div>
         <br>
+        <div>
+            {{ form.submit }}
+        </div>
         </form>
-        <br>
-        {{ form.submit }}
         {% with messages = get_flashed_messages() %}
         {% if messages %}
             <ul class="error"> 
