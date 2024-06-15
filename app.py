@@ -724,6 +724,7 @@ def check_vote(post_id, vote_type):
     if current_user.is_authenticated:
         user_id = current_user.id
         vote_exists = Votes.query.filter_by(user_id=user_id, post_id=post_id, vote_type=vote_type).first()
+        #return True if vote_exists
         return jsonify({'voted': vote_exists is not None})
 
 # Upvotes and downvotes FOR COMMENTS
@@ -804,7 +805,7 @@ def filter_posts():
   filter_option = request.form.get('filter_option')
   redirect_to = request.form.get('redirect_to')
   community_name = request.form.get('community_name')
-
+  # return to where they were 
   if redirect_to == 'index':
     return redirect(url_for('index', filter_option=filter_option))
   if redirect_to == 'community':
