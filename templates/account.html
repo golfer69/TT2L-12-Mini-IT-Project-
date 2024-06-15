@@ -13,19 +13,32 @@
           {% endif %}
         </div>
         <div class="card-text">
-          <strong>Username: </strong> {{ user.username }}<br>
-          <strong>Email: </strong> {{ user.email }}<br>
-          <strong>Date Joined: </strong> {{ user.date_joined.strftime('%Y-%m-%d') }}<br>
-          {% if update_user %}
-            <strong>Name: </strong> {{ update_user.name }}<br>
-            <strong>Age: </strong> {{ update_user.age }}<br>
-            <strong>About: </strong> {{ update_user.about }}<br>
-            <strong>Location: </strong> {{ update_user.location }}<br>
-            <strong>Interests: </strong> {{ update_user.interests }}<br>
-            <strong>Faculty: </strong> {{ update_user.faculty }}<br>
-          {% else %}
-            <p>No additional details provided</p>
-          {% endif %}
+          <div class="info"><strong>Username: </strong> {{ user.username }}<br>
+          <div class="info"><strong>Email: </strong> {{ user.email }}<br>
+          <div class="info"><strong>Date Joined: </strong> {{ user.date_joined.strftime('%Y-%m-%d') }}<br>
+            {% if update_user.name %}
+            <div class="info"><strong>Name: </strong> {{ update_user.name }}<br>
+            {% endif %}
+            
+            {% if update_user.age %}
+            <div class="info"><strong>Age: </strong> {{ update_user.age }}<br>
+            {% endif %}
+
+            {% if update_user.about %}
+            <div class="info"><strong>About: </strong> {{ update_user.about }}<br>
+            {% endif %}
+
+            {% if update_user.location %}
+            <div class="info"><strong>Location: </strong> {{ update_user.location }}<br>
+            {% endif %}
+
+            {% if update_user.interests %}
+            <div class="info"><strong>Interests: </strong> {{ update_user.interests }}<br>
+            {% endif %}
+
+            {% if update_user.faculty %} 
+            <div class="info"><strong>Faculty: </strong> {{ update_user.faculty }}<br>
+            {% endif %}
         </div>
         <div class="update-user-button">
           <a href="{{ url_for('user_details', id=user.id) }}" class="btn btn-primary">Update User</a>
