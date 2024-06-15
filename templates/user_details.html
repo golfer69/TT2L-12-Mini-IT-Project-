@@ -1,48 +1,50 @@
 {% extends 'base.html' %}
 {% block content %}
-  <div class="update-user">
-    <form method="POST" action="{{ url_for('user_details', id=current_user.id) }}" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
-        <div>
-            {{ form.profile_pic.label }}
-            {{ form.profile_pic }}
+    <div class="app">
+        <div class="update-user">
+            <form method="POST" action="{{ url_for('user_details', id=current_user.id) }}" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                <div class="form-group">
+                    <label for="profile-pic">{{ form.profile_pic.label }}</label>
+                    {{ form.profile_pic(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="name">{{ form.name.label }}</label>
+                    {{ form.name(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="age">{{ form.age.label }}</label>
+                    {{ form.age(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="about">{{ form.about.label }}</label>
+                    {{ form.about(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="location">{{ form.location.label }}</label>
+                    {{ form.location(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="interests">{{ form.interests.label }}</label>
+                    {{ form.interests(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    <label for="faculty">{{ form.faculty.label }}</label>
+                    {{ form.faculty(class="form-control") }}
+                </div>
+                <div class="form-group">
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+                {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <ul class="error"> 
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                    </ul>
+                {% endif %}
+                {% endwith %}
+            </form>
         </div>
-        <div>
-            {{ form.name.label }}
-            {{ form.name }}
-        </div>
-        <div>
-            {{ form.age.label }}
-            {{ form.age }}
-        </div>
-        <div>
-            {{ form.about.label }}
-            {{ form.about }}
-        </div>
-        <div>
-            {{ form.location.label }}
-            {{ form.location }}
-        </div>
-        <div>
-            {{ form.interests.label }}
-            {{ form.interests }}
-        </div>
-        <div>
-            {{ form.faculty.label }}
-            {{ form.faculty }}
-        </div>
-        <div>
-            {{ form.submit }}
-        </div>
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul class="error"> 
-            {% for message in messages %}
-                <li>{{ message }}</li>
-            {% endfor %}
-            </ul>
-        {% endif %}
-        {% endwith %}
-    </form>
-  </div>
+    </div>
 {% endblock %}
