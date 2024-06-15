@@ -37,7 +37,7 @@
     </div>
             <!-- delete button -->
             {% if current_user.is_authenticated %}
-            {% if current_user.id == 1 or current_user.id==post.poster_id  %}
+            {% if current_user.admin == 1 or current_user.id==post.poster_id  %}
             <form action="{{ url_for('delete') }}" method="POST" class="inline-block admin-buttons">
                 <input type="hidden" name="item" value="post" >
                 <input type="hidden" name="post_id" value="{{ post.id }}"> 
