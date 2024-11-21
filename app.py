@@ -832,12 +832,11 @@ def decay_hidden_votes(post):
         post.hidden_votes
 
     post_age_days = (current_time - post.date_added).days
-    post_title = post.title
-    decay_factor = 0.99  # Votes decay by 1% each day
+    if post.hidden_votes > 0:
+        decay_factor = 0.99  # Votes decay by 1% each day
+    else:
+        decay_factor = 1.01  # Votes decay by 1% each day for negative votes
     decayed_hidden_votes = post.hidden_votes * (decay_factor ** post_age_days) #decay more and more by days go by
-
-    # Ensure the decayed value doesn't go below 0
-    decayed_hidden_votes = max(decayed_hidden_votes, 0)
 
     return int(decayed_hidden_votes)
 
